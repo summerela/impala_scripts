@@ -1,0 +1,97 @@
+---
+title: "Querying Impala from R"
+author: "Summer Elasady"
+date: "March 22, 2015"
+output: html_document
+---
+##Connecting to impala with R
+
+Once you've created an ODBC DSN on your machine, you can connect to R using the RODBC package: 
+```{r connect_to_impala}
+#run first-time only
+#install.packages("RODBC")
+
+library(RODBC)
+
+#connect using the DSN name you created on your machine
+conn <- odbcConnect("Impala DSN")
+```
+
+##View available databases and tables
+To view what tables are available on impala, run the sqlTables command on the connection:
+```{r view_tables}
+sqlTables(conn)
+```
+##Read a table into a data frame
+Let's pull one of these tables into a data frame: 
+```{r read_in_table}
+#select tables using the format database.table
+#feature.df <- sqlFetch(conn, "default.feature_fm")
+#head(feature.df)
+```
+##Building a basic query
+Pulling down entire tables is not very efficient, so let's use impala queries to find only the data we need.    
+
+Impala queries are basically a limited set of SQL queries and follow variations of this basic format: 
+
+SELECT  
+FROM  
+WHERE  
+
+You can also use the LIMIT statment to limit the amount of records returned, similar to heading a file. 
+
+To select only variants that passed the quality filter: 
+```{r only_filter_pass}
+ sqlQuery(conn, "SELECT * FROM p7_ptb.illumina_variant 
+          WHERE filter = 'PASS' 
+          LIMIT 5")
+```
+That still returns a lot of date. We can get more specific and select variants on chromosome 10 that passed filtering and have quality scores above 300: 
+```{r chromosome_10_pass}
+ sqlQuery(conn, "SELECT * FROM p7_ptb.illumina_variant 
+          WHERE chromosome = '10' 
+          AND filter = 'PASS' 
+          AND qual > '300'
+          LIMIT 5")
+```
+##Pulling data from mulitple tables
+Before we can pull data from the various tables in impala, we need to figure out what fields we can use to match the tables on. 
+
+As an example, we will find all PTB variants on chromosome 7 that clinvar considers pathogenic. 
+
+We can see what columns exist in each table by using a DESCRIBE statement: 
+```{r view_columns}
+#read in column names
+sqlQuery(conn, 'DESCRIBE p7_ptb.illumina_variant')
+#heading for brevity's sake
+head(sqlQuery(conn, 'DESCRIBE public_hg19.clinvar'), 10)
+```
+After looking through the tables, we find the following fields to match on: 
+```{r pander, echo=FALSE}
+library(pander)
+out = data.frame(vcf_field=c('chromosome', 'position', 'ref', 'alt'),clinvar_field=c('chromosome', 'pos', 'ref', 'alt' ))
+pander(out, style='grid', caption="Fields to match on")
+```
+
+sqlSave(channel, mydf, tablename = sqtable, append = FALSE)  
+
+```{r join_tables}
+#sqlQuery(conn, "SELECT DISTINCT vcf.chromosome, vcf.position, vcf.id, vcf.ref, #vcf.alt, vcf.sample_id
+#FROM p7_ptb.illumina_variant vcf, public_hg19.refseq ref
+#WHERE vcf.chromosome = ref.seqid 
+#          AND vcf.ref = ref.ref
+#          AND vcf.al
+#          AND filter = 'PASS' 
+#          AND qual > '300'
+#          LIMIT 5")
+
+
+
+```
+
+Plot results: 
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
