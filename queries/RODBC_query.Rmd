@@ -13,7 +13,7 @@ Once you've [created an ODBC DSN](https://ilyawiki.systemsbiology.net/display/IS
 library(RODBC)
 
 #connect using the DSN name you created on your machine
-conn <- odbcConnect("Cloudera Impala DSN")
+conn <- odbcConnect("Impala DSN")
 ```
 
 ##View available databases and tables
