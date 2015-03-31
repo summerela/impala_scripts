@@ -1,0 +1,310 @@
+---
+title: "Querying Impala from R"
+output: html_document
+---
+##Connecting to impala with R
+
+Once you've [created an ODBC DSN](https://ilyawiki.systemsbiology.net/display/ISBInova/Connecting+to+impala+with+R%3A+mac) on your machine, you can connect to R using the RODBC package:
+
+```{r connect_to_impala}
+#run first-time only
+#install.packages("RODBC")
+
+library(RODBC)
+
+#connect using the DSN name you created on your machine
+conn <- odbcConnect("Cloudera Impala DSN")
+```
+
+##View available databases and tables
+
+To view what tables are available on impala, run the sqlTables()  function on the connection object:
+
+```{r view_tables}
+sqlTables(conn)
+```
+##Read a table into a data frame
+
+We can pull a specific table into a data frame using the format "database_name.table_name": 
+
+```{r read_in_table}
+#select tables using the format database.table
+#feature.df <- sqlFetch(conn, "default.feature_fm")
+#head(feature.df)
+```
+
+To make this more efficient, we can also limit the number of rows we pull in: 
+
+```{r read_in_chunks}
+#select tables using the format "database_name.table_name"
+sqlFetch(conn, "default.feature_fm", max=5)
+```
+
+##Building a basic query
+
+Pulling down entire tables is not very efficient, so let's use impala queries to find only the data we need. Impala queries are basically SQL queries that follow variations of this basic format: 
+
+SELECT column_name(s)
+FROM  database.table  
+WHERE  conditions  
+GROUP BY (use only if you want to aggregate data in some way)  
+LIMIT rows to return (omit to return all matches)  
+
+To select only variants that passed the quality filter: 
+
+```{r only_filter_pass}
+ sqlQuery(conn, "SELECT * 
+          FROM p7_ptb.illumina_variant 
+          WHERE filter = 'PASS' 
+          LIMIT 5")
+```
+
+That still returns a lot of data. We can get more specific and select only variants on chromosome 10 that passed filtering and have quality scores above 300: 
+
+```{r chromosome_10_pass}
+ sqlQuery(conn, "SELECT * 
+          FROM p7_ptb.illumina_variant 
+          WHERE chromosome = '10' 
+          AND filter = 'PASS' 
+          AND qual > '300'
+          LIMIT 5")
+```
+
+##Joining tables
+
+Pulling together data from multiple tables, such as is done when annotating variants, requires the use of SQL JOIN statements. There are many ways this can be done. I'll walk you through some of the easier methods. 
+
+As an example, let's find all PTB variants on chromosome 8 that clinvar considers pathogenic.
+
+Before we can pull data from the various tables, we need to figure out what fields we can use to match the tables on. We can get more information about the columns in each table by using a DESCRIBE statement: 
+
+```{r view_columns}
+#DESCRIBE database_name.table_name
+sqlQuery(conn, 'DESCRIBE p7_ptb.illumina_variant')
+#heading for brevity's sake
+head(sqlQuery(conn, 'DESCRIBE public_hg19.clinvar'), 10)
+```
+
+After looking through the tables, we find the following fields to match on: 
+
+```{r find_cols_2match, pander, echo=FALSE}
+library(pander)
+match_on = data.frame(vcf_field=c('chromosome', 'position', 'ref', 'alt'),clinvar_field=c('chromosome', 'pos', 'ref', 'alt' ))
+pander(match_on, style='simple', caption="Fields to match on")
+```
+
+###SELECT
+
+Now we need to figure out what information we want to get back from each table. Since we are using clinvar to filter our variants, we'll want everything back from the variant file, and it would also be helpful to have the clinvar ID and associated rsID (id and rs columns from the clinvar table). 
+
+Here's our opening statment:   
+
+'SELECT vcf.*, clin.id, clin.rs'  
+
+Wait. What's this "vcf." and "clin." stuff? In the following step, we're going to nickname each source database so that it's easier to keep track of what columns came from which tables without having to type out the full table name every time. It's called aliasing.    
+
+p7_ptb.illumina_variant = vcf     
+public_hg19.clinvar = clin  
+
+###FROM
+
+Here's where we tell impala what table(s) to get the information from. And where we give each table a nickname so we can be lazy typers. 
+
+'FROM p7_ptb.illumina_variant as vcf, public_hg19.clinvar as clin'
+
+###WHERE
+
+Now we need to give impala some parameters on how to match the data. And this is where the aliased names really come in handy. 
+
+We are going to get all entries on chromosome 8, where the position, reference and alternate allele match between the vcf file and clinvar. 
+
+Since the chromosome field can contain letters and not just numbers, its data type is a string and therfore must be placed in quotes, as shown below: 
+
+WHERE vcf.chromosome = "8" AND clin.chromosome = "8"
+AND vcf.position = clin.pos
+AND vcf.ref = clin.ref 
+AND vcf.alt = clin.alt
+
+The WHERE clause is used to filter data sets, so it's perfect for subsetting data. You can also use the following operators: 
+
+```{r where_operators, pander, echo=FALSE}
+operators = data.frame(Operator=c("=", "!=", ">", "<", ">=", "<=", "BETWEEN", "LIKE", "IN", "EXISTS", "NoT EXISTS"),Description=c("Equal", "Not equal", "Greater than", "Less than", "Greater than or equal", "Less than or equal", "Between inclusive range", "Search for pattern", "Specify multiple possible values", "Return values that match parameters in suqbuery", "Return all values that dont match paramaters in subquery"))
+pander(operators, style='simple', caption="Where Operators")
+```
+
+More info on operators here: 
+http://www.cloudera.com/content/cloudera/en/documentation/cloudera-impala/v2-0-x/topics/impala_operators.html
+ 
+####Putting it all together
+
+Let's put the query together and run it: 
+
+```{r run_query1}
+sqlQuery(conn, 'SELECT vcf.*, clin.id, clin.rs
+         FROM p7_ptb.illumina_variant as vcf, public_hg19.clinvar as clin
+         WHERE vcf.chromosome = "7" AND clin.chromosome = "7"
+         AND vcf.position = clin.pos
+         AND vcf.ref = clin.ref
+         AND vcf.alt = clin.alt
+         LIMIT 5'
+         )
+```
+###OR and IN operators
+
+But wait, we forgot to check for pathogenicity! Using a DESCRIBE statement, I found the column we are looking for: 
+
+clnsig - Variant Clinical Significance  
+0 - Uncertain significance  
+1 - not provided  
+2 - Benign  
+3 - Likely benign  
+4 - Likely pathogenic  
+5 - Pathogenic  
+6 - drug response  
+7 - histocompatibility  
+255 - other  
+
+We need to add an OR operator limiting results to only those variants WHERE clin.clnsig = 4 or clin.clnsig = 5.  
+
+While we're at it, let's add a few more descriptive columns and use an alias to give meaningful names to some of the more vague or repetetive columns: 
+
+```{r run_query_OR}
+sqlQuery(conn, 'SELECT vcf.*, clin.id as rsID, clin.geneinfo, clin.clnsig as clinical_sig
+         FROM p7_ptb.illumina_variant as vcf, public_hg19.clinvar as clin
+         WHERE vcf.chromosome = "8" AND clin.chromosome = "8"
+         AND vcf.position = clin.pos
+         AND vcf.ref = clin.ref
+         AND vcf.alt = clin.alt
+         AND (clin.clnsig = 4 OR clin.clnsig = 5)
+         LIMIT 5'
+         )
+```
+
+###IN operator
+
+You can also do this with an IN operator, which is useful when searching for variables that can contain a longer list of values: 
+
+```{r run_query_IN}
+sqlQuery(conn, 'SELECT vcf.*, clin.id as rsID, clin.geneinfo, clin.clnsig as clinical_sig
+         FROM p7_ptb.illumina_variant as vcf, public_hg19.clinvar as clin
+         WHERE vcf.chromosome = "8" AND clin.chromosome = "8"
+         AND vcf.position = clin.pos
+         AND vcf.ref = clin.ref
+         AND vcf.alt = clin.alt
+         AND clin.clnsig IN (4,5)
+         LIMIT 5'
+         )
+```
+###INNER JOINS
+
+We've actually already begun joining tables by using the WHERE clause (called an "implicit join"). You can also use "explicit joins" to get the same results, however, in impala the memory usage and speed of these two joins are often identical, so use whatever method is easier for you to work with:  
+
+```{r run_query_innerJoin}
+sqlQuery(conn, 'SELECT vcf.*, clin.id, clin.rs
+         FROM p7_ptb.illumina_variant as vcf
+         JOIN public_hg19.clinvar as clin
+         WHERE vcf.chromosome = "7" AND clin.chromosome = "7"
+         AND vcf.position = clin.pos
+         AND vcf.ref = clin.ref
+         AND vcf.alt = clin.alt
+         LIMIT 5'
+         )
+```
+
+Neat trick: in the impala web interface, you can paste these queries and click on the "Explain" button to determine if either method will be faster and/or more efficient.  
+
+###Counting 
+
+When we run that query, how many results would we get back if we didn't limit it to 5? We can use a SELECT COUNT statment to count how many results are in our query: 
+
+```{r count}
+sqlQuery(conn, 'SELECT COUNT(*) 
+         FROM p7_ptb.illumina_variant as vcf, public_hg19.clinvar as clin
+         WHERE vcf.chromosome = "8" AND clin.chromosome = "8"
+         AND vcf.position = clin.pos
+         AND vcf.ref = clin.ref
+         AND vcf.alt = clin.alt
+         AND clin.clnsig IN (4,5)'
+         )
+```
+
+How many records in our query have unique sample id? We can choose to count only distinct records using a SELECT DISTINCT statement on the vcf.sample_id field: 
+
+```{r count_distinct}
+sqlQuery(conn, 'SELECT COUNT(DISTINCT vcf.sample_id) 
+         FROM p7_ptb.illumina_variant as vcf, public_hg19.clinvar as clin
+         WHERE vcf.chromosome = "8" AND clin.chromosome = "8"
+         AND vcf.position = clin.pos
+         AND vcf.ref = clin.ref
+         AND vcf.alt = clin.alt
+         AND clin.clnsig IN (4,5)'
+         )
+```
+
+###Finding things- instead of regex, use LIKE
+
+Let's say that in addition to the parameters above, we are only interested in sample id's that begin with "102" and end with "5". SQL has a LIKE operator that can be used with "%" as a wildcard, allowing you to avoid regex whenever possible. Unless you really like regex, if so, you can use that, too.   
+
+You can also skip the wildcard and use LIKE to find a specific sample id (If you are looking for a range of ID's, try using IN). 
+
+To further narrow our search to only sample id's beginning with 102 and ending in 5: 
+
+```{r like_operator}
+sqlQuery(conn, 'SELECT vcf.*, clin.id as rsID, clin.geneinfo, clin.clnsig as clinical_sig
+         FROM p7_ptb.illumina_variant as vcf, public_hg19.clinvar as clin
+         WHERE vcf.chromosome = "8" AND clin.chromosome = "8"
+         AND vcf.position = clin.pos
+         AND vcf.ref = clin.ref
+         AND vcf.alt = clin.alt
+         AND clin.clnsig IN (4,5)
+         AND vcf.sample_id LIKE "102%5"
+         LIMIT 5'
+         )
+```
+
+###Other built-in functions
+Impala comes with several functions you can use on the tables and on your results set. More info can be found here:   
+http://www.cloudera.com/content/cloudera/en/documentation/cloudera-impala/latest/topics/impala_functions.html
+
+###Saving Results
+You can save your results as a table and run queries against it just as you would any existing impala table. 
+
+First, save the results of our query as a data frame called test_table. 
+```{r save_db_ojbect}
+test_table = sqlQuery(conn, 'SELECT vcf.*, clin.id as rsID, clin.geneinfo, clin.clnsig as clinical_sig
+         FROM p7_ptb.illumina_variant as vcf, public_hg19.clinvar as clin
+         WHERE vcf.chromosome = "8" AND clin.chromosome = "8"
+         AND vcf.position = clin.pos
+         AND vcf.ref = clin.ref
+         AND vcf.alt = clin.alt
+         AND clin.clnsig IN (4,5)
+         AND vcf.sample_id LIKE "102%5"
+         LIMIT 5'
+         )
+```
+
+Now we can save the data frame to impala as a table.  
+* dat = name of data frame  
+* tablename = database_name.table_name to save to  
+* append = TRUE if adding rows to an existing table, FALSE if adding a new table to impala
+
+```{r save_results}
+#sqlSave(conn, dat=test_table, tablename='p7dev.test_table', append = FALSE)  
+
+```
+
+###Add rows to an existing table
+
+To add rows to an existing table called "test_table", we state the existing table name and set append to TRUE. 
+
+```{r append_results}
+#sqlSave(conn, dat=test_table, tablename='p7dev.test_table', append = TRUE)  
+
+```
+
+###Helpful links: 
+
+For more information:  
+[SQL]('http://www.w3schools.com/sql/default.asp')  
+[Impala]('http://www.cloudera.com/content/cloudera/en/documentation/core/latest/topics/impala_langref.html')  
+[RODBC]('http://cran.r-project.org/web/packages/RODBC/RODBC.pdf')  
