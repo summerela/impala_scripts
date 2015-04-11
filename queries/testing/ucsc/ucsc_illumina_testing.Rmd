@@ -1,0 +1,267 @@
+---
+title: "ucsc_testing"
+output: html_document
+---
+##Purpose: 
+Testing ucsc gene annotation queries. 
+
+##Test plan
+The first 100000 rows of  p7_ptb.illumina_variant table were saved as p7dev.illumina_test on impala and run through tests against public_hg19.ucsc to compare results between R and impala queries. 
+
+After initial check to make sure tables in R and impala are both 100,000 rows:
+
+1. Run coding gene annotation query on impala and R 
+2. Comapre count of total records returned  
+3. Compare number of unique zygosity entries  
+4. Compare number of unique variant types returned 
+5. Compare count of unique gene names reported   
+
+##Testing Query to find variants in ucsc genes
+The following tests were run on p7dev.illumina_test and public_hg19.ucsc tables on impala. 
+
+###Finding variants on impala
+The following query was run to count rows returned on the illumina_test and public_hg19.ucsc tables:
+
+```sql 
+SELECT COUNT(*)
+FROM p7dev.illumina_test as vcf, public_hg19.ucsc as ucsc
+WHERE vcf.filter = "PASS"  
+AND vcf.chromosome = SUBSTR(ucsc.chrom,4) 
+AND vcf.position BETWEEN ucsc.txstart AND ucsc.txend  
+```
+115769 rows were returned. 
+
+###Downloading variants into R
+The following query was run to return results to download for later comparison with R results. Substring was used to account for different format in chromosome name (and this was added to the Needs_Fixed tab of the vcf_info spreadshet.)
+
+```sql
+SELECT vcf.sample_id as vcf_sample_id, vcf.chromosome as vcf_chrom, vcf.position as vcf_pos,vcf.ref as vcf_ref, vcf.alt as vcf_alt, 
+vcf.id as vcf_rsID, ucsc.name as ucsc_id, SUBSTR(ucsc.chrom,4) as ucsc_chrom, ucsc.strand as ucsc_strand, ucsc.txstart as ucsc_txstart, 
+ucsc.txend as ucsc_txend,ucsc.cdsstart as ucsc_cdsstart, ucsc.cdsend as ucsc_cdsend, ucsc.proteinid as ucsc_proteinid, ucsc.alignid as ucsc_alignid
+FROM p7dev.illumina_test as vcf, public_hg19.ucsc as ucsc
+WHERE vcf.filter = "PASS"  
+AND vcf.chromosome = SUBSTR(ucsc.chrom,4) 
+AND vcf.position BETWEEN ucsc.txstart AND ucsc.txend  
+```
+This file was then read into R to ensure validity of queries used for tesing: 
+
+```{r read_results}
+#read in results table
+ucsc_results = read.csv("~//impala_scripts/queries/testing/ucsc/ucsc_query_result.csv", header=TRUE)
+head(ucsc_results)
+dim(ucsc_results)
+```
+
+###Reading data into R for comparison
+The subset tables were read into R: 
+
+```{r read_in_subset}
+suppressMessages(library(RODBC))
+
+#connect using the DSN name you created on your machine
+conn <- odbcConnect("Impala DSN")
+
+vcf = sqlFetch(conn, "p7dev.illumina_test")
+head(vcf)
+dim(vcf)
+ucsc = sqlFetch(conn, "public_hg19.ucsc")
+head(ucsc)
+dim(ucsc)
+```
+
+The following was run in R: 
+```{r count_features_R}
+suppressMessages(library(GenomicRanges))
+suppressMessages(library(IRanges))
+
+##subset for only vcf rows that passed filtering
+vcf_pass = vcf[which(vcf$filter == "PASS"),]
+        
+#create GRanges objects for comparison
+vars = with(vcf_pass, GRanges(seqnames=vcf_pass$chromosome, 
+                         ranges=IRanges(vcf_pass$pos, width=1, 
+                                        names=paste(vcf_pass$sample_id, ":",vcf_pass$ref, ">", vcf_pass$alt, sep="")),rsID=vcf_pass$id, filter=vcf_pass$filter, qual=vcf_pass$qual, sample_id=vcf_pass$sample_id))
+
+genes = with(ucsc, GRanges(seqnames=as.character(gsub("chr", "", ucsc$chrom)),
+                         ranges=IRanges(ucsc$txstart, ucsc$txend,names=ucsc$name),
+                                        proteinid=ucsc$proteinid))
+
+##find variants that fall in gene regions
+match = suppressWarnings(findOverlaps(vars, genes))
+
+##turn results into a data frame
+match.df = data.frame(sample_id = as.character(mcols(vars)$sample_id)[queryHits(match)],
+                      chrom = seqnames(vars)[queryHits(match)],
+                      pos = as.data.frame(ranges(vars))$start[queryHits(match)],
+                      variant = as.character(lapply(strsplit(as.character(names(vars)[queryHits(match)]), ":"), function(x) x[2])),
+                      rsId = as.character(mcols(vars)$rsID)[queryHits(match)],
+                      gene_name = as.character(names(genes))[subjectHits(match)],
+                      protein_id = mcols(genes)$proteinid[subjectHits(match)],
+                      stringsAsFactors=F)
+dim(match.df)
+#115769 rows, same as impala query                                  
+head(match.df)
+```
+
+###compare Impala Results file and R generated results
+```{r compare_results}
+#add variant column to impala results
+ucsc_results$variant = paste(ucsc_results$vcf_ref, ">", ucsc_results$vcf_alt, sep="")
+#coerce to same structure as match.df for comparison
+ucsc.df = ucsc_results[c(1,2,3,16,6,7,14)]
+colnames(ucsc.df) = colnames(match.df)
+
+#order both data frames for matching
+ucsc.df = ucsc.df[with(ucsc.df, order(sample_id, chrom, pos, variant, gene_name)),]
+match.df = match.df[with(match.df, order(sample_id, chrom, pos, variant, gene_name)),]
+
+#coercing columns to same class for comparison
+i = sapply(ucsc.df, is.factor)
+ucsc.df[i] = lapply(ucsc.df[i], as.character)
+
+j = sapply(match.df, is.factor)
+match.df[j] = lapply(match.df[j], as.character)
+
+#removing rownames for matching
+rownames(match.df)= NULL
+rownames(ucsc.df) = NULL
+
+#compare data frames
+which(match.df != ucsc.df, arr.ind=TRUE)
+
+#0 results returned  = data frames are identical
+
+```
+
+###Count unique protein id's returned
+Imapala: 
+
+This following query was run on impala, 776 unique protein id's returned: 
+```sql
+SELECT COUNT(DISTINCT(ucsc.proteinid))
+FROM p7dev.illumina_test as vcf, public_hg19.ucsc as ucsc
+WHERE vcf.filter = "PASS"  
+AND vcf.chromosome = SUBSTR(ucsc.chrom,4) 
+AND vcf.position BETWEEN ucsc.txstart AND ucsc.txend  
+```
+
+R on impala results: 
+
+The following R query run on the impala results generated above shows that there are 776 unique protein id's returned. 
+
+```{r count_results_features}
+str(ucsc_results$ucsc_proteinid)
+```
+
+R results: 
+776 unique protein id's returned in results, as above. 
+```{r count_R_features}
+length(unique(ucsc.df$protein_id))
+
+```
+
+###Compare random sample of genes returned
+First, we'll grab a random sample of genes from R and examine them on each platform: 
+```{r rand_genes}
+#sample(unique(match.df$gene_name), 5)
+#the above generated the following list, saving as fixed ("uc031qze.1","uc004dhp.3","uc003wvt.4","uc021ujc.2","uc003llx.3")
+rand_genes = c("uc031qze.1","uc004dhp.3","uc003wvt.4","uc021ujc.2","uc003llx.3")
+```
+
+How many rows are returned for these genes in R? 
+```{r count_rand_genes}
+
+rand_match = match.df[(match.df$gene_name %in% rand_genes),]
+dim(rand_match)
+head(rand_match)
+
+```
+
+How many of these genes are in impala results? 
+
+```{r count_rand_impala_results}
+
+match_imp_results = ucsc.df[(ucsc.df$gene_name %in% rand_genes),]
+dim(match_imp_results)
+
+##are the gene also the same in the imapla results?
+which(rand_match != match_imp_results, arr.ind=TRUE)
+#returns 0 mismatches
+```
+371 identical results are returned on impala: 
+```sql
+SELECT COUNT(*)
+FROM p7dev.illumina_test as vcf, public_hg19.ucsc as ucsc
+WHERE vcf.filter = "PASS"  
+AND vcf.chromosome = ucsc.chromosome  
+AND vcf.position BETWEEN ucsc.start AND ucsc.stop 
+AND ucsc.name IN ("uc031qze.1","uc004dhp.3","uc003wvt.4","uc021ujc.2","uc003llx.3")
+```
+
+###Query to find all variants in ucsc annotated regions
+The results of above analysis were used to validate the following query that can be used to determine what regions a variant falls in and for futher annotation in finding amino acid changes:  
+
+```sql 
+SELECT vcf.sample_id as vcf_sample_id, vcf.chromosome as vcf_chrom, vcf.position as vcf_pos,vcf.ref as vcf_ref, vcf.alt as vcf_alt, 
+vcf.id as vcf_rsID, ucsc.name as ucsc_id, SUBSTR(ucsc.chrom,4) as ucsc_chrom, ucsc.strand as ucsc_strand, ucsc.txstart as ucsc_txstart, 
+ucsc.txend as ucsc_txend,ucsc.cdsstart as ucsc_cdsstart, ucsc.cdsend as ucsc_cdsend, ucsc.proteinid as ucsc_proteinid, ucsc.alignid as ucsc_alignid
+FROM p7dev.illumina_test as vcf, public_hg19.ucsc as ucsc
+WHERE vcf.filter = "PASS"  
+AND vcf.qual > 100
+AND vcf.chromosome = SUBSTR(ucsc.chrom,4) 
+AND vcf.position BETWEEN ucsc.txstart AND ucsc.txend  
+```
+
+This is equivalent to: 
+
+```sql
+SELECT vcf.sample_id as vcf_sample_id, vcf.chromosome as vcf_chrom, vcf.position as vcf_pos,vcf.ref as vcf_ref, vcf.alt as vcf_alt, 
+vcf.id as vcf_rsID, ucsc.name as ucsc_id, SUBSTR(ucsc.chrom,4) as ucsc_chrom, ucsc.strand as ucsc_strand, ucsc.txstart as ucsc_txstart, 
+ucsc.txend as ucsc_txend,ucsc.cdsstart as ucsc_cdsstart, ucsc.cdsend as ucsc_cdsend, ucsc.proteinid as ucsc_proteinid, ucsc.alignid as ucsc_alignid
+FROM p7dev.illumina_test as vcf
+JOIN
+public_hg19.ucsc as ucsc
+ON vcf.chromosome = SUBSTR(ucsc.chrom,4)  
+WHERE vcf.filter = "PASS"
+AND vcf.qual > 100
+AND vcf.position BETWEEN ucsc.txstart AND ucsc.txend 
+```
+
+##Query to find variants not in ucsc annotated regions
+###Impala Results
+Results of can be used to locate intergenic variants; downstream analysis can be used to find the two flanking genes, and distances between the variants and the flanking genes.
+
+```sql
+SELECT vcf.* 
+FROM
+  p7dev.illumina_test as vcf
+  LEFT JOIN public_hg19.ucsc as ucsc
+    ON vcf.chromosome = SUBSTR(ucsc.chrom,4) 
+    AND vcf.position BETWEEN ucsc.txstart AND ucsc.txend
+WHERE
+  vcf.filter = "PASS" 
+  AND vcf.qual > 100
+  AND ucsc.chrom IS NULL
+```
+Random sample of rsID's included in this set are annoated in dbSNP as being located in unknown or intergenic regions. 
+
+###Comparison with R
+The results of this query were downloaded into R for analysis in R: 
+```{r load_intergenic_results}
+#read in results of intergenic query
+intergenics = read.csv("~/impala_scripts/queries/testing/ucsc/intergenic_query_result.csv", header=TRUE)
+
+#create big ugly unique id column for matching
+intergenics$id = paste(intergenics$sample_id, intergenics$chromosome, intergenics$position, intergenics$id, sep="_")
+
+#add big ugly id column to annotated gene results
+match.df$id = paste(match.df$sample_id, match.df$chrom, match.df$pos, match.df$rsId, sep="_")
+
+#test if any match id's show up in the intergenic query
+intergenics[which(match.df$id %in% intergenics$id),]
+
+##test if any annotated queries show up in the intergenic query
+match.df[which(intergenics$id %in% match.df$id),]
+
+```
+None of the intergenic hits show up in the annotated regions, and none of the annotated regions show up in the intergenic query. 

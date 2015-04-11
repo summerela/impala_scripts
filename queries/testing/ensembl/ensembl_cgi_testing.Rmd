@@ -1,0 +1,404 @@
+---
+title: "testing_cgi_ensmebl.rmd"
+output: html_document
+---
+###Purpose: 
+Testing ensembl gene annotation queries for cgi variants. 
+
+###Test plan
+The first 100,000 rows of  p7_ptb.comgen_variant and public_hg19.ensembl_genes were subset and saved on impala as p7dev.cgi_test and p7dev.ensembl_test. 
+
+After an initial check to make sure tables in R and impala are both 100,000 rows:
+  
+1. Run coding gene annotation query on impala and in R 
+2. Comapre count of total records returned  
+3. Compare number of unique zygosity entries  
+4. Compare number of unique variant types returned 
+5. Compare count of unique gene names reported   
+6. Compare counts of ensembl features returned
+7. Compare random sample of results between R, impala and bioconductor for hg19
+
+###Finding variants on impala
+The following query was run to count the number of anntoated genes returned: 
+  
+```sql 
+SELECT COUNT(*)
+FROM p7dev.cgi_test as vcf, p7dev.ensembl_test as ens
+WHERE vcf.allele1varquality = "VQHIGH"  
+AND vcf.totalreadcount > 30
+AND vcf.chromosome = ens.chromosome
+AND vcf.start >= ens.start 
+AND vcf.stop <= ens.stop 
+```
+82 rows were returned. 
+
+###Downloading variants into R
+The following query was run to return results for later comparison with R results: 
+```sql
+SELECT cgi.sample_id as cgi_sample_id, cgi.chromosome as cgi_chrom,
+cgi.start as cgi_start,cgi.stop as cgi_stop,
+cgi.reference as cgi_ref,cgi.zygosity as cgi_zygosity,cgi.allele1seq as cgi_alt1, 
+cgi.allele2seq as cgi_alt2, cgi.allele1varquality as cgi_alt1qual, cgi.vartype as cgi_vartype,cgi.allele2varquality as cgi_alt2qual, cgi.totalreadcount as cgi_readcount,
+ens.start as ensembl_start, ens.stop as ensembl_end, ens.feature, ens.gene_name as ensembl_gene_name, ens.gene_id as ensembl_geneid, ens.gene_biotype as ensembl_gene_biotype, 
+ens.transcript_name as ensembl_tx_name,ens.transcript_id as ensembl_trans_id, 
+ens.exon_id as ensembl_exonid, ens.strand as ensembl_strand
+FROM p7dev.cgi_test as cgi, p7dev.ensembl_test as ens
+WHERE cgi.allele1varquality = "VQHIGH"  
+AND cgi.totalreadcount > 30
+AND cgi.chromosome = ens.chromosome
+AND cgi.start >= ens.start 
+AND cgi.stop <= ens.stop
+```
+This file was then read into R to ensure validity of queries used for tesing: 
+  
+```{r read_results}
+#read in results table
+ens_results = read.csv("D:/Documents/GitHub/impala_scripts/queries/testing/ensembl/cgi_results.csv", header=TRUE)
+head(ens_results)
+```
+
+###Reading data into R for comparison
+
+The subset tables were read into R: 
+  
+```{r read_in_subset}
+suppressMessages(library(RODBC))
+
+#connect using the DSN name you created on your machine
+conn <- odbcConnect("Impala DSN")
+
+vcf = sqlFetch(conn, "p7dev.cgi_test")
+head(vcf)
+dim(vcf)
+ens = sqlFetch(conn, "p7dev.ensembl_test")
+head(ens)
+dim(ens)
+```
+
+The following was run in R to find overalps bewteen cgi variants and ensembl genes: 
+```{r count_features_R}
+suppressMessages(library(GenomicRanges))
+suppressMessages(library(IRanges))
+
+##subset for only vcf rows that have high quality alt1allele and read count > 30
+vcf_pass = vcf[which(vcf$allele1varquality == "VQHIGH" & vcf$totalreadcount > 30),]
+
+#create GRanges objects for comparison
+vars = with(vcf_pass, GRanges(seqnames=vcf_pass$chromosome, 
+                              ranges=IRanges(vcf_pass$start, vcf_pass$stop, 
+                              names=paste(vcf_pass$sample_id, ":",vcf_pass$reference, ">", vcf_pass$allele1seq, sep="")),zygosity=vcf_pass$zygosity, vartype=vcf_pass$vartype,
+                              read_count = vcf_pass$totalreadcount, 
+                              sample_id = vcf_pass$sample_id))
+
+genes = with(ens, GRanges(seqnames=ens$chromosome, 
+                          ranges=IRanges(ens$start, ens$stop,names=ens$gene_id),
+                          feature=ens$feature, trans_id=ens$transcript_id, gene_id=ens$gene_id, gene_name=ens$gene_name, trans_name=ens$transcript_name, exon=ens$exon_id))
+
+##find variants that fall in gene regions
+match = suppressWarnings(findOverlaps(vars, genes))
+
+##turn results into a data frame
+match.df = data.frame(sample_id = mcols(vars)$sample_id[queryHits(match)], 
+                      chrom = seqnames(vars)[queryHits(match)],
+                      start = as.data.frame(ranges(vars))$start[queryHits(match)], 
+                      end = as.data.frame(ranges(vars))$end[queryHits(match)],
+                      variant = as.character(lapply(strsplit(as.character(names(vars)[queryHits(match)]), ":"), function(x) x[2])), 
+                      vartype = as.character(mcols(vars)$vartype)[queryHits(match)],
+                      zygosity = as.character(mcols(vars)$zygosity)[queryHits(match)],
+                      read_count = as.character(mcols(vars)$read_count)[queryHits(match)],
+                      gene_name = mcols(genes)$gene_name[subjectHits(match)],
+                      gene_id = names(genes)[subjectHits(match)],
+                      trans_name = mcols(genes)$trans_name[subjectHits(match)],
+                      trans_id = mcols(genes)$trans_id[subjectHits(match)],
+                      exon_id = mcols(genes)$exon[subjectHits(match)],
+                      feature = mcols(genes)$feature[subjectHits(match)],
+                      stringsAsFactors=F)
+
+#82 rows, same as impala query                                  
+head(match.df)
+dim(match.df)   
+
+```
+
+###Compare Impala Results file and R generated results
+
+```{r compare_results}
+#add variant column to impala results
+ens_results$variant = paste(ens_results$cgi_ref, ">", ens_results$cgi_alt1, sep="")
+#coerce to same structure as match.df for comparison
+ens.df = ens_results[c(1:4,23,10,6,12,16,17,19,20,21,15)]
+colnames(ens.df) = colnames(match.df)
+
+#order both data frames for matching
+ens.df = ens.df[with(ens.df, order(sample_id, chrom, start, end, variant, gene_name, gene_id, trans_name, trans_id, exon_id, feature)),]
+match.df = match.df[with(match.df, order(sample_id, chrom, start, end, variant, gene_name, trans_name, trans_id, exon_id, feature)),]
+
+#coercing columns to same class for comparison
+i = sapply(ens.df, is.factor)
+ens.df[i] = lapply(ens.df[i], as.character)
+
+j = sapply(match.df, is.factor)
+match.df[j] = lapply(match.df[j], as.character)
+
+#removing rownames for matching
+rownames(match.df)= NULL
+rownames(ens.df) = NULL
+
+#compare data frames
+which(match.df != ens.df, arr.ind=TRUE)
+
+```
+
+No results returned means that the results are identical. 
+
+###Count zygosity
+This following query was run on impala to count number of entries in zygosity: 
+
+```sql
+SELECT COUNT(cgi.zygosity)
+FROM p7dev.cgi_test as cgi, p7dev.ensembl_test as ens
+WHERE cgi.allele1varquality = "VQHIGH"  
+AND cgi.totalreadcount > 30
+AND cgi.chromosome = ens.chromosome
+AND cgi.start >= ens.start 
+AND cgi.stop <= ens.stop
+GROUP BY cgi.zygosity
+```
+
+```{r zygosity_table, echo=FALSE}
+suppressMessages(library(knitr))
+kable(data.frame(zygosity = c("het-ref", "hom"), count=c("64", "18")), 
+      align="l", format="pandoc")
+
+```
+
+R on impala results: 
+  
+The following R query run on the downloaded impala results and generated the same zygosity counts as the imapala query.  
+
+```{r count_results_zygosity}
+table(ens_results$cgi_zygosity)
+
+```
+
+R results:  
+
+The R generated data was also consistent. 
+
+```{r count_R_zygosity}
+table(match.df$zygosity)
+
+```
+
+###Compare variant type counts
+This query was run on impala to count number of vartypes returned: 
+
+```sql
+SELECT COUNT(cgi.vartype)
+FROM p7dev.cgi_test as cgi, p7dev.ensembl_test as ens
+WHERE cgi.allele1varquality = "VQHIGH"  
+AND cgi.totalreadcount > 30
+AND cgi.chromosome = ens.chromosome
+AND cgi.start >= ens.start 
+AND cgi.stop <= ens.stop
+GROUP BY cgi.vartype
+```
+
+```{r vartype_table, echo=FALSE}
+kable(data.frame(variant_type = c("del", "ins", "snp"), count=c("2", "6", "74")), 
+      align="l", format="pandoc")
+```
+
+R on impala results:   
+  
+The impala results were also counted in R.   
+
+```{r count_results_vartype}
+table(ens_results$cgi_vartype)
+
+```
+
+R generated results: 
+
+Results from the R-generated data are consistent with the impala query:  
+
+```{r count_R_vartyp}
+table(match.df$vartype)
+
+```
+
+##Compare count of unique gene names returned
+This following query was run on impala to count the number of unique gene names returned: 
+
+```sql
+SELECT COUNT(ens.gene_name)
+FROM p7dev.cgi_test as cgi, p7dev.ensembl_test as ens
+WHERE cgi.allele1varquality = "VQHIGH"  
+AND cgi.totalreadcount > 30
+AND cgi.chromosome = ens.chromosome
+AND cgi.start >= ens.start 
+AND cgi.stop <= ens.stop
+GROUP BY ens.gene_name
+```
+
+```{r gene_table, echo=FALSE}
+kable(data.frame(gene_name = c("C10orf128", "CTNNA3", "FAM170B", "LRRC18", "RP11-298H24.1", "RP11-45P22.2", "RP11-523O18.5", "RP11-523O18.7", "RP11-534L6.3", "VSTM4", "WDFY4"), count=c("4", "13", "1", "4", "3", "1", "1", "1", "1","8", "45")), 
+      align="l", format="pandoc")
+```
+
+R on impala results:    
+  
+The impala results were also counted in R. 
+
+```{r count_results_genes}
+table(ens_results$ensembl_gene_name)
+
+```
+
+R results:   
+
+Results from the R-generated data are consistent with the impala query.   
+
+```{r count_R_genes}
+table(match.df$gene_name)
+
+```
+
+##Compare count of ensembl features returned
+This following query was run on impala to count number of unique gene names returned: 
+
+```sql
+SELECT COUNT(ens.feature)
+FROM p7dev.cgi_test as cgi, p7dev.ensembl_test as ens
+WHERE cgi.allele1varquality = "VQHIGH"  
+AND cgi.totalreadcount > 30
+AND cgi.chromosome = ens.chromosome
+AND cgi.start >= ens.start 
+AND cgi.stop <= ens.stop
+GROUP BY ens.feature
+```
+
+```{r feature_table, echo=FALSE}
+kable(data.frame(gene_name = c("CDS", "exon"), count=c("18", "64")), 
+      align="l", format="pandoc")
+```
+
+R on impala results:   
+  
+The impala results were also counted in R.   
+
+```{r count_results_features}
+table(ens_results$feature)
+
+```
+
+R results:   
+
+Results from the R-generated data are consistent with the impala query. 
+
+```{r count_R_features}
+table(match.df$feature)
+
+```
+
+###Compare random sample of genes returned
+First, we'll grab a random sample of genes from R and examine them on each platform: 
+```{r rand_genes}
+#rand_genes = sample(unique(match.df$gene_name), 5)
+#the above generated the following list, saving as fixed ("RP11-523O18.7","RP11-298H24.1", "WDFY4","VSTM4", "LRRC18")
+rand_genes = c("RP11-523O18.7","RP11-298H24.1", "WDFY4","VSTM4", "LRRC18")
+```
+
+How many rows are returned for these genes in R?   
+```{r count_rand_genes}
+
+rand_match = match.df[(match.df$gene_name %in% rand_genes),]
+dim(rand_match)
+head(rand_match)
+
+```
+
+How many of these genes are in impala results? 
+
+```{r count_rand_impala_results}
+
+match_imp_results = ens.df[(ens.df$gene_name %in% rand_genes),]
+dim(match_imp_results)
+head(match_imp_results)
+
+##are the gene also the same in the imapla results?
+which(rand_match != match_imp_results, arr.ind=TRUE)
+#returns 0 mismatches
+```
+
+61 results are returned on impala: 
+
+```sql
+SELECT COUNT(*)
+FROM p7dev.cgi_test as cgi, p7dev.ensembl_test as ens
+WHERE cgi.allele1varquality = "VQHIGH"  
+AND cgi.totalreadcount > 30
+AND cgi.chromosome = ens.chromosome
+AND cgi.start >= ens.start 
+AND cgi.stop <= ens.stop
+AND ens.gene_name IN ("RP11-523O18.7","RP11-298H24.1", "WDFY4","VSTM4", "LRRC18")
+```
+
+##Query to locate intergenic variants
+Results of this query can be used to locate intergenic variants; downstream analysis can be used to find the two flanking genes, and distances between the variants and the flanking genes.
+
+The following query returned 56480 rows and the results were downloaded for analysis in R: 
+
+```sql
+SELECT cgi.* 
+FROM
+p7dev.cgi_test as cgi
+LEFT JOIN p7dev.ensembl_test as ens
+ON cgi.chromosome = ens.chromosome
+AND cgi.start >= ens.start 
+AND cgi.stop <= ens.stop
+WHERE cgi.allele1varquality = "VQHIGH"  
+AND cgi.totalreadcount > 30
+AND ens.chromosome IS NULL
+```
+Each of the randomly selected variants was compared with R's annoatation database for hg19 using bioconductor: 
+
+```{r check_intergenic}
+#load results from impala
+intergenic_csv = read.csv("D:/Documents/GitHub/impala_scripts/queries/testing/ensembl/intergenic_cgi.csv", header=TRUE)
+head(intergenic_csv)
+
+#pull random sample and assign to variable
+rand_intergenic = intergenic_csv[sample(unique(c(intergenic_csv$sample_id)), 5),]
+rand_intergenic
+
+suppressMessages(library(VariantAnnotation))
+suppressMessages(library(AnnotationHub))
+suppressMessages(library(TxDb.Hsapiens.UCSC.hg19.knownGene))
+
+#load referenece genome from ucsc knowngene db
+txdb_hg19 <- TxDb.Hsapiens.UCSC.hg19.knownGene
+
+
+#create granges object from random sample of intergenics
+not_genes = with(rand_intergenic, GRanges(seqnames=chromosome, 
+                              ranges=IRanges(start, stop, 
+                              names=paste(sample_id, ":",reference, ">", allele1seq, sep="")),zygosity=zygosity, vartype=vartype,
+                              read_count = totalreadcount, 
+                              sample_id = sample_id))
+#chr names don't match
+head(seqlevels(txdb_hg19))
+seqlevels(not_genes)
+#matching chr names
+seqlevels(not_genes) <- paste0("chr", seqlevels(not_genes))
+not_genes
+
+#assign genome
+genome(not_genes) = "hg19"
+
+#confirm that random sample is intergenic
+locateVariants(not_genes, txdb_hg19, AllVariants())
+
+```
+
+
