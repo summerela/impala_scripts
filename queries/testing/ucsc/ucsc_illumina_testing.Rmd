@@ -29,15 +29,22 @@ WHERE vcf.filter = "PASS"
 AND vcf.chromosome = SUBSTR(ucsc.chrom,4) 
 AND vcf.position BETWEEN ucsc.txstart AND ucsc.txend  
 ```
-115769 rows were returned. 
+115,769 rows were returned. 
 
 ###Downloading variants into R
 The following query was run to return results to download for later comparison with R results. Substring was used to account for different format in chromosome name (and this was added to the Needs_Fixed tab of the vcf_info spreadshet.)
 
 ```sql
-SELECT vcf.sample_id as vcf_sample_id, vcf.chromosome as vcf_chrom, vcf.position as vcf_pos,vcf.ref as vcf_ref, vcf.alt as vcf_alt, 
-vcf.id as vcf_rsID, ucsc.name as ucsc_id, SUBSTR(ucsc.chrom,4) as ucsc_chrom, ucsc.strand as ucsc_strand, ucsc.txstart as ucsc_txstart, 
-ucsc.txend as ucsc_txend,ucsc.cdsstart as ucsc_cdsstart, ucsc.cdsend as ucsc_cdsend, ucsc.proteinid as ucsc_proteinid, ucsc.alignid as ucsc_alignid
+SELECT vcf.sample_id as vcf_sample_id, vcf.chromosome as vcf_chrom, vcf.position as vcf_pos,vcf.ref as vcf_ref, vcf.alt as vcf_alt, vcf.id as vcf_rsID, ucsc.name as ucsc_id, 
+SUBSTR(ucsc.chrom,4) as ucsc_chrom, ucsc.strand as ucsc_strand, ucsc.txstart as ucsc_txstart, 
+ucsc.txend as ucsc_txend,ucsc.cdsstart as ucsc_cdsstart, ucsc.cdsend as ucsc_cdsend, 
+ucsc.proteinid as ucsc_proteinid, ucsc.alignid as ucsc_alignid,
+CASE 
+WHEN vcf.position BETWEEN ucsc.cdsstart AND ucsc.cdsend 
+THEN 'CDS' 
+WHEN vcf.position BETWEEN ucsc.txstart AND ucsc.txend
+THEN 'transcript'
+             END AS ucsc_feature
 FROM p7dev.illumina_test as vcf, public_hg19.ucsc as ucsc
 WHERE vcf.filter = "PASS"  
 AND vcf.chromosome = SUBSTR(ucsc.chrom,4) 
@@ -47,7 +54,7 @@ This file was then read into R to ensure validity of queries used for tesing:
 
 ```{r read_results}
 #read in results table
-ucsc_results = read.csv("~//impala_scripts/queries/testing/ucsc/ucsc_query_result.csv", header=TRUE)
+ucsc_results = read.csv("~/impala_scripts/queries/testing/ucsc/ucsc_query_result.csv", header=TRUE)
 head(ucsc_results)
 dim(ucsc_results)
 ```
