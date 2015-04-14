@@ -222,7 +222,7 @@ WHERE
 ```
 
 ###Examining random sample of intergenic variants
-A random sample of intergenic variants was compared annoated in R using the bioconductor hg19 database: 
+A random sample of intergenic variants was compared with variants annotated in R using the bioconductor hg19 ensembl database: 
 
 
 ```{r load_intergenic}
