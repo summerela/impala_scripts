@@ -1,0 +1,149 @@
+---
+title: "clinvar_compare_df"
+author: "Summer Elasady"
+date: "Friday, April 24, 2015"
+output: pdf_document
+---
+##Comparing impala and Brady's results by data frame
+To compare every record of Brady's clinvar results with the results of the impala query, two matching data frames were created for comparison across all values. 
+
+```{r create_df}
+
+library(readr)
+
+##read in brady and impala query results
+brady = read_tsv("~/GitHub/impala_scripts/queries/testing/clinvar/brady_clinvar.txt")
+impala = read_csv("~/GitHub/impala_scripts/queries/testing/clinvar/impala_query_results.csv")
+
+##make data frames with matching variables
+brady.df = data.frame(chr = gsub("chr", "", lapply(strsplit(as.character(brady$position), ":"), function(x) x[1])),
+                      pos = unlist(lapply(strsplit(as.character(brady$position), ":"), function(x) x[2])),
+                      ref = unlist(lapply(strsplit(as.character(brady$dna_change), "->"), function(x) x[1])),
+                      alt = unlist(lapply(strsplit(as.character(brady$dna_change), "->"), function(x) x[2])),
+                      zygosity = gsub("homozygous", "hom", brady$zygosity),
+                      gene = unlist(lapply(strsplit(brady$gene_definition, ':'), function(x) x[1])),
+                      sample_id = gsub(".*:","",brady$identifier_or_consent), 
+                      clin_sig = brady$clinvar_pathogenicity)
+
+impala.df = data.frame(chr = as.character(impala$chr), 
+                       pos = as.character(impala$start),
+                       ref = impala$ref,
+                       alt = impala$allele1seq,
+                       zygosity = impala$zygosity,
+                       gene = unlist(lapply(strsplit(impala$clin_geneinfo, ':'), function(x) x[1])),
+                       sample_id = impala$sample_id,
+                       clin_sig = as.character(impala$clin_sigid))
+
+##coerce all values to character for matching
+#coercing columns to same class for comparison
+i = sapply(brady.df, is.factor)
+brady.df[i] = lapply(brady.df[i], as.character)
+
+j = sapply(impala.df, is.factor)
+impala.df[j] = lapply(impala.df[j], as.character)
+
+##order data frames by sample id, chr, pos for matching
+#order both data frames for matching
+brady.df = brady.df[with(brady.df, order(sample_id, chr, pos)),]
+impala.df = impala.df[with(impala.df, order(sample_id, chr, pos)),]
+
+##subest brady's results to match with impala query
+pathogenic = c("4", "5")
+not_pathogenic = c("2", "3")
+brady_filter = brady.df[which(brady.df$chr == "8" & brady.df$zygosity == "hom"
+                          &  grep(paste(pathogenic,collapse="|"), brady.df$clin_sig) &
+                            grep(paste(not_pathogenic,collapse="|"), brady.df$clin_sig, invert=TRUE)),]
+
+##clear rownames for matching
+rownames(impala.df) = NULL
+rownames(brady_filter) = NULL
+
+##since the impala set does not include piping, and all the pipes from Brady's results are "5|5" gsub with "5" for matching
+##yes I realize this is a bit of cheating
+brady_filter$clin_sig = as.character("5")
+```
+
+Once data frames were created from each result with matching column names and class type structures, dplyr was be used to search for any differences in the data frames. All rows not returned in the final output mean that the entries are identical. 
+
+```{r compare}
+
+require(dplyr)
+#records in impala not in brady's results
+not_in_brady = unique(anti_join(impala.df,brady_filter))
+dim(not_in_brady)
+not_in_brady
+
+##records in brady's results but not in impala
+not_in_impala = unique(anti_join(brady_filter,impala.df))
+dim(not_in_impala)
+not_in_impala
+```
+
+These results are identical with the previous analysis. 
+
+##How do these results compare to similar results between data sets?   
+To answer the question of how the results compare across data sets, results similar to each of the differences were extracted from each data set. 
+
+###Results not found in Brady's set
+
+####Sample 101-180-M and all results for CRH:   
+
+```{r brady_search}
+
+##Sample ID 
+brady_filter[which(brady_filter$sample_id == "101-180-M"),] 
+impala.df[which(impala.df$sample_id == "101-180-M"),]
+brady.df[which(brady.df$sample_id == "101-180-M"),]
+```
+
+This sample ID only has a result on chromosome 9 in Brady's set. Let's see if there are any results for the CRH gene: 
+
+```{r find_crh}
+
+##Gene
+brady_filter[which(brady_filter$gene == "CRH"),] #not in filtered set
+brady.df[which(brady.df$gene == "CRH"),]
+```
+
+The CRH gene does not appear in Brady's results. Let's look for anything that might be in that gene region. 
+
+```{r crh_region}
+
+##Region
+brady_filter[which(brady_filter$chr == "8" & brady_filter$pos =="67091182" ),] #not in filtered set
+brady.df[which(brady.df$chr == "8" & (brady.df$pos >= "67091000" & brady.df$pos <= "67091300")),] #nothing in this range
+
+```
+
+Nothing from Brady's results set falls in this region. 
+
+####Sample 101-506-M and all results with CYP11B2
+
+Let's look at hits for sample ID 101-506-M
+
+```{r brady_search_101506M}
+
+##Sample ID 
+brady_filter[which(brady_filter$sample_id == "101-506-M"),] #not in filtered set
+impala.df[which(impala.df$sample_id == "101-506-M"),]
+brady.df[which(brady.df$sample_id == "101-506-M"),]
+##sample ID not in Brady's results
+```
+
+This sample ID does not appear in Brady's results. Let's look for the CYP11B2 gene: 
+
+```{r cpy11b2_gene}
+##Gene
+brady_filter[which(brady_filter$gene == "CYP11B2"),] 
+brady.df[which(brady.df$gene == "CYP11B2"),]
+##this gene is in Brady's results with matching coords, but that sample is not included
+```
+
+This gene appears in Brady's results, but since that sample ID is missing, this hit is not a match. Let's check for anything in that region: 
+
+```{r cpy11b2_region}
+##Region
+brady_filter[which(brady_filter$chr == "8" & brady_filter$pos =="143994266" ),] 
+brady.df[which(brady.df$chr == "8" & (brady.df$pos >= "143994100" & brady.df$pos <= "143994300")),] #nothing in this range
+```
+This gene is the only one that hits in this region. 
