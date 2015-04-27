@@ -10,106 +10,112 @@ The following query can be used to determine what gene regions a variant lies in
 
 Update or remove the following variables, as needed:  
 - ill.filter: filter out variants that did not pass filtering by the variant caller  
-- ill.qual: filter out variants below a certain quality score  
+- ill.qual: filter out variants below a certain quality score, add "AND ill.qual > 100"
 - ucsc.strand: Find only matches on the forwad strand, remove for both, or "-" for reverse
-
+- ucsc.name: enter each gene of interest as a list, with each gene in quotes, comma-separated 
 
 ```sql
-SELECT ill.sample_id as ill_sample_id, ill.chromosome as ill_chrom, 
-ill.position as ill_pos,ill.ref as ill_ref, ill.alt as ill_alt, ill.id as ill_rsID, 
-ucsc.name as ucsc_id, SUBSTR(ucsc.chrom,4) as ucsc_chrom, ucsc.strand as ucsc_strand, 
-ucsc.txstart as ucsc_txstart, ucsc.txend as ucsc_txend, ucsc.cdsstart as ucsc_cdsstart, 
-ucsc.cdsend as ucsc_cdsend, ucsc.exonstarts as ucsc_exonstart, ucsc.exonends as ucsc_exonend, 
-ucsc.proteinid as ucsc_proteinid, ucsc.alignid as ucsc_alignid
-FROM p7dev.illumina_test as ill, public_hg19.ucsc as ucsc
-WHERE ill.filter = "PASS"  
+SELECT ill.sample_id, ill.chr, ill.pos, ill.ref, ill.alt, ill.id as ill_rsID, 
+ucsc.name as ucsc_geneid, ucsc.strand as ucsc_strand, ucsc.txstart as ucsc_txstart, 
+ucsc.txend as ucsc_txend, ucsc.cdsstart as ucsc_cdsstart, ucsc.cdsend as ucsc_cdsend, 
+ucsc.exonstart as ucsc_exonstart, ucsc.exonend as ucsc_exonend, 
+ucsc.proteinid as ucsc_proteinid,
+CASE 
+WHEN ill.pos BETWEEN ucsc.cdsstart AND ucsc.cdsend and ill.pos NOT BETWEEN ucsc.exonstart and ucsc.exonend
+THEN 'cds' 
+WHEN ill.pos BETWEEN ucsc.txstart AND ucsc.txend
+THEN 'transcript'
+WHEN ill.pos BETWEEN ucsc.exonstart AND ucsc.exonend
+THEN 'exon'
+ELSE NULL
+END AS ucsc_feature
+FROM p7_ptb.illumina_variant as ill, public_hg19.ucsc_knowngene as ucsc
+WHERE ill.filter = "PASS" 
 AND ucsc.strand = "+"
-AND ill.chromosome = SUBSTR(ucsc.chrom,4) 
-AND ill.position BETWEEN ucsc.txstart AND ucsc.txend  
+AND ill.chr = ucsc.chr
+AND ill.pos BETWEEN ucsc.txstart AND ucsc.txend  
+LIMIT 5
 ```
 
 ##Find specific genes in the ucsc gene subset created above
 Update or remove the following variables, as needed:  
 - ill.filter: filter out variants that did not pass filtering by the variant caller  
-- ill.qual: filter out variants below a certain quality score  
+- ill.qual: filter out variants below a certain quality score, add "AND ill.qual > 100"
 - ucsc.strand: Find only matches on the forwad strand, remove for both, or "-" for reverse
 - ucsc.name: enter each gene of interest as a list, with each gene in quotes, comma-separated  
 
 ```sql
-SELECT ill.sample_id as ill_sample_id, ill.chromosome as ill_chrom, 
-ill.position as ill_pos,ill.ref as ill_ref, ill.alt as ill_alt, ill.id as ill_rsID, 
-ucsc.name as ucsc_id, SUBSTR(ucsc.chrom,4) as ucsc_chrom, ucsc.strand as ucsc_strand, 
-ucsc.txstart as ucsc_txstart, ucsc.txend as ucsc_txend, ucsc.cdsstart as ucsc_cdsstart, 
-ucsc.cdsend as ucsc_cdsend, ucsc.exonstarts as ucsc_exonstart, ucsc.exonends as ucsc_exonend, 
-ucsc.proteinid as ucsc_proteinid, ucsc.alignid as ucsc_alignid
-FROM p7dev.illumina_test as ill, public_hg19.ucsc as ucsc
-WHERE ill.filter = "PASS"  
+SELECT DISTINCT ill.sample_id, ill.chr, ill.pos, ill.ref, ill.alt, ill.id as ill_rsID, 
+ucsc.name as ucsc_geneid, ucsc.strand as ucsc_strand, ucsc.txstart as ucsc_txstart, 
+ucsc.txend as ucsc_txend, ucsc.cdsstart as ucsc_cdsstart, ucsc.cdsend as ucsc_cdsend, 
+ucsc.exonstarts as ucsc_exonstart, ucsc.exonends as ucsc_exonend, 
+ucsc.proteinid as ucsc_proteinid,
+CASE 
+WHEN ill.pos BETWEEN ucsc.cdsstart AND ucsc.cdsend 
+THEN 'CDS' 
+WHEN ill.pos BETWEEN ucsc.txstart AND ucsc.txend
+THEN 'transcript'
+ELSE NULL
+END AS ucsc_feature
+FROM p7_ptb.illumina_variant as ill, public_hg19.ucsc_knowngene as ucsc
+WHERE ill.filter = "PASS" 
 AND ucsc.strand = "+"
-AND ill.chromosome = SUBSTR(ucsc.chrom,4) 
-AND ill.position BETWEEN ucsc.txstart AND ucsc.txend  
-AND ucsc.name IN ("uc009xhs.1", "uc010qcb.1", "uc001ioc.1", "uc001ioc.1", "uc010qcb.1")
+AND ill.chr = ucsc.chr 
+AND ill.pos BETWEEN ucsc.txstart AND ucsc.txend  
+AND ucsc.name IN ("uc010mtc.3", "uc004bbc.3", "uc011lvi.2", "uc004bbb.3", "uc010mtc.3")
 ```
+
+**NOTE: If you don't have a long list of gene names, it might be faster to use: 
+AND (ucsc.name = "uc009xhs.1" OR ucsc.name = "uc010qcb.1" OR ucsc.name = "uc001ioc.1")
 
 ##Find a specific gene in the ucsc gene subset 
 Update or remove the following variables, as needed:  
 - ill.filter: filter out variants that did not pass filtering by the variant caller  
-- ill.qual: filter out variants below a certain quality score  
+- ill.qual: filter out variants below a certain quality score, add "AND ill.qual > 100"
 - ucsc.strand: Find only matches on the forwad strand, remove for both, or "-" for reverse
-- ucsc.name: Enter gene of interest, surrounded by quotes
+- ucsc.name: enter each gene of interest as a list, with each gene in quotes, comma-separated 
 
 ```sql
-SELECT ill.sample_id as ill_sample_id, ill.chromosome as ill_chrom, 
-ill.position as ill_pos,ill.ref as ill_ref, ill.alt as ill_alt, ill.id as ill_rsID, 
-ucsc.name as ucsc_id, SUBSTR(ucsc.chrom,4) as ucsc_chrom, ucsc.strand as ucsc_strand, 
-ucsc.txstart as ucsc_txstart, ucsc.txend as ucsc_txend, ucsc.cdsstart as ucsc_cdsstart, 
-ucsc.cdsend as ucsc_cdsend, ucsc.exonstarts as ucsc_exonstart, ucsc.exonends as ucsc_exonend, 
-ucsc.proteinid as ucsc_proteinid, ucsc.alignid as ucsc_alignid,
+SELECT DISTINCT ill.sample_id, ill.chr, ill.pos, ill.ref, ill.alt, ill.id as ill_rsID, 
+ucsc.name as ucsc_geneid, ucsc.strand as ucsc_strand, ucsc.txstart as ucsc_txstart, 
+ucsc.txend as ucsc_txend, ucsc.cdsstart as ucsc_cdsstart, ucsc.cdsend as ucsc_cdsend, 
+ucsc.exonstarts as ucsc_exonstart, ucsc.exonends as ucsc_exonend, 
+ucsc.proteinid as ucsc_proteinid,
 CASE 
-WHEN ill.position BETWEEN ucsc.cdsstart AND ucsc.cdsend 
+WHEN ill.pos BETWEEN ucsc.cdsstart AND ucsc.cdsend 
 THEN 'CDS' 
-WHEN ill.position BETWEEN ucsc.txstart AND ucsc.txend
+WHEN ill.pos BETWEEN ucsc.txstart AND ucsc.txend
 THEN 'transcript'
 ELSE NULL
-             END AS ucsc_feature
-FROM p7dev.illumina_test as ill, public_hg19.ucsc as ucsc
-WHERE ill.filter = "PASS"  
+END AS ucsc_feature
+FROM p7_ptb.illumina_variant as ill, public_hg19.ucsc_knowngene as ucsc
+WHERE ill.filter = "PASS" 
 AND ucsc.strand = "+"
-AND ill.chromosome = SUBSTR(ucsc.chrom,4) 
-AND ill.position BETWEEN ucsc.txstart AND ucsc.txend  
-AND ucsc.name = ("uc009xhs.1")
+AND ill.chr = ucsc.chr
+AND ill.pos BETWEEN ucsc.txstart AND ucsc.txend  
+AND ucsc.name = "uc010mtc.3"
 ```
 ##Find variants in located in coding regions
 Use this query to find all variants located in a region annotated by ucsc as coding. 
 
 Update or remove the following variables, as needed:  
 - ill.filter: filter out variants that did not pass filtering by the variant caller  
-- ill.qual: filter out variants below a certain quality score  
+- ill.qual: filter out variants below a certain quality score, add "AND ill.qual > 100""
 - ucsc.strand: Find only matches on the forwad strand, remove for both, or "-" for reverse
-- ucsc_table.ucsc_feature: enter either "CDS" or "transcript" surrounded by quotes
+- ucsc.name: enter each gene of interest as a list, with each gene in quotes, comma-separated 
+- change the last line to cdsstart/cdsend, exonstart/exonend,txstart/txend depending on what feature you want to return
 
 ```sql
-WITH ucsc_table AS (
-SELECT ill.sample_id as ill_sample_id, ill.chromosome as ill_chrom, 
-ill.position as ill_pos,ill.ref as ill_ref, ill.alt as ill_alt, ill.id as ill_rsID, 
-ucsc.name as ucsc_id, SUBSTR(ucsc.chrom,4) as ucsc_chrom, ucsc.strand as ucsc_strand, 
-ucsc.txstart as ucsc_txstart, ucsc.txend as ucsc_txend, ucsc.cdsstart as ucsc_cdsstart, 
-ucsc.cdsend as ucsc_cdsend, ucsc.exonstarts as ucsc_exonstart, ucsc.exonends as ucsc_exonend, 
-ucsc.proteinid as ucsc_proteinid, ucsc.alignid as ucsc_alignid,
-CASE 
-WHEN ill.position BETWEEN ucsc.cdsstart AND ucsc.cdsend 
-THEN 'CDS' 
-WHEN ill.position BETWEEN ucsc.txstart AND ucsc.txend
-THEN 'transcript'
-ELSE NULL
-             END AS ucsc_feature
-FROM p7dev.illumina_test as ill, public_hg19.ucsc as ucsc
-WHERE ill.filter = "PASS"  
+SELECT DISTINCT ill.sample_id, ill.chr, ill.pos, ill.ref, ill.alt, ill.id as ill_rsID, 
+ucsc.name as ucsc_geneid, ucsc.strand as ucsc_strand, ucsc.txstart as ucsc_txstart, 
+ucsc.txend as ucsc_txend, ucsc.cdsstart as ucsc_cdsstart, ucsc.cdsend as ucsc_cdsend, 
+ucsc.exonstart as ucsc_exonstart, ucsc.exonend as ucsc_exonend, 
+ucsc.proteinid as ucsc_proteinid
+FROM p7_ptb.illumina_variant as ill, public_hg19.ucsc_knowngene as ucsc
+WHERE ill.filter = "PASS" 
 AND ucsc.strand = "+"
-AND ill.chromosome = SUBSTR(ucsc.chrom,4) 
-AND ill.position BETWEEN ucsc.txstart AND ucsc.txend 
-  )
-  SELECT * FROM ucsc_table
-  WHERE ucsc_table.ucsc_feature = "CDS"
+AND ill.chr = ucsc.chr
+AND ill.pos BETWEEN ucsc.cdsstart AND ucsc.cdsend 
 ```
 
 ##Find variant located in eiher one feature or another
@@ -122,28 +128,16 @@ Update or remove the following variables, as needed:
 - ucsc_table.ucsc_feature: enter either "CDS" or "transcript" surrounded by quotes
 
 ```sql
-WITH ucsc_table AS (
-SELECT ill.sample_id as ill_sample_id, ill.chromosome as ill_chrom, 
-ill.position as ill_pos,ill.ref as ill_ref, ill.alt as ill_alt, ill.id as ill_rsID, 
-ucsc.name as ucsc_id, SUBSTR(ucsc.chrom,4) as ucsc_chrom, ucsc.strand as ucsc_strand, 
-ucsc.txstart as ucsc_txstart, ucsc.txend as ucsc_txend, ucsc.cdsstart as ucsc_cdsstart, 
-ucsc.cdsend as ucsc_cdsend, ucsc.exonstarts as ucsc_exonstart, ucsc.exonends as ucsc_exonend, 
-ucsc.proteinid as ucsc_proteinid, ucsc.alignid as ucsc_alignid,
-CASE 
-WHEN ill.position BETWEEN ucsc.cdsstart AND ucsc.cdsend 
-THEN 'CDS' 
-WHEN ill.position BETWEEN ucsc.txstart AND ucsc.txend
-THEN 'transcript'
-ELSE NULL
-             END AS ucsc_feature
-FROM p7dev.illumina_test as ill, public_hg19.ucsc as ucsc
-WHERE ill.filter = "PASS"  
+SELECT DISTINCT ill.sample_id, ill.chr, ill.pos, ill.ref, ill.alt, ill.id as ill_rsID, 
+ucsc.name as ucsc_geneid, ucsc.strand as ucsc_strand, ucsc.txstart as ucsc_txstart, 
+ucsc.txend as ucsc_txend, ucsc.cdsstart as ucsc_cdsstart, ucsc.cdsend as ucsc_cdsend, 
+ucsc.exonstart as ucsc_exonstart, ucsc.exonend as ucsc_exonend, 
+ucsc.proteinid as ucsc_proteinid
+FROM p7_ptb.illumina_variant as ill, public_hg19.ucsc_knowngene as ucsc
+WHERE ill.filter = "PASS" 
 AND ucsc.strand = "+"
-AND ill.chromosome = SUBSTR(ucsc.chrom,4) 
-AND ill.position BETWEEN ucsc.txstart AND ucsc.txend 
-  )
-  SELECT * FROM ucsc_table
-  WHERE (ucsc_table.ucsc_feature= "CDS" or ucsc_table.ucsc_feature = "transcript")
+AND ill.chr =ucsc.chr
+WHERE (ill.pos BETWEEN ucsc.cdsstart AND ucsc.cdsend) or (ill.pos BETWEEN ucsc.txstart AND ucsc.txsend)
 ```
 
 ##Find variants that are not located in ucsc gene regions
