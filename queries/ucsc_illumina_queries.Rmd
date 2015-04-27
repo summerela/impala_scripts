@@ -21,9 +21,11 @@ ucsc.txend as ucsc_txend, ucsc.cdsstart as ucsc_cdsstart, ucsc.cdsend as ucsc_cd
 ucsc.exonstart as ucsc_exonstart, ucsc.exonend as ucsc_exonend, 
 ucsc.proteinid as ucsc_proteinid,
 CASE 
-WHEN ill.pos BETWEEN ucsc.cdsstart AND ucsc.cdsend and ill.pos NOT BETWEEN ucsc.exonstart and ucsc.exonend
+WHEN ill.pos BETWEEN ucsc.cdsstart AND ucsc.cdsend 
 THEN 'cds' 
-WHEN ill.pos BETWEEN ucsc.txstart AND ucsc.txend
+WHEN ill.pos BETWEEN ucsc.txstart AND ucsc.txend 
+AND ill.pos NOT BETWEEN ucsc.cdsstart AND ucsc.cdsend
+AND ill.pos NOT BETWEEN ucsc.exonstart AND ucsc.exonend
 THEN 'transcript'
 WHEN ill.pos BETWEEN ucsc.exonstart AND ucsc.exonend
 THEN 'exon'
@@ -34,7 +36,6 @@ WHERE ill.filter = "PASS"
 AND ucsc.strand = "+"
 AND ill.chr = ucsc.chr
 AND ill.pos BETWEEN ucsc.txstart AND ucsc.txend  
-LIMIT 5
 ```
 
 ##Find specific genes in the ucsc gene subset created above
