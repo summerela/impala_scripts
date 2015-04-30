@@ -96,7 +96,7 @@ AND ill.chr = ucsc.chr
 AND ill.pos BETWEEN ucsc.txstart AND ucsc.txend  
 AND ucsc.name = "uc010mtc.3"
 ```
-##Find variants in located in coding regions
+##Find variants in located in feature regions
 Use this query to find all variants located in a region annotated by ucsc as coding. 
 
 Update or remove the following variables, as needed:  
