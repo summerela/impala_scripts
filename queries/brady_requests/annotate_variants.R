@@ -33,7 +33,7 @@ annotate_vars  = function(variant_df, gene_list){
   #load ensembl data from biomart
   ensembl = makeTxDbFromBiomart(biomart="ENSEMBL_MART_ENSEMBL", host="grch37.ensembl.org")
   #create granges object from subset
-  variant_ranges = with(variant_df, GRanges(seqnames=chrom, 
+  variant_ranges = with(variant_df, GRanges(seqnames=chr, 
                                         ranges=IRanges(pos, width=1, 
                                         names=paste(sample_id, ":",ref, ">", alt, sep="")),
                                         sample_id = sample_id,
@@ -50,7 +50,7 @@ annotate_vars  = function(variant_df, gene_list){
   #data frame results
   loc.df = as.data.frame(loc, row.names= seq(1:length(loc)))
   #merge results with variant subset
-  annots.df = merge(loc.df, variant_df, by.x=c("seqnames", "start"), by.y=c("chrom", "pos"))
+  annots.df = merge(loc.df, variant_df, by.x=c("seqnames", "start"), by.y=c("chr", "pos"))
   #filter out intergenic regions
   annots.df = annots.df[(annots.df$LOCATION != "intergenic"),]
   #map ensembl geneid to gene name
