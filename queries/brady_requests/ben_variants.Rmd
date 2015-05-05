@@ -101,38 +101,52 @@ het_nb = nb[which(nb$gt == "0/1"),]
 comp_mom = mom[which(mom$gt == "0/1" | mom$gt == "1/1"),]
 comp_dad = dad[which(dad$gt == "0/1" | dad$gt == "1/1"),]
 
-#merge het newborn with mom
-comp_het_nb_mom = merge(het_nb, comp_mom, by=c("gene_name", "chr"))
+#split nb variants into separate df for each gene
+nb_gene = split(het_nb, het_nb$gene_name)
+#name each df with gene name 
+names(nb_gene) = paste(names(nb_gene), ".df", sep="")
+#add df to env for downstream access
+list2env(nb_gene, envir = .GlobalEnv)
 
-#get rid of unnecessary columns
-comp_het_nb_mom = comp_het_nb_mom[,c(1,2,9:12,5,4,6:7,15,17,18)]
-
-#merge results with dad
-comp_hets = merge(comp_het_nb_mom, comp_dad, by=c("gene_name", "chr"))
-#get rid of unnecessary columns
-comp_het = comp_hets[,c(1:13,15,17,18)]
-colnames(comp_het) = c("gene_name", "chr", "qual", "filter", "kav_freqPct", "kav_count", "nb_rsID", "nb_pos", "nb_ref", "nb_alt", "m_pos", "m_ref", "m_alt", "f_pos", "f_ref", "f_alt")
-
-#group by gene
-library(dplyr)
-by_gene = group_by(comp_het, as.factor(comp_het$gene_name))
-
-head(comp_het, 2)
-
-#pull out list of genes returned
-gene_list = as.character(unique(comp_het$gene_name))
+#list of data frames
+ACAA1.df
+ACAA2 #only one variant, not a candidate for comp.het
+ECHS1 #only one variant, not a candidate for comp.het
+EHHADH #only one variant, not a candidate for comp.het
+HADHB  #only one variant, not a candidate for comp.het
+HSD17B1
+HSD17B11 
+HSD17B12
+HSD17B13 
+HSD17B3
+HSD17B4  
+HSD17B7
+HSD17B7P1
+HSD17B7P2
 
 
 
-group by gene name (for each gene)
-if more than one nb_pos
-and one of them = mom alt pos and mom alt
-and one of them = dad alt pos and dad alt
-then compound het
+find_comp_hets = function(df){
+  #check for more than one variant/pos per gene
+  if ( (dim(df)[1] > 1 ) & (length(unique(as.numeric(df$pos)))>1) ) {
+    cat(paste("Checking ", df, "for compound heterozygosity.", sep=" "))
+    
+  }else
+    cat(paste("Less than one variant/position found in", df, sep=" ")) 
+}
 
-YearlyResults <- tapply(LottiaData,LottiaData$Year,glm(Count~zone,family=poisson))
+test = as.list(names(nb_gene))
 
-pairs = tapply(comp_het, comp_het$gene_name, )
+lapply(test, function(x) find_comp_hets(x))
+
+#automate and add check for matching alt alleles
+het_mom[which(het_mom$chr == "3" & het_mom$pos == "38144875"),]
+
+#check for variant in father
+het_dad[which(het_dad$chr == "3"& het_dad$pos == "38173733"),]
+
+
+
 
 
 
