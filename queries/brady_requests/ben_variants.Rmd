@@ -35,14 +35,13 @@ LEFT JOIN public_hg19.kaviar k
 ```
 
 #Analysis 
-Assumption that genes do not span multiple chromosomes. 
+
 
 ```{r}
 library(readr)
-library(sqldf)
 
 #read in query results
-query = read_csv("~/impala_scripts/queries/brady_requests/ben_query.csv")
+query = read_csv("~/impala_queries/queries/brady_requests/ben_query.csv")
 
 #split apart data frame by member
 mom = query[which(query$member == "M"),]
@@ -112,11 +111,30 @@ comp_het_nb_mom = comp_het_nb_mom[,c(1,2,9:12,5,4,6:7,15,17,18)]
 comp_hets = merge(comp_het_nb_mom, comp_dad, by=c("gene_name", "chr"))
 #get rid of unnecessary columns
 comp_het = comp_hets[,c(1:13,15,17,18)]
-colnames(comp_het) = c("gene_name", "chr", "qual", "filter", "kav_freqPct", "kav_count", "nb_rsID", "nb_pos", "nb_ref", 
-                       "nb_alt", "m_pos", "m_ref", "m_alt", "f_pos", "f_ref", "f_alt")
+colnames(comp_het) = c("gene_name", "chr", "qual", "filter", "kav_freqPct", "kav_count", "nb_rsID", "nb_pos", "nb_ref", "nb_alt", "m_pos", "m_ref", "m_alt", "f_pos", "f_ref", "f_alt")
+
+#group by gene
+library(dplyr)
+by_gene = group_by(comp_het, as.factor(comp_het$gene_name))
+
+head(comp_het, 2)
+
+#pull out list of genes returned
+gene_list = as.character(unique(comp_het$gene_name))
 
 
 
-head(comp_het)
+group by gene name (for each gene)
+if more than one nb_pos
+and one of them = mom alt pos and mom alt
+and one of them = dad alt pos and dad alt
+then compound het
+
+YearlyResults <- tapply(LottiaData,LottiaData$Year,glm(Count~zone,family=poisson))
+
+pairs = tapply(comp_het, comp_het$gene_name, )
+
+
+
 
 ```
