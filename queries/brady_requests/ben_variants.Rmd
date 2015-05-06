@@ -1,0 +1,154 @@
+---
+title: "find_variants_ben"
+output: pdf_document
+---
+# Purpose: 
+Pull git from home for the intro. 
+
+#Query
+This query was run to find variants in regions of interest: 
+```sql
+WITH ens AS (
+ SELECT DISTINCT chromosome as chr, start, stop, gene_name
+   FROM public_hg19.ensembl_genes
+  WHERE (gene_name IN ( 'HADH', 'HADHA', 'HADHB', 'ACAA1',
+                        'ACAA2', 'EHHADH', 'ECHS1')
+     OR gene_name LIKE 'HSD17B%')
+    AND chromosome NOT LIKE "H%"
+)
+SELECT p.*, k.id, k.ref, k.alt, (k.alle_freq * 100) as kav_freqPct, k.alle_cnt as kav_count
+  FROM
+(SELECT DISTINCT p.sample_id, p.chr, p.pos, p.id,
+                 p.ref, p.alt, p.qual, p.filter,
+                 ens.gene_name
+   FROM ens, p7_ptb.itmi_102_puzzle p
+  WHERE p.chr = ens.chr
+    AND p.pos >= ens.start AND p.pos <= ens.stop
+    AND p.gt IS NOT NULL
+) AS p
+LEFT JOIN public_hg19.kaviar k
+       ON p.chr = k.chromosome
+      AND p.pos = k.pos
+      AND p.ref = k.ref
+      AND p.alt = k.alt
+      AND k.alle_freq < .10
+```
+
+#Analysis 
+
+
+```{r}
+library(readr)
+
+#read in query results
+query = read_csv("~/impala_queries/queries/brady_requests/ben_query.csv")
+
+#split apart data frame by member
+mom = query[which(query$member == "M"),]
+dad = query[which(query$member == "F"),]
+nb = query[which(query$member == "NB"),]
+
+#######################
+#find homozygous alt ##
+#######################
+
+#subset for zygosity congruent with hom alt mutations
+hom_alt_nb = nb[which(nb$gt == "1/1"),]
+het_mom = mom[which(mom$gt == "0/1"),]
+het_dad = dad[which(dad$gt == "0/1"),]
+
+#merge together to match by gene, chr and position
+nb_mom_hom_alt = merge(hom_alt_nb, het_mom, by=c("gene_name", "chr", "pos"))
+#get rid of unnecessary columns
+nb_mom_hom_alt = nb_mom_hom_alt[,c(1:3,5,9:12,6,7,17)]
+
+#merge with dad
+hom_alt = merge(nb_mom_hom_alt, het_dad, by=c("gene_name", "chr", "pos"))
+
+#get rid of unnecessary columns
+colnames(hom_alt)
+hom_alt = hom_alt[,c(1:11,15)]
+colnames(hom_alt) = c("gene_name", "chr", "pos", "rsID", "qual", "filter", "kav_freqPct", 
+                      "kav_count", "ref", "nb_alt", "m_alt", "f_alt")
+
+hom_alt_results = hom_alt[which((hom_alt$nb_alt == hom_alt$m_alt) & (hom_alt$nb_alt == hom_alt$f_alt)),]
+hom_alt_results
+
+#############################
+#find homozygous recessive ##
+#############################
+hom_rec_nb = nb[which(nb$gt == "0/0"),]
+
+#merge hom rec nb with het mom
+hom_rec_nb_mom = merge(hom_rec_nb, het_mom, by=c("gene_name", "chr", "pos"))
+#get rid of unnecessary columns
+hom_rec_nb_mom = hom_rec_nb_mom[,c(1:3,5,9:12,6,7,17)]
+
+#merge with dad
+hom_rec = merge(hom_rec_nb_mom, het_dad, by=c("gene_name", "chr", "pos"))
+#get rid of unnecessary columns
+hom_rec = hom_rec[,c(1:11,15)]
+colnames(hom_rec) = c("gene_name", "chr", "pos", "rsID", "qual", "filter", "kav_freqPct", 
+                      "kav_count", "ref", "nb_alt", "m_alt", "f_alt")
+hom_rec
+
+#####################
+#find compound het ##
+#####################
+
+#subset for possible zygosity for compound het
+het_nb = nb[which(nb$gt == "0/1"),]
+comp_mom = mom[which(mom$gt == "0/1" | mom$gt == "1/1"),]
+comp_dad = dad[which(dad$gt == "0/1" | dad$gt == "1/1"),]
+
+#split nb variants into separate df for each gene
+nb_gene = split(het_nb, het_nb$gene_name)
+#name each df with gene name 
+names(nb_gene) = paste(names(nb_gene), ".df", sep="")
+#add df to env for downstream access
+list2env(nb_gene, envir = .GlobalEnv)
+
+#list of data frames
+ACAA1.df
+ACAA2 #only one variant, not a candidate for comp.het
+ECHS1 #only one variant, not a candidate for comp.het
+EHHADH #only one variant, not a candidate for comp.het
+HADHB  #only one variant, not a candidate for comp.het
+HSD17B1
+HSD17B11 
+HSD17B12
+HSD17B13 
+HSD17B3
+HSD17B4  
+HSD17B7
+HSD17B7P1
+HSD17B7P2
+
+
+
+find_comp_hets = function(df){
+  #check for more than one variant/pos per gene
+  if ( (dim(df)[1] > 1 ) & (length(unique(as.numeric(df$pos)))>1) ) {
+    cat(paste("Checking ", df, "for compound heterozygosity.", sep=" "))
+    
+  }else
+    cat(paste("Less than one variant/position found in", df, sep=" ")) 
+}
+
+test = as.list(names(nb_gene))
+
+lapply(test, function(x) find_comp_hets(x))
+
+#automate and add check for matching alt alleles
+het_mom[which(het_mom$chr == "3" & het_mom$pos == "38144875"),]
+
+#check for variant in father
+het_dad[which(het_dad$chr == "3"& het_dad$pos == "38173733"),]
+
+
+
+
+
+
+
+```
