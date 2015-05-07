@@ -16,10 +16,18 @@ WITH ens AS (
      OR gene_name LIKE 'HSD17B%')
     AND chromosome NOT LIKE "H%"
 )
-SELECT p.*, k.id, k.ref, k.alt, (k.alle_freq * 100) as kav_freqPct, k.alle_cnt as kav_count
+SELECT p.*, (k.alle_freq * 100) as kav_freqPct, k.alle_cnt as kav_count, 
+    (CASE  
+      WHEN SUBSTRING(p.sample_id, -2) = '01'
+      THEN 'M'
+      WHEN SUBSTRING(p.sample_id, -2) = '02'
+      THEN 'F'
+      WHEN SUBSTRING(p.sample_id, -2) = '03'
+      THEN 'NB'
+      END) as member      
   FROM
 (SELECT DISTINCT p.sample_id, p.chr, p.pos, p.id,
-                 p.ref, p.alt, p.qual, p.filter,
+                 p.ref, p.alt, p.gt, p.qual, p.filter,
                  ens.gene_name
    FROM ens, p7_ptb.itmi_102_puzzle p
   WHERE p.chr = ens.chr
@@ -34,19 +42,28 @@ LEFT JOIN public_hg19.kaviar k
       AND k.alle_freq < .10
 ```
 
-#Analysis 
+#Search for homozygous alt alleles
 
+```{r hom_alt}
+suppressMessages(library(readr))
 
-```{r}
-library(readr)
-
-#read in query results
-query = read_csv("~/impala_queries/queries/brady_requests/ben_query.csv")
+#read in query results from impala
+query = read_csv("~/GitHub/impala_scripts/queries/brady_requests/ben_query.csv")
 
 #split apart data frame by member
 mom = query[which(query$member == "M"),]
 dad = query[which(query$member == "F"),]
 nb = query[which(query$member == "NB"),]
+
+#add gene:chr:pos id to each df
+mom$variant_id = paste(mom$gene_name, mom$chr, mom$pos, sep=":")
+dad$variant_id = paste(dad$gene_name, dad$chr, dad$pos, sep=":")
+nb$variant_id = paste(nb$gene_name, nb$chr, nb$pos, sep=":")
+
+#add id for alt allele
+mom$alt_id = paste(mom$chr, mom$pos, mom$alt, sep=":")
+dad$alt_id = paste(dad$chr, dad$pos, dad$alt, sep=":")
+nb$alt_id = paste(nb$chr, nb$pos, nb$alt, sep=":")
 
 #######################
 #find homozygous alt ##
@@ -71,79 +88,138 @@ hom_alt = hom_alt[,c(1:11,15)]
 colnames(hom_alt) = c("gene_name", "chr", "pos", "rsID", "qual", "filter", "kav_freqPct", 
                       "kav_count", "ref", "nb_alt", "m_alt", "f_alt")
 
-hom_alt_results = hom_alt[which((hom_alt$nb_alt == hom_alt$m_alt) & (hom_alt$nb_alt == hom_alt$f_alt)),]
-hom_alt_results
+hom_alt.df = hom_alt[which((hom_alt$nb_alt == hom_alt$m_alt) & (hom_alt$nb_alt == hom_alt$f_alt)),]
+hom_alt.df
+```
 
+##Search for homozygous ref alleles
+
+```{r hom_ref}
 #############################
-#find homozygous recessive ##
+#find homozygous reference ##
 #############################
-hom_rec_nb = nb[which(nb$gt == "0/0"),]
+hom_ref_nb = nb[which(nb$gt == "0/0"),]
 
 #merge hom rec nb with het mom
-hom_rec_nb_mom = merge(hom_rec_nb, het_mom, by=c("gene_name", "chr", "pos"))
+hom_ref_nb_mom = merge(hom_ref_nb, het_mom, by=c("gene_name", "chr", "pos"))
 #get rid of unnecessary columns
-hom_rec_nb_mom = hom_rec_nb_mom[,c(1:3,5,9:12,6,7,17)]
+hom_ref_nb_mom = hom_ref_nb_mom[,c(1:3,5,9:12,6,7,17)]
 
 #merge with dad
-hom_rec = merge(hom_rec_nb_mom, het_dad, by=c("gene_name", "chr", "pos"))
+hom_ref.df = merge(hom_ref_nb_mom, het_dad, by=c("gene_name", "chr", "pos"))
 #get rid of unnecessary columns
-hom_rec = hom_rec[,c(1:11,15)]
-colnames(hom_rec) = c("gene_name", "chr", "pos", "rsID", "qual", "filter", "kav_freqPct", 
+hom_ref.df = hom_ref.df[,c(1:11,15)]
+colnames(hom_ref.df) = c("gene_name", "chr", "pos", "rsID", "qual", "filter", "kav_freqPct", 
                       "kav_count", "ref", "nb_alt", "m_alt", "f_alt")
-hom_rec
+hom_ref.df
 
+```
+
+##Search for compound het alleles
+
+```{r comp_het}
 #####################
 #find compound het ##
 #####################
+suppressMessages(library(stats))
 
 #subset for possible zygosity for compound het
 het_nb = nb[which(nb$gt == "0/1"),]
 comp_mom = mom[which(mom$gt == "0/1" | mom$gt == "1/1"),]
 comp_dad = dad[which(dad$gt == "0/1" | dad$gt == "1/1"),]
 
-#split nb variants into separate df for each gene
-nb_gene = split(het_nb, het_nb$gene_name)
-#name each df with gene name 
-names(nb_gene) = paste(names(nb_gene), ".df", sep="")
-#add df to env for downstream access
-list2env(nb_gene, envir = .GlobalEnv)
+#order data frames for split by function
+het_nb = het_nb[order(het_nb$gene_name),]
+comp_mom = comp_mom[order(comp_mom$gene_name),]
+comp_dad = comp_dad[order(comp_dad$gene_name),]
 
-#list of data frames
-ACAA1.df
-ACAA2 #only one variant, not a candidate for comp.het
-ECHS1 #only one variant, not a candidate for comp.het
-EHHADH #only one variant, not a candidate for comp.het
-HADHB  #only one variant, not a candidate for comp.het
-HSD17B1
-HSD17B11 
-HSD17B12
-HSD17B13 
-HSD17B3
-HSD17B4  
-HSD17B7
-HSD17B7P1
-HSD17B7P2
-
-
-
-find_comp_hets = function(df){
-  #check for more than one variant/pos per gene
-  if ( (dim(df)[1] > 1 ) & (length(unique(as.numeric(df$pos)))>1) ) {
-    cat(paste("Checking ", df, "for compound heterozygosity.", sep=" "))
-    
-  }else
-    cat(paste("Less than one variant/position found in", df, sep=" ")) 
+#function to check for comp_hets
+find_comphet = function(x){
+  #check if more than one variant found per gene
+  if (length(unique(x$pos)) >1 ) {
+    #find matching variants from the parents
+    mom_vars = comp_mom[grep(paste(x$variant_id, collapse="|"), comp_mom$variant_id),]
+    dad_vars = comp_dad[grep(paste(x$variant_id, collapse="|"), comp_dad$variant_id),]
+    #check that parent variants are different and at different positions
+    if (dim(mom_vars)[1] > 1 & dim(dad_vars)[1] > 1){
+      #find variants that are same in mom and dad
+      same = merge(mom_vars, dad_vars, by="variant_id")
+      #check that both mom and dad have variants that are different
+      if (dim(dad_vars[!(dad_vars$variant_id %in% same$variant_id),])[1] >= 1 &
+            dim(mom_vars[!(mom_vars$variant_id %in% same$variant_id),])[1] >= 1){
+        #pull out comp hets
+        comp_hets.df = rbind(het_nb[grep(paste(mom_vars[!(mom_vars$variant_id %in% same$variant_id),]$variant_id,
+                                               collapse="|"),  
+        het_nb$variant_id),],
+        het_nb[grep(paste(dad_vars[!(dad_vars$variant_id %in% same$variant_id),]$variant_id, collapse="|"),
+        het_nb$variant_id),],
+        mom_vars[!(mom_vars$variant_id %in% same$variant_id),],
+        dad_vars[!(dad_vars$variant_id %in% same$variant_id),])
+        comp_hets.df[order(comp_hets.df$gene_name, comp_hets.df$chr, comp_hets.df$pos),]
+            }else
+              print("Same variants found in both parents")     
+      } else
+        paste("Variants only found in one parent.", sep=" ")
+    } else
+      paste("Only one variant found in gene.")
 }
 
-test = as.list(names(nb_gene))
+##apply function to newborn comp het candidates
+comp_het_list = by(het_nb, het_nb$gene_name, find_comphet)
 
-lapply(test, function(x) find_comp_hets(x))
+comp_het.df = do.call(rbind, comp_het_list)
+comp_hets = comp_het.df[which(comp_het.df$sample_id != "Variants only found in one parent." 
+                  & comp_het.df$sample_id != "Same variants found in both parents"
+            & comp_het.df$sample_id != "Variants only found in one parent."
+            & comp_het.df$sample_id != "Only one variant found in gene."),]
+rownames(comp_hets)  = NULL
 
-#automate and add check for matching alt alleles
-het_mom[which(het_mom$chr == "3" & het_mom$pos == "38144875"),]
+comp_hets
 
-#check for variant in father
-het_dad[which(het_dad$chr == "3"& het_dad$pos == "38173733"),]
+```
+
+##Search for Mendelian Inheritance Errors
+
+```{r find_mie}
+
+#subset for newborns not found above
+comp_hets$variant_type = "comp_het"
+hom_ref.df$variant_type = "hom_ref"
+hom_alt.df$variant_type = "hom_alt"
+
+##go back and get all the columns for hom variants ##
+
+#data frame homozygous variants
+homozygous = rbind(hom_ref.df, hom_alt.df)
+homozygous$variant_id = paste(homozygous$gene_name, homozygous$chr, homozygous$pos, sep=":")
+
+#find nb variants not in homozygous variants
+mie_cands = nb[!(nb$variant_id %in% homozygous$variant_id),]
+
+#find nb variants not in comp_hets
+mie_cands = mie_cands[!(mie_cands$variant_id %in% comp_hets$variant_id),]
+
+##########################
+#find de novo mutations ##
+##########################
+#if variant = 1/1 must have one alt from mom and one from dad
+
+#find het mie nb candidates
+mie_hom_alt = mie_cands[(mie_cands$gt == "1/1"),]
+
+#check for alts not from either mom or dad
+mie_hom_alt[!((mie_hom_alt$alt_id %in% het_dad$alt_id) | (mie_hom_alt$alt_id %in% het_mom$alt_id)),]
+
+dad[(grep("1:162767168:A", dad$alt_id)),]
+
+
+head(dad)
+
+#if variant 0/0 must have ref from mom and ref from dad
+
+
+#if variant 0/1 must have one ref from mom and one from dad 
+
 
 
 
