@@ -3,10 +3,25 @@ title: "find_variants_ben"
 output: pdf_document
 ---
 # Purpose: 
-Pull git from home for the intro. 
+Ben has been studying a child with a trifunctional protein deficiency and would like to know if there are any 
+other variants near the HADHB allele. 
+
+- Search all variants found in family trio  
+- For genes of interest in the region  
+- Homozygous or compound heterozygous in the newborn  
+- Check for Mammalian Inheritance Errors (MIE)  
+- Add Kaviar allele frequency to distinguish rare variants  
+
+Sex chromosomes were ignored.
+
+#Results/Discussion
+I would like to walk through the logic of each step with Brady and if we are going to be using this query again in the future, turn the entire script into a function that can be run easily based on genes of interest. I feel like something may be missing from the comp het logic regarding genotype of parents. And I would also like to identify other types of MIE’s that I should search for. 
+
+Overall, if the logic is correct, than not much was found. 
 
 #Query
-This query was run to find variants in regions of interest: 
+This query was run to find variants from ensembl in the regions of interest, add a column to identify trio member, and return results that are potential rare variants that are either not in kaviar, or in kaviar with a frequency of less than 10%:
+
 ```sql
 WITH ens AS (
  SELECT DISTINCT chromosome as chr, start, stop, gene_name
@@ -16,106 +31,229 @@ WITH ens AS (
      OR gene_name LIKE 'HSD17B%')
     AND chromosome NOT LIKE "H%"
 )
-SELECT p.*, (k.alle_freq * 100) as kav_freqPct, k.alle_cnt as kav_count, 
-    (CASE  
+SELECT p.sample_id, p.qual, p.filter, k.id as rsID, (k.alle_freq * 100) as kav_pct, k.alle_cnt as kav_count,
+gene_name, p.chr, p.pos, p.ref, p.alt, p.gt, 
+ (CASE  
       WHEN SUBSTRING(p.sample_id, -2) = '01'
       THEN 'M'
       WHEN SUBSTRING(p.sample_id, -2) = '02'
       THEN 'F'
       WHEN SUBSTRING(p.sample_id, -2) = '03'
       THEN 'NB'
-      END) as member      
+      END) as member, CONCAT(gene_name, ":", p.chr, ":", CAST(p.pos AS STRING)) as variant_id, 
+      CONCAT(p.chr, ":", CAST(p.pos AS STRING), ":", p.alt) as alt_id 
   FROM
-(SELECT DISTINCT p.sample_id, p.chr, p.pos, p.id,
-                 p.ref, p.alt, p.gt, p.qual, p.filter,
-                 ens.gene_name
+(SELECT DISTINCT p.sample_id, p.qual, p.filter, ens.gene_name, p.chr, p.pos, p.ref, p.alt, p.gt
    FROM ens, p7_ptb.itmi_102_puzzle p
-  WHERE p.chr = ens.chr
-    AND p.pos >= ens.start AND p.pos <= ens.stop
-    AND p.gt IS NOT NULL
+   WHERE p.chr = ens.chr
+   AND (p.pos >= ens.start AND p.pos <= ens.stop)
+   AND p.gt IS NOT NULL
 ) AS p
-LEFT JOIN public_hg19.kaviar k
+LEFT JOIN /* +SHUFFLE */ public_hg19.kaviar k
        ON p.chr = k.chromosome
       AND p.pos = k.pos
       AND p.ref = k.ref
       AND p.alt = k.alt
-      AND k.alle_freq < .10
+WHERE (k.alle_freq < .10 OR k.alle_freq IS NULL)
 ```
 
-#Search for homozygous alt alleles
+## Testing results against impala
+The results of the query shown above were stored as a table on impala and used to:   
+- Compare counts with data subset in R  
+- Examine variants at positions reported in the R analysis to verify results
 
-```{r hom_alt}
+###Compare genotype counts
+For comparing counts, variations of the following query was used to compare resuls with R: 
+```sql
+SELECT COUNT(1) 
+FROM ben_query as ben
+WHERE ben.sample_id LIKE "%03"
+AND ben.gt = "0/1"
+```
+
+```{r read_in_and_test}
+#########################################
+## read in and structure query results ##
+#########################################
 suppressMessages(library(readr))
 
 #read in query results from impala
-query = read_csv("~/GitHub/impala_scripts/queries/brady_requests/ben_query.csv")
+query = read_csv("~/impala_scripts/queries/brady_requests/ben_query.csv")
+#quick check on data structure
+head(query)
+#dimensions
+dim(query)
 
-#split apart data frame by member
+#split apart data frame by member id and examine data
 mom = query[which(query$member == "M"),]
+dim(mom)
+table(mom$gt)
+
 dad = query[which(query$member == "F"),]
+dim(dad)
+table(dad$gt)
+
 nb = query[which(query$member == "NB"),]
+dim(nb) #6274 newborn variants
+table(nb$gt)
 
-#add gene:chr:pos id to each df
-mom$variant_id = paste(mom$gene_name, mom$chr, mom$pos, sep=":")
-dad$variant_id = paste(dad$gene_name, dad$chr, dad$pos, sep=":")
-nb$variant_id = paste(nb$gene_name, nb$chr, nb$pos, sep=":")
+###############################
+##comparing genotype counts  ##
+###############################
+#5 hom alt newborns
+hom_alt_nb = nb[which(nb$gt == "1/1"),]
+dim(hom_alt_nb)
 
-#add id for alt allele
-mom$alt_id = paste(mom$chr, mom$pos, mom$alt, sep=":")
-dad$alt_id = paste(dad$chr, dad$pos, dad$alt, sep=":")
-nb$alt_id = paste(nb$chr, nb$pos, nb$alt, sep=":")
+#15 het newborns in R query
+het_nb = nb[(nb$gt == "0/1"),]
+dim(het_nb)
 
+#6245 hom ref newborns
+hom_ref_nb = nb[(nb$gt == "0/0"),]
+dim(hom_ref_nb)
+
+#19 het moms
+het_mom = mom[which(mom$gt == "0/1"),]
+dim(het_mom) 
+
+#10 het moms 
+het_dad = dad[which(dad$gt == "0/1"),]
+dim(het_dad) 
+```
+
+Counts match impala results. 
+
+#Search for homozygous alt alleles
+The data was read into R and searched for variants in the newborn marked as homozygous for the alternate allele. If the newborn alternate allele was the same as the alternate allele for both parents at this location, or if the nb allele was a no-call but both parent alleles were equal, it was marked as a homozygous alternate.  
+
+Homozygous alternate parent alleles were ignored.  
+
+```{r hom_alt}
 #######################
 #find homozygous alt ##
 #######################
+#merge together to find genes in parents that match nb variants on each gene, by chr and position
+nb_mom_hom_alt = merge(hom_alt_nb, het_mom, by="variant_id")
+dim(nb_mom_hom_alt)#2/5 variants match moms variants
 
-#subset for zygosity congruent with hom alt mutations
-hom_alt_nb = nb[which(nb$gt == "1/1"),]
-het_mom = mom[which(mom$gt == "0/1"),]
-het_dad = dad[which(dad$gt == "0/1"),]
+#merge nb with dad
+nb_dad_hom_alt = merge(hom_alt_nb, het_dad, by="variant_id")
+dim(nb_dad_hom_alt)#2/5 variants match dad's variants
 
-#merge together to match by gene, chr and position
-nb_mom_hom_alt = merge(hom_alt_nb, het_mom, by=c("gene_name", "chr", "pos"))
-#get rid of unnecessary columns
-nb_mom_hom_alt = nb_mom_hom_alt[,c(1:3,5,9:12,6,7,17)]
-
-#merge with dad
-hom_alt = merge(nb_mom_hom_alt, het_dad, by=c("gene_name", "chr", "pos"))
+#merge mom and dad's matching varaints
+hom_alts = merge(nb_mom_hom_alt, nb_dad_hom_alt, by="variant_id")
+dim(hom_alts)#one variant matches both mom and dad
 
 #get rid of unnecessary columns
-colnames(hom_alt)
-hom_alt = hom_alt[,c(1:11,15)]
-colnames(hom_alt) = c("gene_name", "chr", "pos", "rsID", "qual", "filter", "kav_freqPct", 
-                      "kav_count", "ref", "nb_alt", "m_alt", "f_alt")
+hom_alt.df = hom_alts[,c(1:13,26:27,54:55)]
+colnames(hom_alt.df) = c("variant_id", "sample_id", "qual", "filter", "rsID", "kav_freqPct", 
+                      "kav_count", "gene_name", "chr", "pos","ref", "nb_alt", "nb_gt", 
+                      "m_alt", "m_gt", "f_alt","f_gt")
 
-hom_alt.df = hom_alt[which((hom_alt$nb_alt == hom_alt$m_alt) & (hom_alt$nb_alt == hom_alt$f_alt)),]
+#find variants where mother, father and newborn have matching alts at same chr/pos, or
+#mom and dad alts match and nb call is null
+hom_alt.df = hom_alt.df[which((hom_alt.df$nb_alt == hom_alt.df$m_alt) & (hom_alt.df$nb_alt == hom_alt.df$f_alt) | 
+                                (hom_alt.df$m_alt == hom_alt.df$f_alt & hom_alt.df$nb_alt == "NULL")
+                              ),]
 hom_alt.df
 ```
 
+##Confirm hom alt analysis
+For each of the five homozygous alt newborn variants found, a query was run to manually check for all variants at that chromosome and position. 
+
+```{r test_hom_alt}
+
+#Mother is 0/1 and father is 1/1
+hom_alt_nb[1,]
+
+#mother and father are het
+hom_alt_nb[2,]
+
+#both parents are 1/1
+hom_alt_nb[3,]
+
+#father 0/1, mother 1/1
+hom_alt_nb[4,]
+
+#no varaint reported for mother, several variants with filter errors, low qual
+hom_alt_nb[5,]
+
+```
+
+For each variant found that meets the criteria specified in the impala query, the results are consistent with manual examination of impala data due to the exclusion of homozygous parent variants. 
+
 ##Search for homozygous ref alleles
+The data was subset for variants where the newborn marked as homozygous reference. If the newborn reference allele was the same as the reference allele in both parents het at this location, or if the nb allele was a no-call but both parent alleles were equal, it was marked as a homozygous reference.  
+
+Homozygous reference parent allelels were ignored.  
 
 ```{r hom_ref}
 #############################
 #find homozygous reference ##
 #############################
 hom_ref_nb = nb[which(nb$gt == "0/0"),]
+dim(hom_ref_nb) #6245 hom_ref variants
 
-#merge hom rec nb with het mom
-hom_ref_nb_mom = merge(hom_ref_nb, het_mom, by=c("gene_name", "chr", "pos"))
-#get rid of unnecessary columns
-hom_ref_nb_mom = hom_ref_nb_mom[,c(1:3,5,9:12,6,7,17)]
+#merge hom ref nb with 19 het mom variants, matching by chr and position
+hom_ref_nb_mom = merge(hom_ref_nb, het_mom, by="variant_id")
+dim(hom_ref_nb_mom) #1/19 het mom variant matches with newborns
 
-#merge with dad
-hom_ref.df = merge(hom_ref_nb_mom, het_dad, by=c("gene_name", "chr", "pos"))
+#merge hom ref nb with het dad
+hom_ref_nb_dad = merge(hom_ref_nb, het_dad, by="variant_id")
+dim(hom_ref_nb_dad) #0/10 het dads match with homozygous ref newborns
+
+#merge mom and dad matching variants
+hom_refs = merge(hom_ref_nb_mom, hom_ref_nb_dad, by= "variant_id")
+
 #get rid of unnecessary columns
-hom_ref.df = hom_ref.df[,c(1:11,15)]
-colnames(hom_ref.df) = c("gene_name", "chr", "pos", "rsID", "qual", "filter", "kav_freqPct", 
-                      "kav_count", "ref", "nb_alt", "m_alt", "f_alt")
+hom_ref.df = hom_refs[,(1:13,26:27,54:55)]
+colnames(hom_ref.df) = c("variant_id", "sample_id", "qual", "filter", "rsID", "kav_freqPct",
+"kav_count", "gene_name", "chr", "pos", "ref", "nb_alt", "nb_gt",
+"m_alt", "m_gt", "f_alt","f_gt")
+
+#find variants where mother, father and newborn have matching alts at same chr/pos, or
+#mom and dad alts match and nb call is null
+hom_ref.df = hhom_ref.df[which((hom_ref.df$nb_alt == hom_ref.df$m_alt) & (hom_ref.df$nb_alt == hom_ref.df$f_alt) | 
+                                (hom_ref.df$m_alt == hom_ref.df$f_alt & hom_ref.df$nb_alt == "NULL")
+                              ),]
 hom_ref.df
+```
+
+##Confirm hom ref analysis
+For the 6245 homozygous ref newborns variants found, a random set of 5 variants will be selected and each reported position examined manually in impala. 
+
+```{r test_hom_ref}
+
+hom_ref_sample = hom_ref_nb[sample(1:nrow(hom_ref_nb), 5, replace=FALSE),]
+
+#Mother and father are 0/0
+hom_ref_sample[1,]
+
+#no parent variants reported
+hom_ref_sample[2,]
+
+#no parent variants reported
+hom_ref_sample[3,]
+
+#no variant reported for father
+hom_ref_sample[4,]
+
+#no parent varaints reported 
+hom_ref_sample[5,]
 
 ```
 
+The impala results were consistent with the logic of the analysis. We may want to add in a way of handling newborn variant calls that are missing calls from either/both parents. 
+
 ##Search for compound het alleles
+To locate potential compound het variants, the data was subset for het newborn variants, and the parents were subset for either heterozygous or homozygous alternate variants. The data was grouped by gene name, and a function was ran in the following order:  
+- Subset variants with more than one variant position per gene  
+- The mother and father variants were matched to newborn variants  
+
+If variants were found from both parents:
+- Check that the alt alleles in each parent were at different positions  
+- Check that alt alleles in each parent are not in the same position  
+- Return variants where the newborn has a diffent variant from mom and dad on the same gene  
 
 ```{r comp_het}
 #####################
@@ -125,106 +263,277 @@ suppressMessages(library(stats))
 
 #subset for possible zygosity for compound het
 het_nb = nb[which(nb$gt == "0/1"),]
-comp_mom = mom[which(mom$gt == "0/1" | mom$gt == "1/1"),]
-comp_dad = dad[which(dad$gt == "0/1" | dad$gt == "1/1"),]
-
-#order data frames for split by function
-het_nb = het_nb[order(het_nb$gene_name),]
-comp_mom = comp_mom[order(comp_mom$gene_name),]
-comp_dad = comp_dad[order(comp_dad$gene_name),]
+dim(het_nb) #16 het newborns
 
 #function to check for comp_hets
 find_comphet = function(x){
   #check if more than one variant found per gene
   if (length(unique(x$pos)) >1 ) {
-    #find matching variants from the parents
-    mom_vars = comp_mom[grep(paste(x$variant_id, collapse="|"), comp_mom$variant_id),]
-    dad_vars = comp_dad[grep(paste(x$variant_id, collapse="|"), comp_dad$variant_id),]
-    #check that parent variants are different and at different positions
-    if (dim(mom_vars)[1] > 1 & dim(dad_vars)[1] > 1){
-      #find variants that are same in mom and dad
-      same = merge(mom_vars, dad_vars, by="variant_id")
-      #check that both mom and dad have variants that are different
-      if (dim(dad_vars[!(dad_vars$variant_id %in% same$variant_id),])[1] >= 1 &
-            dim(mom_vars[!(mom_vars$variant_id %in% same$variant_id),])[1] >= 1){
-        #pull out comp hets
-        comp_hets.df = rbind(het_nb[grep(paste(mom_vars[!(mom_vars$variant_id %in% same$variant_id),]$variant_id,
-                                               collapse="|"),  
-        het_nb$variant_id),],
-        het_nb[grep(paste(dad_vars[!(dad_vars$variant_id %in% same$variant_id),]$variant_id, collapse="|"),
-        het_nb$variant_id),],
-        mom_vars[!(mom_vars$variant_id %in% same$variant_id),],
-        dad_vars[!(dad_vars$variant_id %in% same$variant_id),])
-        comp_hets.df[order(comp_hets.df$gene_name, comp_hets.df$chr, comp_hets.df$pos),]
-            }else
-              print("Same variants found in both parents")     
-      } else
-        paste("Variants only found in one parent.", sep=" ")
+    #find matching variants from each parent
+    mom_vars = mom[grep(paste(x$variant_id, collapse="|"), mom$variant_id),]
+    dad_vars = dad[grep(paste(x$variant_id, collapse="|"), dad$variant_id),]
+    #find variants from parents that are in the same position
+    same = merge(mom_vars, dad_vars, by="variant_id")
+    #pull out parent variant that are not in the same position    
+    mom_comp_hets = mom_vars[!(mom_vars$variant_id %in% same$variant_id),]
+    dad_comp_hets = dad_vars[!(dad_vars$variant_id %in% same$variant_id),]
+    #match with newborn variants    
+    mom_comps = merge(nb_het, mom_comp_hets, by="variant_id")
+    mom_comps = mom_comps[,c(1:13,28,26:27)]
+    colnames(mom_comps) = c("variant_id", "sample_id", "qual", "filter","rsID", "kav_freqPct", "kav_count",
+                        "gene_name", "chr", "pos", "ref", "nb_alt", "nb_gt", "parent", "parent_alt", "parent_gt")
+    dad_comps = merge(nb_het, dad_comp_hets, by="variant_id")
+    dad_comps = dad_comps[,c(1:13,28,26:27)]
+    colnames(dad_comps) = c("variant_id", "sample_id", "qual", "filter","rsID", "kav_freqPct", "kav_count",
+                        "gene_name", "chr", "pos", "ref", "nb_alt", "nb_gt", "parent", "parent_alt", "parent_gt")     
+    #merge results 
+    comp_hets.df = rbind(mom_comps, dad_comps) 
+    #if comp hets found from both parents, print results
+    if ((dim(comp_hets.df)[1]>0)
+      & (dim(comp_hets.df[(comp_hets.df$parent == "M"),])[1] > 0) 
+      & (dim(comp_hets.df[(comp_hets.df$parent == "F"),])[1]> 0)){      
+      comp_hets.df
     } else
-      paste("Only one variant found in gene.")
-}
+      print("Variants at different positions on the gene are from the same parent.")       
+    }else #(length(unique(x$pos)) >1 ) = false
+      print("Variants on gene only found in same position.")
+}#end of function
 
 ##apply function to newborn comp het candidates
-comp_het_list = by(het_nb, het_nb$gene_name, find_comphet)
+by(het_nb, het_nb$gene_name, find_comphet)
+```
 
-comp_het.df = do.call(rbind, comp_het_list)
-comp_hets = comp_het.df[which(comp_het.df$sample_id != "Variants only found in one parent." 
-                  & comp_het.df$sample_id != "Same variants found in both parents"
-            & comp_het.df$sample_id != "Variants only found in one parent."
-            & comp_het.df$sample_id != "Only one variant found in gene."),]
-rownames(comp_hets)  = NULL
+##Confirm Results of comp-het analysis
+The results of the comp-het analysis will be confirmed by grouping the het variants found in the newborn by gene and manually examining all het variants found in the newborn on each gene. 
 
-comp_hets
+Variations of the following query were used to find all het newborn variants on each of the genes of interest:  
+```sql
+WITH ens AS (
+ SELECT DISTINCT chromosome as chr, start, stop, gene_name
+   FROM public_hg19.ensembl_genes
+  WHERE gene_name = "ACAA2"
+    AND chromosome NOT LIKE "H%"
+)
+SELECT p.sample_id, p.qual, p.filter, k.id as rsID, (k.alle_freq * 100) as kav_pct, k.alle_cnt as kav_count,
+gene_name, p.chr, p.pos, p.ref, p.alt, p.gt
+  FROM
+(SELECT DISTINCT p.sample_id, p.qual, p.filter, ens.gene_name, p.chr, p.pos, p.ref, p.alt, p.gt
+   FROM ens, p7_ptb.itmi_102_puzzle p
+   WHERE ens.chr = p.chr
+   AND p.sample_id LIKE "%03"
+   AND (p.pos >= ens.start AND p.pos <= ens.stop)
+   AND p.gt = "0/1"
+) AS p
+LEFT JOIN /* +SHUFFLE */ public_hg19.kaviar k
+       ON p.chr = k.chromosome
+      AND p.pos = k.pos
+      AND p.ref = k.ref
+      AND p.alt = k.alt
+WHERE (k.alle_freq < .10 OR k.alle_freq IS NULL)
+```
+
+Variations on the following query were used to examine all variants found on genes with more than one het nb variant; 
+```sql
+WITH ens AS (
+ SELECT DISTINCT chromosome as chr, start, stop, gene_name
+   FROM public_hg19.ensembl_genes
+  WHERE gene_name = "HSD17B3"
+    AND chromosome NOT LIKE "H%"
+)
+SELECT p.sample_id, p.qual, p.filter, k.id as rsID, (k.alle_freq * 100) as kav_pct, k.alle_cnt as kav_count,
+gene_name, p.chr, p.pos, p.ref, p.alt, p.gt
+  FROM
+(SELECT DISTINCT p.sample_id, p.qual, p.filter, ens.gene_name, p.chr, p.pos, p.ref, p.alt, p.gt
+   FROM ens, p7_ptb.itmi_102_puzzle p
+   WHERE ens.chr = p.chr
+   AND p.chr = "9"
+   AND (p.pos = 99003102 OR p.pos = 98997810)
+   AND (p.pos >= ens.start AND p.pos <= ens.stop)
+) AS p
+LEFT JOIN /* +SHUFFLE */ public_hg19.kaviar k
+       ON p.chr = k.chromosome
+      AND p.pos = k.pos
+      AND p.ref = k.ref
+      AND p.alt = k.alt
+WHERE (k.alle_freq < .10 OR k.alle_freq IS NULL)
+ORDER BY p.sample_id, p.gt, p.chr, p.pos
+```
+
+```{r test_comp_het}
+#group het nb by gene
+by_gene = split(het_nb, het_nb$gene_name)
+
+#het nb variant found at only one position on the gene
+by_gene$ACAA2
+
+#het nb variant found at only one position on the gene
+by_gene$EHHADH
+
+#het nb variant found at only one position on the gene
+by_gene$HADHB
+
+#variants reported at chr 17 40702252 and 40702760
+by_gene$HSD17B1
+#variant at 40702760 found only in father
+#variant at 40702252 found only in mother
+
+#variants reported at chr 11 43876002 and 43877726, both from mother
+by_gene$HSD17B12
+
+#variants reported at chr 4 88225032 and 88238293
+by_gene$HSD17B13
+#variant at 88225032 found in both parents
+#variant at 88238293 only found in mother
+#since unable to determine which parent 88225032 came from, would it still be considered comp-het? 
+ 
+#variants reporated at chr 9 99003102 and 98997810 from father only
+by_gene$HSD17B3
+
+#variants reported at chr 5 118788196, 118831460 and 118970770
+by_gene$HSD17B4
+#variant at 118788196 only found in mother
+#variant at 118831460 only found in mother
+#variant at 118970770 only found in father
+#since variants exist that are only found in each parent, comp-het? 
+
+#variants reported at chr 10 38667003 and 38667067
+by_gene$HSD17B7P2
+#variant at 38667003 found in both parents
+#variant at 38667067 only found in mother
+
+
+
+```
+##Search for Mendelian Inheritance Errors
+The resulting data set from the impala query was checked for congruence with laws of Mendelian inheritance,
+as follows.  
+
+####Het newborn variants
+For newborn variants genotyped as het (0/1):  
+- If the mother is 0/0, then mother must be 0/1 and the nb alt must match the father’s alt  
+- If the father is 0/0, then father must be 0/1 and the nb alt must match the mother’s alt  
+- If both parents are het, nb alt and parent alts must be the same  
+- If the mother is 1/1, then the father must be 0/1 or 0/0 and the nb alt must match the mother’s alt  
+- If the father is 1/1, then the mother must be 0/1 or 0/0 and the nb alt must match the fathers’s alt   
+
+```{r find_mie}
+####################################
+## Het = 16 nb variants with 0/1 ##
+####################################
+nb_het = nb[which(nb$gt == "0/1"),]
+
+#find matching variant positions in parents
+mom_vars = mom[grep(paste(nb_het$variant_id, collapse="|"), mom$variant_id),] #10 vars
+dad_vars = dad[grep(paste(nb_het$variant_id, collapse="|"), dad$variant_id),] #9 vars
+
+#merge together to find intersection of gene:chr:pos
+mie_hets = merge(nb_het, mom_vars, by = "variant_id")
+mie_hets = merge(mie_hets, dad_vars, by = "variant_id")
+
+#clean up results
+mie_hets = mie_hets[,c(1,3:13,26:27,40:41)]
+colnames(mie_hets) = c("variant_id", "qual", "filter", "rsID", "kav_pct", "kav_count",
+                       "gene_name", "chr", "pos", "ref", "nb_alt", "nb_gt", "m_alt",
+                       "m_gt", "f_alt", "f_gt")
+
+#find variants that are in congruence with MI laws
+#if the mother is 0/0, then the nb alt must match the father's alt or be null
+mie_hets[(mie_hets$m_gt == "0/0" & mie_hets$f_gt == "0/1" & (mie_hets$nb_alt == mie_hets$f_alt |
+        #if the father is 0/0, then the nb alt must match the mother's alt
+        mie_hets[(mie_hets$d_gt == "0/0" & mie_hets$m_gt == "0/1" & (mie_hets$nb_alt == mie_hets$m_alt|
+        #if both parents are het, nb alt and parent alts must be the same, or nb alt is null
+        mie_hets[((mie_hets$m_gt == "0/1" & mie_hets$f_gt== "0/1") &
+        #if the mother is 1/1, then the father must be 0/1 or 0/0 and the nb alt must match the mother's alt
+        mie_hets[(mie_hets$m_gt == "1/1" & mie_hets$f_gt != "1/1"
+        #if the father is 1/1, then the mother must be 0/1 or 0/0 and the nb alt must match the fathers's alt
+        mie_hets[(mie_hets$f_gt == "1/1" & mie_hets$m_gt != "1/1"
+        mie_hets$nb_alt == "NULL")),],
+        mie_hets$nb_alt == "NULL")),],
+        ((mie_hets$nb_alt == mie_hets$f_alt)| (mie_hets$nb_alt == "NULL")) & (mie_hets$m_alt == mie_hets$f_alt)),],
+        & (mie_hets$nb_alt == mie_hets$m_alt)),],
+        & (mie_hets$nb_alt == mie_hets$f_alt)),]
+
+#if nb_het variants are not in no_mie set, then they are MIE
+nb_het[grep(paste(nb_het$variant_id, collapse="|"), no_mie$variant_id, invert=TRUE),]
 
 ```
 
-##Search for Mendelian Inheritance Errors
+##Hom ref newborn variants
+For newborn variants genotyped as het (0/0):  
+- If the mother is 0/1, then the dad must be 0/0  
+- If the father is 0/1, then the mother must be 0/0  
+- Or both parents are 0/0  
 
-```{r find_mie}
+```{r hom_ref_mie}
+#################################################
+## homozygous ref = 6245 nb variants with 0/0 ##
+#################################################
+nb_hom_ref = nb[which(nb$gt == "0/0"),]
 
-#subset for newborns not found above
-comp_hets$variant_type = "comp_het"
-hom_ref.df$variant_type = "hom_ref"
-hom_alt.df$variant_type = "hom_alt"
+#find equivalent variants in parents
+mom_hom_vars = na.omit(mom[match(nb_hom_ref$variant_id, mom$variant_id),])
+dad_hom_vars = na.omit(dad[match(nb_hom_ref$variant_id, dad$variant_id),])
 
-##go back and get all the columns for hom variants ##
+#merge together to find intersection of gene:chr:pos
+mie_homs = merge(nb_hom_ref, mom_hom_vars, by = "variant_id")
+mie_homs = merge(mie_homs, dad_hom_vars, by = "variant_id")
 
-#data frame homozygous variants
-homozygous = rbind(hom_ref.df, hom_alt.df)
-homozygous$variant_id = paste(homozygous$gene_name, homozygous$chr, homozygous$pos, sep=":")
+#clean up resuts
+mie_homs = mie_homs[,c(1, 3:13,26:27,40:41)]
+colnames(mie_homs) = c("variant_id", "qual", "filter", "rsID", "kav_pct", "kav_count",
+                       "gene_name", "chr", "pos", "ref", "nb_alt", "nb_gt", "m_alt",
+                       "m_gt", "f_alt", "f_gt")
 
-#find nb variants not in homozygous variants
-mie_cands = nb[!(nb$variant_id %in% homozygous$variant_id),]
+#find variants that are in congruence with MI laws
+no_mie_homs = rbind(
+  #if the mother is 0/1, then the dad must be 0/0 and nb ref must match
+  mie_homs[(mie_homs$m_gt == "0/1" & mie_homs$f_gt == "0/0"),],
+  #if the father is 0/1, then the mother must be 0/0
+  mie_homs[(mie_homs$d_gt == "0/1" & mie_homs$m_gt == "0/0"),],
+  #both parents are 0/0
+  mie_homs[(mie_homs$m_gt == "0/0" & mie_homs$f_gt== "0/0"),]
+)
 
-#find nb variants not in comp_hets
-mie_cands = mie_cands[!(mie_cands$variant_id %in% comp_hets$variant_id),]
+#if nb_hom variants are not in no_mie_homs set, then they are MIE
+na.omit(nb_hom_ref[!match(nb_hom_ref$variant_id, no_mie_homs$variant_id),])
+```
 
-##########################
-#find de novo mutations ##
-##########################
-#if variant = 1/1 must have one alt from mom and one from dad
+##Hom alt newborn variants
+For newborn variants genotyped as het (1/1):  
+- If the father is 0/1, then the mother must be 1/1  
+- If the mother is 0/1, then the father must be 1/1   
+- Or both parents are 1/1  
 
-#find het mie nb candidates
-mie_hom_alt = mie_cands[(mie_cands$gt == "1/1"),]
+```{r hom_alt_mie}
+##############################################
+## homozygous alt = 5 nb variants with 1/1 ##
+##############################################
+nb_hom_alt = nb[which(nb$gt == "1/1"),]
 
-#check for alts not from either mom or dad
-mie_hom_alt[!((mie_hom_alt$alt_id %in% het_dad$alt_id) | (mie_hom_alt$alt_id %in% het_mom$alt_id)),]
+#find equivalent variants in parents
+mom_hom_alt = na.omit(mom[match(nb_hom_alt$variant_id, mom$variant_id),])
+dad_hom_alt = na.omit(dad[match(nb_hom_alt$variant_id, dad$variant_id),])
 
-dad[(grep("1:162767168:A", dad$alt_id)),]
+#merge together to find intersection of gene:chr:pos
+mie_alt = merge(nb_hom_alt, mom_hom_alt, by = "variant_id")
+mie_alt = merge(mie_alt, dad_hom_alt, by = "variant_id")
 
+#clean up resuts
+mie_alts = mie_alt[,c(1, 3:13,26:27,40:41)]
+colnames(mie_alts) = c("variant_id", "qual", "filter", "rsID", "kav_pct",
+                       "kav_count", "gene_name", "chr", "pos", "ref", "nb_alt",
+                       "nb_gt", "m_alt", "m_gt", "f_alt", "f_gt")
 
-head(dad)
+#find variants that are in congruence with MI laws
+mie_hom_alt = rbind(
+  #if the mother is 0/1, then the father must be 1/1
+  mie_alts[(mie_alts$m_gt == "0/1" & mie_alts$f_gt == "1/1"),],
+  #if the father is 0/1, then the mother must be 1/1
+  mie_alts[(mie_alts$d_gt == "0/1" & mie_alts$m_gt == "1/1"),],
+  #both parents are 1/1
+  mie_alts[(mie_alts$m_gt == "1/1" & mie_alts$f_gt == "1/1"),]
+)
 
-#if variant 0/0 must have ref from mom and ref from dad
-
-
-#if variant 0/1 must have one ref from mom and one from dad 
-
-
-
-
-
-
-
-
+#if nb_hom variants are not in no_mie_homs set, then they are MIE
+na.omit(nb_hom_alt[!match(nb_hom_alt$variant_id, mie_hom_alt$variant_id),])
 ```
