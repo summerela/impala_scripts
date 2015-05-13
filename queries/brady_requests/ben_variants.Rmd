@@ -206,14 +206,14 @@ dim(hom_ref_nb_dad) #0/10 het dads match with homozygous ref newborns
 hom_refs = merge(hom_ref_nb_mom, hom_ref_nb_dad, by= "variant_id")
 
 #get rid of unnecessary columns
-hom_ref.df = hom_refs[,(1:13,26:27,54:55)]
+hom_ref.df = hom_refs[,c(1:13,26:27,54:55)]
 colnames(hom_ref.df) = c("variant_id", "sample_id", "qual", "filter", "rsID", "kav_freqPct",
-"kav_count", "gene_name", "chr", "pos", "ref", "nb_alt", "nb_gt",
-"m_alt", "m_gt", "f_alt","f_gt")
+                         "kav_count", "gene_name", "chr", "pos", "ref", "nb_alt", "nb_gt",
+                         "m_alt", "m_gt", "f_alt","f_gt")
 
 #find variants where mother, father and newborn have matching alts at same chr/pos, or
 #mom and dad alts match and nb call is null
-hom_ref.df = hhom_ref.df[which((hom_ref.df$nb_alt == hom_ref.df$m_alt) & (hom_ref.df$nb_alt == hom_ref.df$f_alt) | 
+hom_ref.df = hom_ref.df[which((hom_ref.df$nb_alt == hom_ref.df$m_alt) & (hom_ref.df$nb_alt == hom_ref.df$f_alt) | 
                                 (hom_ref.df$m_alt == hom_ref.df$f_alt & hom_ref.df$nb_alt == "NULL")
                               ),]
 hom_ref.df
@@ -385,6 +385,9 @@ by_gene$HSD17B13
 #variant at 88225032 found in both parents
 #variant at 88238293 only found in mother
 #since unable to determine which parent 88225032 came from, would it still be considered comp-het? 
+
+### check on logic using this variant ## 
+find_comphet(by_gene$HSD17B13)
  
 #variants reporated at chr 9 99003102 and 98997810 from father only
 by_gene$HSD17B3
@@ -422,40 +425,45 @@ For newborn variants genotyped as het (0/1):
 ####################################
 nb_het = nb[which(nb$gt == "0/1"),]
 
-#find matching variant positions in parents
+#find matching variants from each parent
 mom_vars = mom[grep(paste(nb_het$variant_id, collapse="|"), mom$variant_id),] #10 vars
 dad_vars = dad[grep(paste(nb_het$variant_id, collapse="|"), dad$variant_id),] #9 vars
 
 #merge together to find intersection of gene:chr:pos
-mie_hets = merge(nb_het, mom_vars, by = "variant_id")
-mie_hets = merge(mie_hets, dad_vars, by = "variant_id")
+mie_het_nb_mom = merge(nb_het, mom_vars, by = "variant_id")
+mie_hets_nb_dad = merge(nb_het, dad_vars, by = "variant_id")
+mie_hets = merge(mie_het_nb_mom, mie_hets_nb_dad, by= "variant_id")
 
-#clean up results
-mie_hets = mie_hets[,c(1,3:13,26:27,40:41)]
-colnames(mie_hets) = c("variant_id", "qual", "filter", "rsID", "kav_pct", "kav_count",
-                       "gene_name", "chr", "pos", "ref", "nb_alt", "nb_gt", "m_alt",
-                       "m_gt", "f_alt", "f_gt")
+#get rid of unnecessary columns
+mie_hets = mie_hets[,c(1:13,26:27,54:55)]
+colnames(mie_hets) = c("variant_id", "sample_id", "qual", "filter", "rsID", "kav_freqPct",
+                         "kav_count", "gene_name", "chr", "pos", "ref", "nb_alt", "nb_gt",
+                         "m_alt", "m_gt", "f_alt","f_gt")
+
+#variants not in mie_hets and not marked as comp_het are missing info from one parent
+missing_info = nb_het[grep(paste(mie_hets$variant_id, collapse="|"), nb_het$variant_id, invert=TRUE),]
+missing_info = missing_info[grep(paste(comp_het.df$variant_id, collapse="|"), missing_info$variant_id, invert=TRUE),]
+missing_info
+#these were verified by hand on impala as missing info from one parent
 
 #find variants that are in congruence with MI laws
-#if the mother is 0/0, then the nb alt must match the father's alt or be null
-mie_hets[(mie_hets$m_gt == "0/0" & mie_hets$f_gt == "0/1" & (mie_hets$nb_alt == mie_hets$f_alt |
-        #if the father is 0/0, then the nb alt must match the mother's alt
-        mie_hets[(mie_hets$d_gt == "0/0" & mie_hets$m_gt == "0/1" & (mie_hets$nb_alt == mie_hets$m_alt|
-        #if both parents are het, nb alt and parent alts must be the same, or nb alt is null
-        mie_hets[((mie_hets$m_gt == "0/1" & mie_hets$f_gt== "0/1") &
-        #if the mother is 1/1, then the father must be 0/1 or 0/0 and the nb alt must match the mother's alt
-        mie_hets[(mie_hets$m_gt == "1/1" & mie_hets$f_gt != "1/1"
-        #if the father is 1/1, then the mother must be 0/1 or 0/0 and the nb alt must match the fathers's alt
-        mie_hets[(mie_hets$f_gt == "1/1" & mie_hets$m_gt != "1/1"
-        mie_hets$nb_alt == "NULL")),],
-        mie_hets$nb_alt == "NULL")),],
-        ((mie_hets$nb_alt == mie_hets$f_alt)| (mie_hets$nb_alt == "NULL")) & (mie_hets$m_alt == mie_hets$f_alt)),],
-        & (mie_hets$nb_alt == mie_hets$m_alt)),],
-        & (mie_hets$nb_alt == mie_hets$f_alt)),]
+no_mie = rbind(
+  #if the mother is 0/0 and father is 0/1, then the nb alt must match the father's alt or be null
+  mie_hets[(mie_hets$m_gt == "0/0" & mie_hets$f_gt == "0/1" & (mie_hets$nb_alt == mie_hets$f_alt | mie_hets$nb_alt == "NULL")),],
+  #if the father is 0/0 and the mother is 0/1, then the nb alt must match the mother's alt or be null
+  mie_hets[(mie_hets$f_gt == "0/0" & mie_hets$m_gt == "0/1" & (mie_hets$nb_alt == mie_hets$m_alt| mie_hets$nb_alt == "NULL")),],
+  #if both parents are het, nb alt and parent alts must be the same, or nb alt is null
+  mie_hets[((mie_hets$m_gt == "0/1" & mie_hets$f_gt== "0/1") & (mie_hets$nb_alt == mie_hets$f_alt & mie_hets$nb_alt == mie_hets$m_alt)| (mie_hets$m_alt == mie_hets$f_alt & mie_hets$nb_alt == "NULL")),],
+  #if the mother is 1/1, then the father must be 0/1 or 0/0 and the nb alt must match the mother's alt
+  #or be null
+  mie_hets[(mie_hets$m_gt == "1/1" & (mie_hets$f_gt == "0/1" | mie_hets$f_gt == "0/0") & (mie_hets$nb_alt == mie_hets$m_alt & mie_hets$nb_alt == mie_hets$f_alt | mie_hets$m_alt == mie_hets$f_alt & mie_hets$nb_alt == "NULL")),],
+  #if the father is 1/1, then the mother must be 0/1 or 0/0 and the nb alt must match the fathers's alt
+  mie_hets[(mie_hets$f_gt == "1/1" & (mie_hets$m_gt == "0/1" | mie_hets$m_gt == "0/0") & (mie_hets$nb_alt == mie_hets$f_alt & mie_hets$nb_alt == mie_hets$m_alt | mie_hets$f_alt == mie_hets$m_alt & mie_hets$nb_alt == "NULL")),])
 
-#if nb_het variants are not in no_mie set, then they are MIE
-nb_het[grep(paste(nb_het$variant_id, collapse="|"), no_mie$variant_id, invert=TRUE),]
-
+#if mie_het variants are not in no_mie set, then they are potentially MIE
+mie_het_cands = mie_hets[grep(paste(no_mie$variant_id, collapse="|"), mie_hets$variant_id, invert=TRUE),]
+mie_het_cands
+  
 ```
 
 ##Hom ref newborn variants
@@ -474,19 +482,25 @@ nb_hom_ref = nb[which(nb$gt == "0/0"),]
 mom_hom_vars = na.omit(mom[match(nb_hom_ref$variant_id, mom$variant_id),])
 dad_hom_vars = na.omit(dad[match(nb_hom_ref$variant_id, dad$variant_id),])
 
-#merge together to find intersection of gene:chr:pos
-mie_homs = merge(nb_hom_ref, mom_hom_vars, by = "variant_id")
-mie_homs = merge(mie_homs, dad_hom_vars, by = "variant_id")
+#merge together to find matching parent varients
+mie_hom_nb_mom = merge(nb_hom_ref, mom_hom_vars, by = "variant_id")
+mie_hom_nb_dad = merge(mie_hom_nb_mom, dad_hom_vars, by = "variant_id")
+mie_homs = merge(mie_hom_nb_mom, mie_hom_nb_dad, by= "variant_id")
 
 #clean up resuts
-mie_homs = mie_homs[,c(1, 3:13,26:27,40:41)]
-colnames(mie_homs) = c("variant_id", "qual", "filter", "rsID", "kav_pct", "kav_count",
-                       "gene_name", "chr", "pos", "ref", "nb_alt", "nb_gt", "m_alt",
-                       "m_gt", "f_alt", "f_gt")
+mie_homs = mie_homs[,c(1:13,26:27,54:55)]
+colnames(mie_homs) = c("variant_id", "sample_id", "qual", "filter", "rsID", "kav_freqPct",
+                         "kav_count", "gene_name", "chr", "pos", "ref", "nb_alt", "nb_gt",
+                         "m_alt", "m_gt", "f_alt","f_gt")
+
+#variants that are not in mie_homs and not marked hom ref are missing parent info
+missing_info_miehoms = nb_hom_ref[grep(paste(mie_homs$variant_id, collapse="|"), nb_hom_ref$variant_id, invert=TRUE),]
+missing_info_miehoms = missing_info[grep(paste(hom_ref.df$variant_id, collapse="|"), missing_info$variant_id, invert=TRUE),]
+missing_info_miehoms
 
 #find variants that are in congruence with MI laws
 no_mie_homs = rbind(
-  #if the mother is 0/1, then the dad must be 0/0 and nb ref must match
+  #if the mother is 0/1, then the dad must be 0/0 
   mie_homs[(mie_homs$m_gt == "0/1" & mie_homs$f_gt == "0/0"),],
   #if the father is 0/1, then the mother must be 0/0
   mie_homs[(mie_homs$d_gt == "0/1" & mie_homs$m_gt == "0/0"),],
