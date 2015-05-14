@@ -62,14 +62,6 @@ The results of the query shown above were stored as a table on impala and used t
 - Compare counts with data subset in R  
 - Examine variants at positions reported in the R analysis to verify results
 
-###Compare genotype counts
-For comparing counts, variations of the following query was used to compare resuls with R: 
-```sql
-SELECT COUNT(1) 
-FROM ben_query as ben
-WHERE ben.sample_id LIKE "%03"
-AND ben.gt = "0/1"
-```
 
 ```{r read_in_and_test}
 #########################################
@@ -77,8 +69,15 @@ AND ben.gt = "0/1"
 #########################################
 suppressMessages(library(readr))
 
-#read in query results from impala
-query = read_csv("~/impala_scripts/queries/brady_requests/ben_query.csv")
+#load library
+library(RODBC)
+#connect using the DSN name you created on your machine
+conn <- odbcConnect("Impala DSN")
+
+#read in query results
+query = sqlFetch(conn, "users_selasady.ben_query")
+
+
 #quick check on data structure
 head(query)
 #dimensions
@@ -98,7 +97,7 @@ dim(nb) #6274 newborn variants
 table(nb$gt)
 
 ###############################
-##comparing genotype counts  ##
+## genotype counts  ##
 ###############################
 #5 hom alt newborns
 hom_alt_nb = nb[which(nb$gt == "1/1"),]
@@ -121,8 +120,6 @@ het_dad = dad[which(dad$gt == "0/1"),]
 dim(het_dad) 
 ```
 
-Counts match impala results. 
-
 #Search for homozygous alt alleles
 The data was read into R and searched for variants in the newborn marked as homozygous for the alternate allele. If the newborn alternate allele was the same as the alternate allele for both parents at this location, or if the nb allele was a no-call but both parent alleles were equal, it was marked as a homozygous alternate.  
 
@@ -137,8 +134,8 @@ nb_mom_hom_alt = merge(hom_alt_nb, het_mom, by="variant_id")
 dim(nb_mom_hom_alt)#2/5 variants match moms variants
 
 #merge nb with dad
-nb_dad_hom_alt = merge(hom_alt_nb, het_dad, by="variant_id")
-dim(nb_dad_hom_alt)#2/5 variants match dad's variants
+hom_alts = merge(nb_mom_hom_alt, het_dad, by="variant_id")
+dim(hom_alts)#2/5 variants match dad's variants
 
 #merge mom and dad's matching varaints
 hom_alts = merge(nb_mom_hom_alt, nb_dad_hom_alt, by="variant_id")
