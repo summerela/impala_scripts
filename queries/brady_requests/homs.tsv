@@ -1,0 +1,2 @@
+"variant_id"	"sample_id"	"qual"	"filter"	"rsID"	"kav_freqPct"	"kav_count"	"gene_name"	"chr"	"pos"	"ref"	"nb_alt"	"nb_gt"	"m_alt"	"m_gt"	"f_alt"	"f_gt"	"variant_type"
+"1"	"ACAA2:18:47339364"	"102-01197-03"	385	"PASS"	"rs75954532"	8.78290012478828	1475	"ACAA2"	"18"	47339364	"C"	"T"	"1/1"	"T"	"0/1"	"T"	"0/1"	"hom_alt"
