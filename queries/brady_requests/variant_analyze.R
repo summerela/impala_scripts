@@ -49,6 +49,7 @@ if(length(new.packages)) install.packages(new.packages, repos="http://cran.fhcrc
 library(RODBC)
 #connect using the DSN name you created on your machine
 conn <- odbcConnect("Impala DSN")
+print("Connected to impala.")
 
 args = "HOX%,BRCA1,BRCA2,RAS%"
 
@@ -58,10 +59,15 @@ args.df$type = NA
 args.df[(grepl("%$", args.df$gene)),]$type = "wildcard"
 args.df[!(grepl("%$", args.df$gene)),]$type = "gene"
 
+#if there are one or more wildcards
+if (dim(args.df[(args.df$type == "wildcard"),])[1] > 0 {
+  wildcards = paste("ens.gene_name LIKE '", paste(as.character(args.df[(args.df$type == "wildcard"),]$gene), 
+                                                  collapse= "' OR ens.gene_name LIKE '"), "'", sep="")
+}
 
-paste("ens.gene_name LIKE '", paste(as.character(args.df[(args.df$type == "wildcard"),]$gene), 
-                                  collapse= "' OR ens.gene_name LIKE '"), "'", sep="")
+#creates wildcard gene lists
 
+#creates non-wildcard gene list
 paste("WHERE ens.gene_name IN ('", paste(as.character(args.df[(args.df$type == "gene"),]$gene), collapse="','")
                                         , "')", sep="")
 
@@ -74,4 +80,41 @@ paste("WHERE ens.gene_name IN ('", paste(as.character(args.df[(args.df$type == "
 query = paste("SELECT * FROM public_hg19.ensembl_genes ens WHERE ens.gene_name = '", argsL$gene, "' LIMIT 5", sep="")
 
 print(sqlQuery(conn, query))
+
+
+
+
+
+WITH ens AS (
+  SELECT DISTINCT chromosome as chr, start, stop, gene_name
+  FROM public_hg19.ensembl_genes
+  WHERE (gene_name IN ( 'HADH', 'HADHA', 'HADHB', 'ACAA1',
+                        'ACAA2', 'EHHADH', 'ECHS1')
+         OR gene_name LIKE 'HSD17B%')
+  AND chromosome NOT LIKE "H%"
+)
+SELECT p.sample_id, p.qual, p.filter, k.id as rsID, (k.alle_freq * 100) as kav_pct, k.alle_cnt as kav_count,
+gene_name, p.chr, p.pos, p.ref, p.alt, p.gt, 
+(CASE  
+ WHEN SUBSTRING(p.sample_id, -2) = '01'
+ THEN 'M'
+ WHEN SUBSTRING(p.sample_id, -2) = '02'
+ THEN 'F'
+ WHEN SUBSTRING(p.sample_id, -2) = '03'
+ THEN 'NB'
+ END) as member, CONCAT(gene_name, ":", p.chr, ":", CAST(p.pos AS STRING)) as variant_id, 
+CONCAT(p.chr, ":", CAST(p.pos AS STRING), ":", p.alt) as alt_id 
+FROM
+(SELECT DISTINCT p.sample_id, p.qual, p.filter, ens.gene_name, p.chr, p.pos, p.ref, p.alt, p.gt
+ FROM ens, p7_ptb.itmi_102_puzzle p
+ WHERE p.chr = ens.chr
+ AND (p.pos >= ens.start AND p.pos <= ens.stop)
+ AND p.gt IS NOT NULL
+) AS p
+LEFT JOIN /* +SHUFFLE */ public_hg19.kaviar k
+ON p.chr = k.chromosome
+AND p.pos = k.pos
+AND p.ref = k.ref
+AND p.alt = k.alt
+WHERE (k.alle_freq < .10 OR k.alle_freq IS NULL)
 
