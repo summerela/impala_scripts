@@ -1,8 +1,5 @@
 #!/usr/bin/env Rscript
 
-#for windows, export R path
-system(paste("export PATH=$PATH:/usr/bin/R"), wait=TRUE)
-
 ###############################
 ## Read in command line args ##
 ###############################
@@ -11,8 +8,8 @@ system(paste("export PATH=$PATH:/usr/bin/R"), wait=TRUE)
 args=(commandArgs(TRUE))
 
 ##print help if both args not provided 
-if(length(args) < 2) {
-  cat("\n **Enter arguments for both gene and db:** \n")
+if(length(args) < 3) {
+  cat("\n **Enter arguments for gene, db and kav:** \n")
   args <- c("--help")
 }
 
@@ -23,11 +20,12 @@ if("--help" %in% args) {
       
       Arguments:
       --gene  - Genes of interest, surrounded by quotes, comma-sep, no spaces
-      --db      - Database to search in, ex.p7_ptb.illumina_variant
+      --db    - Database to search in, ex.p7_ptb.illumina_variant
+      --kav   - Kaviar allele frequency cutoff  %
       --help             - print help text
       
       Example:
-      ./variant_analyze.R --gene='BRCA1' --db='p7_ptb.illumina_variant' \n\n")
+      ./variant_analyze.R --gene='BRCA1' --db='p7_ptb.illumina_variant' --kav=10 \n\n")
  
   q(save="no")
 }
@@ -52,6 +50,28 @@ library(RODBC)
 #connect using the DSN name you created on your machine
 conn <- odbcConnect("Impala DSN")
 
+args = "HOX%,BRCA1,BRCA2,RAS%"
+
+args.df = as.data.frame(matrix(unlist(strsplit(args, ","))))
+colnames(args.df) = "gene"
+args.df$type = NA
+args.df[(grepl("%$", args.df$gene)),]$type = "wildcard"
+args.df[!(grepl("%$", args.df$gene)),]$type = "gene"
 
 
+paste("ens.gene_name LIKE '", paste(as.character(args.df[(args.df$type == "wildcard"),]$gene), 
+                                  collapse= "' OR ens.gene_name LIKE '"), "'", sep="")
+
+paste("WHERE ens.gene_name IN ('", paste(as.character(args.df[(args.df$type == "gene"),]$gene), collapse="','")
+                                        , "')", sep="")
+
+
+
+
+#######################
+##  Run impala query ##
+#######################
+query = paste("SELECT * FROM public_hg19.ensembl_genes ens WHERE ens.gene_name = '", argsL$gene, "' LIMIT 5", sep="")
+
+print(sqlQuery(conn, query))
 
