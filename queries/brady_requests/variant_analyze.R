@@ -36,140 +36,95 @@ argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
 argsL <- as.list(as.character(argsDF$V2))
 names(argsL) <- argsDF$V1
 
+#assign args to variable
+gene_arg = argsL$gene
+db_arg = argsL$db
+kav_arg = argsL$kav
 
-##load libraries, install if needed
-list.of.packages <- c("RODBC")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages, repos="http://cran.fhcrc.org")
- 
-#######################
-## Connect to impala ##
-#######################
-#load library
-library(RODBC)
-#connect using the DSN name you created on your machine
-conn <- odbcConnect("Impala DSN")
-print("Connected to impala.")
-
+# ##load libraries, install if needed
+# list.of.packages <- c("RODBC")
+# new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+# if(length(new.packages)) install.packages(new.packages, repos="http://cran.fhcrc.org")
+#  
+# #######################
+# ## Connect to impala ##
+# #######################
+# # #load library
+# # library(RODBC)
+# # #connect using the DSN name you created on your machine
+# # conn <- odbcConnect("Impala DSN")
+# # print("Connected to impala.")
+# 
 #################################
 ## Create query from user args ##
 #################################
-genes = args$genes
-database = args$db
-kav_freq = args$kav
+#create df of genes of interest, mark if wildcard
+genes.df = as.data.frame(matrix(unlist(strsplit(gene_arg, ","))))
+colnames(genes.df) = "gene"
+genes.df$type = NA
+genes.df[(grepl("%$", genes.df$gene)),]$type = "wildcard"
+genes.df[!(grepl("%$", genes.df$gene)),]$type = "gene"
 
-print(genes)
-print(database)
-print(kav_freq)
+#create wildcard gene lists
+if (dim(genes.df[(genes.df$type == "wildcard"),])[1] > 0 ){
+  wildcards = paste("ens.gene_name LIKE '", paste(as.character(genes.df[(genes.df$type == "wildcard"),]$gene), 
+                                                  collapse= "' OR ens.gene_name LIKE '"), "'", sep="")
+} else
+  wildcards = NULL
 
-# #create df of genes of interest, mark if wildcard
-# args.df = as.data.frame(matrix(unlist(strsplit(args, ","))))
-# colnames(args.df) = "gene"
-# args.df$type = NA
-# args.df[(grepl("%$", args.df$gene)),]$type = "wildcard"
-# args.df[!(grepl("%$", args.df$gene)),]$type = "gene"
-# 
-# #create wildcard gene lists
-# if (dim(args.df[(args.df$type == "wildcard"),])[1] > 0 ){
-#   wildcards = paste("ens.gene_name LIKE '", paste(as.character(args.df[(args.df$type == "wildcard"),]$gene), 
-#                                                   collapse= "' OR ens.gene_name LIKE '"), "'", sep="")
-#   wildcards
-# } else
-#   wildcards = NULL
-# 
-# #create non-wildcard gene list
-# if (dim(args.df[(args.df$type == "gene"),])[1] > 0){
-#   genes = paste("WHERE ens.gene_name IN ('", paste(as.character(args.df[(args.df$type == "gene"),]$gene), collapse="','")
-#                 , "')", sep="")
-# } else
-#   genes = NULL
-# 
-# 
-# #if wildcard and genes, add statement to gene list
-# if ((length(wildcards) > 0) & length(genes) > 0 ){
-#   gene_list = paste(genes, "OR", wildcards, sep=" ")
-# } else if 
-#  (length(wildcards) > 0 & length(genes) < 1){
-#   gene_list = paste("WHERE", wildcards)
-# } else if (length(wildcards) < 1 & length(genes) > 0){
-#   gene_list = genes
-# } else 
-#   print("No genes of interest found.")
-# 
-# #######################
-# ##  Run impala query ##
-# #######################
-# 
-# print(sqlQuery(conn, query))
-# 
-# 
-# ben_query = paste0(" 
-#   WITH ens AS (
-#   SELECT DISTINCT chromosome as chr, start, stop, gene_name
-#   FROM public_hg19.ensembl_genes
-#       WHERE (gene_name IN (",  gene_list, 
-#       " AND chromosome NOT LIKE 'H%'
-# )
-#       SELECT p.sample_id, p.qual, p.filter, k.id as rsID, (k.alle_freq * 100) as kav_pct, k.alle_cnt as kav_count,
-#       gene_name, p.chr, p.pos, p.ref, p.alt, p.gt, 
-#       (CASE  
-#       WHEN SUBSTRING(p.sample_id, -2) = '01'
-#       THEN 'M'
-#       WHEN SUBSTRING(p.sample_id, -2) = '02'
-#       THEN 'F'
-#       WHEN SUBSTRING(p.sample_id, -2) = '03'
-#       THEN 'NB'
-#       END) as member, CONCAT(gene_name, ':', p.chr, ':', CAST(p.pos AS STRING)) as variant_id, 
-#       CONCAT(p.chr, ':', CAST(p.pos AS STRING), ':', p.alt) as alt_id 
-#       FROM
-#       (SELECT DISTINCT p.sample_id, p.qual, p.filter, ens.gene_name, p.chr, p.pos, p.ref, p.alt, p.gt
-#       FROM ens," paste(
-#       WHERE p.chr = ens.chr
-#       AND (p.pos >= ens.start AND p.pos <= ens.stop)
-#       AND p.gt IS NOT NULL
-#       ) AS p
-#       LEFT JOIN /* +SHUFFLE */ public_hg19.kaviar k
-#       ON p.chr = k.chromosome
-#       AND p.pos = k.pos
-#       AND p.ref = k.ref
-#       AND p.alt = k.alt
-#       WHERE (k.alle_freq < .10 OR k.alle_freq IS NULL)
-#       ")
-# nchar(ben_query)
-# 
-# query =  strwrap(ben_query, width=nchar(ben_query), simplify=TRUE)
-# query
-# 
-# WITH ens AS (
-#   SELECT DISTINCT chromosome as chr, start, stop, gene_name
-#   FROM public_hg19.ensembl_genes
-#   WHERE (gene_name IN ( 'HADH', 'HADHA', 'HADHB', 'ACAA1',
-#                         'ACAA2', 'EHHADH', 'ECHS1')
-#          OR gene_name LIKE 'HSD17B%')
-#   AND chromosome NOT LIKE "H%"
-# )
-# SELECT p.sample_id, p.qual, p.filter, k.id as rsID, (k.alle_freq * 100) as kav_pct, k.alle_cnt as kav_count,
-# gene_name, p.chr, p.pos, p.ref, p.alt, p.gt, 
-# (CASE  
-#  WHEN SUBSTRING(p.sample_id, -2) = '01'
-#  THEN 'M'
-#  WHEN SUBSTRING(p.sample_id, -2) = '02'
-#  THEN 'F'
-#  WHEN SUBSTRING(p.sample_id, -2) = '03'
-#  THEN 'NB'
-#  END) as member, CONCAT(gene_name, ":", p.chr, ":", CAST(p.pos AS STRING)) as variant_id, 
-# CONCAT(p.chr, ":", CAST(p.pos AS STRING), ":", p.alt) as alt_id 
-# FROM
-# (SELECT DISTINCT p.sample_id, p.qual, p.filter, ens.gene_name, p.chr, p.pos, p.ref, p.alt, p.gt
-#  FROM ens, p7_ptb.itmi_102_puzzle p
-#  WHERE p.chr = ens.chr
-#  AND (p.pos >= ens.start AND p.pos <= ens.stop)
-#  AND p.gt IS NOT NULL
-# ) AS p
-# LEFT JOIN /* +SHUFFLE */ public_hg19.kaviar k
-# ON p.chr = k.chromosome
-# AND p.pos = k.pos
-# AND p.ref = k.ref
-# AND p.alt = k.alt
-# WHERE (k.alle_freq < .10 OR k.alle_freq IS NULL)
-# 
+#create non-wildcard gene list
+if (dim(genes.df[(genes.df$type == "gene"),])[1] > 0){
+  genes = paste("WHERE ens.gene_name IN ('", paste(as.character(genes.df[(genes.df$type == "gene"),]$gene), collapse="','")
+                , "')", sep="")
+} else
+  genes = NULL
+
+
+#if wildcard and genes, add statement to gene list
+if ((length(wildcards) > 0) & length(genes) > 0 ){
+  gene_list = paste(genes, "OR", wildcards, sep=" ")
+} else if 
+ (length(wildcards) > 0 & length(genes) < 1){
+  gene_list = paste("(WHERE", wildcards)
+} else if (length(wildcards) < 1 & length(genes) > 0){
+  gene_list = genes
+} else 
+  print("No genes of interest found.")
+
+#######################
+##  Run impala query ##
+#######################
+ben_query = paste0(" 
+  WITH ens AS (SELECT DISTINCT chromosome as chr, start, stop, gene_name
+  FROM public_hg19.ensembl_genes ",  gene_list, ") 
+      AND chromosome NOT LIKE 'H%'
+)
+      SELECT p.sample_id, p.qual, p.filter, k.id as rsID, (k.alle_freq * 100) as kav_pct, k.alle_cnt as kav_count,
+      gene_name, p.chr, p.pos, p.ref, p.alt, p.gt, 
+      (CASE  
+      WHEN SUBSTRING(p.sample_id, -2) = '01'
+      THEN 'M'
+      WHEN SUBSTRING(p.sample_id, -2) = '02'
+      THEN 'F'
+      WHEN SUBSTRING(p.sample_id, -2) = '03'
+      THEN 'NB'
+      END) as member, CONCAT(gene_name, ':', p.chr, ':', CAST(p.pos AS STRING)) as variant_id, 
+      CONCAT(p.chr, ':', CAST(p.pos AS STRING), ':', p.alt) as alt_id 
+      FROM
+      (SELECT DISTINCT p.sample_id, p.qual, p.filter, ens.gene_name, p.chr, p.pos, p.ref, p.alt, p.gt
+      FROM ens,", db_arg, 
+      "WHERE p.chr = ens.chr
+      AND (p.pos >= ens.start AND p.pos <= ens.stop)
+      AND p.gt IS NOT NULL
+      ) AS p
+      LEFT JOIN /* +SHUFFLE */ public_hg19.kaviar k
+      ON p.chr = k.chromosome
+      AND p.pos = k.pos
+      AND p.ref = k.ref
+      AND p.alt = k.alt
+      WHERE (k.alle_freq < .", kav_arg, " OR k.alle_freq IS NULL)
+      ")
+
+query =  strwrap(ben_query, width=nchar(ben_query), simplify=TRUE)
+print(query)
+
