@@ -246,7 +246,7 @@ find_comphet = function(x){
 ##apply function to newborn comp het candidates
 comp_hets = by(het_nb, as.character(het_nb$gene_name), find_comphet)
 
-#data frame results - automate this dammit Summer
+#data frame results
 comp_het.df = rbind(comp_hets$HSD17B1, comp_hets$HSD17B13, comp_hets$HSD17B4, comp_hets$HSD17B7P2)
 #combine with newborn variants
 comp_het.df = merge(het_nb, comp_het.df, by="variant_id")
@@ -310,7 +310,7 @@ mie_hom_nb_mom = merge(nb_hom_ref, mom_hom_vars, by = "variant_id")
 mie_hom_nb_dad = merge(mie_hom_nb_mom, dad_hom_vars, by = "variant_id")
 mie_homs = merge(mie_hom_nb_mom, mie_hom_nb_dad, by= "variant_id")
 
-#clean up resuts
+#clean up results
 mie_homs = mie_homs[,c(1:13,25:26,38:39)]
 colnames(mie_homs) = c("variant_id", "sample_id", "qual", "filter", "rsID", "kav_freqPct",
                        "kav_count", "gene_name", "chr", "pos", "ref", "nb_alt", "nb_gt",
@@ -369,35 +369,44 @@ hom_alt_mie = na.omit(nb_hom_alt[!match(nb_hom_alt$variant_id, mie_hom_alt$varia
 ####################################
 ## Merge Results and save to file ##
 ####################################
-
-#remove variant id
-
-#comp hets, find both parents alts for each position
-
-
+#remove extraneous columns from comp hets
 comp_het_nb.df = comp_het.df[,c(1:13)]
 
+#add parent information
+comp_het_nb.df$m_alt = mom[match(comp_het_nb.df$variant_id, mom$variant_id),]$alt
+comp_het_nb.df$m_gt = mom[match(comp_het_nb.df$variant_id, mom$variant_id),]$gt
+comp_het_nb.df$f_alt = dad[match(comp_het_nb.df$variant_id, dad$variant_id),]$alt
+comp_het_nb.df$f_gt = dad[match(comp_het_nb.df$variant_id, dad$variant_id),]$gt
 
-mom_comp_hets = na.omit(mom[match(comp_het_nb.df$variant_id, mom$variant_id),])
-dad_comp_hets = na.omit(dad[match(comp_het_nb.df$variant_id, dad$variant_id),])
+#make column names the same
+colnames(comp_het_nb.df) = colnames(hom_alt.df)
 
-nb_mom_comp_hets = merge(comp_het_nb.df, mom_comp_hets, by="variant_id")
-nb_mom_comp_hets = nb_mom_comp_hets[,c(1:13, 24:25)]
+#add labels to each 
+if (dim(hom_alt.df)[1] > 0){
+  hom_alt.df$vartype= "hom_alt"
+  df_list = list("hom_alt.df")
+}
+if (dim(hom_ref.df)[1] > 0){
+  hom_ref.df$vartype = "hom_ref"
+  df_list = c(df_list, "hom_ref.df")
+}
+if (dim(comp_het.df)[1] > 0){
+  comp_het_nb.df$vartype = "comp_het"
+  df_list = c(df_list, "comp_het_nb.df")
+}
+if (dim(het_mie)[1] > 0){
+  het_mie$vartype = "het_mie"
+  df_list = c(df_list, "het_mie")
+}
+if (dim(hom_ref_mie)[1] > 0){
+  hom_ref_mie$vartype = "hom_ref_mie"
+  df_list = c(df_list, "hom_ref_mie")
+}
+if (dim(hom_alt_mie)[1] > 0){
+  hom_alt_mie$vartype = "hom_alt_mie"
+  df_list = c(df_list, "hom_alt_mie")
+}
 
-nb_dad_comp_hets = merge(comp_het_nb.df, nb_mom_comp_hets, by="variant_id")
-nb_dad_comp_hets = nb_dad_comp_hets[,c(1:13, 24:25)]
-head(nb_dad_comp_hets)
-
-comp_hets.df = merge(nb_mom_comp_hets, nb_dad_comp_hets, by="variant_id")
-
-colnames(comp_hets.df)
-
-test = comp_hets[,c(2:13,24:25,)]
-head(test)
-
-head(hom_alt.df)
-head(comp_het.df)
-
-
+results.df = unique(do.call("rbind", lapply(df_list, get)))
 
 
