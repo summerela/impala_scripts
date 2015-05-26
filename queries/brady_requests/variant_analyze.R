@@ -1,5 +1,26 @@
 #!/usr/bin/env Rscript
 
+###############################  variant_analyze.R  ####################################################
+##  PURPOSE: This script uses a user-specified gene annotation database and variant database to locate
+##           variants that fall in the range of a user-specified list of genes of interest. After 
+##           identifying potential variants, the variants are checked against the Kaviar database to
+##           determine if the variants are rare according to a user-specified kaviar frequency. Only 
+##           variants below this kaviar frequency, or not in kaviar, are returned. This script returns
+##           information about heritability, including: MIE, compound-heterozygosity, and homozygous alt
+##           and homozygous ref alleles that were inhereted from none homozygous parents. 
+##
+##  INPUT:   Enter arguments for gene, db and kav as follows: 
+##           --gene  - Comma separated list of genes of interest, comma-separated, no spaces
+##           --db    - Database to search in, ex.p7_ptb.illumina_variant
+##           --kav   - Kaviar allele frequency cutoff  %
+##           --plat  - Specify if platform is illumina or cgi
+##
+##  EXAMPLE: ./variant_analyze.R --gene='BRCA1' --db='p7_ptb.illumina_variant' --kav=10 --plat='illumina' 
+##
+##  OUTPUT: TSV file of candidate variants of interest, marking variant type. 
+###########################################################################################################
+options(error=traceback)
+
 ###############################
 ## Read in command line args ##
 ###############################
@@ -57,6 +78,7 @@ library(RODBC)
 conn <- odbcConnect("Impala DSN")
 print("Connected to impala.")
 conn
+
 #################################
 ## Create query from user args ##
 #################################
