@@ -130,47 +130,60 @@ query_df = pd.read_csv('/Users/selasady/impala_scripts/queries/brady_requests/te
 ############################
 # find candidate variants ##
 ############################
-# use variant id to match by gene, chr and position and check inheritance
-
+# create lists to store candidate variants
 hom_alt = []
 hom_ref = []
 comp_het = []
 
-by_variant = query_df.groupby('variant_id')
+# # group by variant id to locate variants at same chr and pos
+# by_variant = query_df.groupby('variant_id')
+#
+# test = by_variant.get_group('ACAA2:18:47339364')
+#
+# # if there are variants from each trio member and parents are het at this chr:pos
+# if (len(test[(test.member == "NB")]) > 0) and (len(test[(test['member']=='M') & (test['gt']=='0/1')]) > 0 )\
+#         and (len(test[(test['member']=='F') & (test['gt']=='0/1')]) > 0 ):
+#     # if the newborn is hom_ref
+#     if (len(test[(test['member']=='NB') & (test['gt']=='0/0')]) > 0 ):
+#         #mark as hom_ref
+#         hom_ref.append(test)
+#     #if the newborn is hom_alt
+#     if (len(test[(test['member']=='NB') & (test['gt']=='1/1')]) > 0 ):
+#         hom_alt.append(test)
+# print hom_alt
 
-test = query_df[query_df['gene_name'] == "HSD17B13"]
-
-#print len(test[(test.member == "NB")]) > 0
 
 #     if nb is het
 #         and more than one variant per gene
 #         and variant from mom and dad are different
 #         then mark as comp het
 
-
-#check for hom_alt and hom_ref rare variants
-if (len(test[(test.member == "NB")]) > 0) and (len(test[(test.member == "M")]) > 0) and (len(test[(test.member == "F")]) > 0):
-    if (len(test[(test['member']=='NB') & (test['gt']=='0/0')]) > 0 ) \
-            and (len(test[(test['member']=='M') & (test['gt']=='0/1')]) > 0 ) \
-            and (len(test[(test['member']=='F') & (test['gt']=='0/1')]) > 0 ):
-        hom_ref.append(test)
-    if (len(test[(test['member']=='NB') & (test['gt']=='1/1')]) > 0 ) \
-            and (len(test[(test['member']=='M') & (test['gt']=='0/1')]) > 0 ) \
-            and (len(test[(test['member']=='F') & (test['gt']=='0/1')]) > 0 ):
-        hom_alt.append(test)
-
-#check for comp hets per gene
-if test.variant_id.nunique() > 1:
-    print "sweet"
+#group variants by gene name
+by_gene = query_df.groupby('gene_name')
 
 
+test_gene = by_gene.get_group('HSD17B7P2')
+test_gene['alt'].fillna("NC")
 
-#print test[(test['member']=='NB') & (test['gt']=='0/0')]
+
+dad = test_gene['pos'][(test_gene['member'] == 'F')]
+mom = test_gene['pos'][(test_gene['member'] == 'M')]
+nb = test_gene['pos'][(test_gene['member'] == 'NB')]
+
+print len(list(set(nb) - set(mom))) < len(nb)
+print len(list(set(nb) - set(dad))) < len(nb)
+
+#if there is more than one variant per gene, there is a newborn het and there are parent variants at diff positions:
+if test_gene.pos.nunique() > 1 and (len(test_gene[(test_gene['member']=='NB') & (test_gene['gt']=='0/1')]) > 1 ) \
+    and len(list(set(dad) - set(mom))) > 0:
+    ##if nb het variant
+    if (len(list(set(nb) - set(mom))) < len(nb)) and (len(list(set(nb) - set(dad))) < len(nb)):
+        #find het variants and matching parent variants
+        print test_gene[((test_gene['member'] == "NB") & (test_gene['gt'] == "0/1"))]
+
+        comp_het.append(test_gene)
 
 
-# for name, group in by_variant:
-#     print name
-#     print group
 
 
 
