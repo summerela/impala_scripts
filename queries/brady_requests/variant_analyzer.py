@@ -34,7 +34,8 @@
 # ###############
 # # Build Query #
 # ###############
-# print "Building query to look for " + args.platform + " variants in " + str(gene_list) + "\n" + "with Kaviar frequency of " + args.kav + "% or less..." + "\n"
+# print "Building query to look for " + args.platform + " variants in " + str(gene_list) + "\n" + \
+# "with Kaviar frequency of " + args.kav + "% or less..." + "\n"
 #
 # # create statements for genes and wildcards
 # if len(gene_list) > 0 and len(wildcards) < 1:
@@ -81,7 +82,8 @@
 #             END) as member, CONCAT(gene_name, ':', p.chr, ':', CAST(p.start AS STRING), ':',
 #             CAST(p.stop AS STRING)) as variant_id
 #             FROM
-#             (SELECT DISTINCT p.sample_id, p.allele1varquality, p.totalreadcount, ens.gene_name, p.chr, p.start, p.stop,
+#             (SELECT DISTINCT p.sample_id, p.allele1varquality, p.totalreadcount, ens.gene_name, p.chr, \
+# p.start, p.stop,
 #              p.ref, p.allele1seq, p.allele2seq, p.zygosity
 #              FROM public_hg19.ensembl_genes ens, {0:s} AS p
 #              {1:s}
@@ -124,12 +126,11 @@
 
 # TESTING #
 import pandas as pd
-query_df = pd.read_csv('/Users/selasady/impala_scripts/queries/brady_requests/test_results.csv', dtype=str)
+query_df = pd.read_csv('test_results.csv',  dtype=str)
 
-
-############################
-# find candidate variants ##
-############################
+########################################
+# find hom_alt and hom_ref candidates ##
+########################################
 # create lists to store candidate variants
 hom_alt = []
 hom_ref = []
@@ -137,8 +138,6 @@ comp_het = []
 
 # # group by variant id to locate variants at same chr and pos
 # by_variant = query_df.groupby('variant_id')
-#
-# test = by_variant.get_group('ACAA2:18:47339364')
 #
 # # if there are variants from each trio member and parents are het at this chr:pos
 # if (len(test[(test.member == "NB")]) > 0) and (len(test[(test['member']=='M') & (test['gt']=='0/1')]) > 0 )\
@@ -150,60 +149,61 @@ comp_het = []
 #     #if the newborn is hom_alt
 #     if (len(test[(test['member']=='NB') & (test['gt']=='1/1')]) > 0 ):
 #         hom_alt.append(test)
-# print hom_alt
 
-
-#     if nb is het
-#         and more than one variant per gene
-#         and variant from mom and dad are different
-#         then mark as comp het
-
-#group variants by gene name
-by_gene = query_df.groupby('gene_name')
-
-
-test_gene = by_gene.get_group('HSD17B7P2')
-test_gene['alt'].fillna("NC")
-
-
-dad = test_gene['pos'][(test_gene['member'] == 'F')]
-mom = test_gene['pos'][(test_gene['member'] == 'M')]
-nb = test_gene['pos'][(test_gene['member'] == 'NB')]
-
-print len(list(set(nb) - set(mom))) < len(nb)
-print len(list(set(nb) - set(dad))) < len(nb)
-
-#if there is more than one variant per gene, there is a newborn het and there are parent variants at diff positions:
-if test_gene.pos.nunique() > 1 and (len(test_gene[(test_gene['member']=='NB') & (test_gene['gt']=='0/1')]) > 1 ) \
-    and len(list(set(dad) - set(mom))) > 0:
-    ##if nb het variant
-    if (len(list(set(nb) - set(mom))) < len(nb)) and (len(list(set(nb) - set(dad))) < len(nb)):
-        #find het variants and matching parent variants
-        print test_gene[((test_gene['member'] == "NB") & (test_gene['gt'] == "0/1"))]
-
-        comp_het.append(test_gene)
-
-
-
-
-
-
-
-#d.groupby('journey')['mode'].apply(lambda g: 'BUS' in g.values and 'RTS' in g.values)
-
-
-
-
-
+###################
+# find comp_hets ##
+###################
+# #group variants by gene name
+# by_gene = query_df.groupby('gene_name')
 #
+# #create list of variant positions for each trio member
+# dad = test_gene[(test_gene['member'] == 'F')]
+# mom = test_gene[(test_gene['member'] == 'M')]
+# nb = test_gene[(test_gene['member'] == 'NB')]
 #
+# #define function to check for differences in position
+# diff = lambda l1,l2: [x for x in l1 if x not in l2]
+#
+# #if there is more than one variant position per gene, a newborn het and parent variants at diff positions:
+# if test_gene.pos.nunique() > 1 and (len(test_gene[(test_gene['member']=='NB') & (test_gene['gt']=='0/1')]) > 1 ) \
+#     and len(list(set(dad.pos) - set(mom.pos))) > 0:
+#     #find nb het variants and matching parent variants
+#     nb_comp = test_gene[((test_gene['member'] == "NB") & (test_gene['gt'] == "0/1"))]
+#     mom_comp = mom[mom['variant_id'].isin(nb_comp.variant_id)]
+#     dad_comp = dad[dad['variant_id'].isin(nb_comp.variant_id)]
+#     #if mom_comps and dad_comps have different variants, append to comp_het list
+#     if len(diff(mom_comp.pos, dad_comp.pos)) > 0:
+#         comp_het.append(pd.concat([nb_comp, mom_comp, dad_comp]))
+
+#############
+# find MIE ##
+#############
+#create list to store mie candidates
+mie = []
+
+#split data set by gene:chr:pos
+by_variantId = query_df.groupby('variant_id')
+
+test = by_variantId.head(50)
+
+#if newborn is het and both parents at this position are homozygous
+if ((len(test[(test['member']=='NB') & (test['gt']=='0/1')]) > 0 ) &
+         len(test[(test['member']=='M') & (test['gt']=='0/0' | test['gt']=='1/1') > 0 )):
+     print test
+
+#if newborns is hom_alt and only one parent het for same alt
 
 
-
-
-
-
-#find mie
+# # if there are variants from each trio member and parents are het at this chr:pos
+# if (len(test[(test.member == "NB")]) > 0) and (len(test[(test['member']=='M') & (test['gt']=='0/1')]) > 0 )\
+#         and (len(test[(test['member']=='F') & (test['gt']=='0/1')]) > 0 ):
+#     # if the newborn is hom_ref
+#     if (len(test[(test['member']=='NB') & (test['gt']=='0/0')]) > 0 ):
+#         #mark as hom_ref
+#         hom_ref.append(test)
+#     #if the newborn is hom_alt
+#     if (len(test[(test['member']=='NB') & (test['gt']=='1/1')]) > 0 ):
+#         hom_alt.append(test)
 
 #
 # ########################
