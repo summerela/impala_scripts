@@ -1,4 +1,3 @@
-# _author__ = 'summerrae'
 # ######################
 # # process user args  #
 # ######################
@@ -132,231 +131,75 @@ query_df = pd.read_csv('test_results.csv',  dtype=str)
 # find hom_alt and hom_ref candidates ##
 ########################################
 # create lists to store candidate variants
-hom_alt = []
-hom_ref = []
-comp_het = []
-
+# hom_alt = []
+# hom_ref = []
+#
 # # group by variant id to locate variants at same chr and pos
 # by_variant = query_df.groupby('variant_id')
 #
-# # if there are variants from each trio member and parents are het at this chr:pos
-# if (len(test[(test.member == "NB")]) > 0) and (len(test[(test['member']=='M') & (test['gt']=='0/1')]) > 0 )\
-#         and (len(test[(test['member']=='F') & (test['gt']=='0/1')]) > 0 ):
-#     # if the newborn is hom_ref
-#     if (len(test[(test['member']=='NB') & (test['gt']=='0/0')]) > 0 ):
-#         #mark as hom_ref
-#         hom_ref.append(test)
-#     #if the newborn is hom_alt
-#     if (len(test[(test['member']=='NB') & (test['gt']=='1/1')]) > 0 ):
-#         hom_alt.append(test)
+# for name, group in by_variant:
+#     #find positions where both parents are het
+#     if (len(group[(group['member']=='M') & (group['gt']=='0/1')]) > 0 )\
+#         and (len(group[(group['member']=='F') & (group['gt']=='0/1')]) > 0 ):
+#         # if the newborn is hom_ref
+#         if (len(group[(group['member']=='NB') & (group['gt']=='0/0')]) > 0 ):
+#             #mark as hom_ref
+#             group['var_type'] = "hom_ref"
+#             hom_ref.append(group)
+#         #if the newborn is hom_alt
+#         elif (len(group[(group['member']=='NB') & (group['gt']=='1/1')]) > 0 ):
+#                 group['var_type'] = "hom_alt"
+#                 hom_alt.append(group)
 
-###################
-# find comp_hets ##
-###################
-# #group variants by gene name
-# by_gene = query_df.groupby('gene_name')
-#
-# #create list of variant positions for each trio member
-# dad = test_gene[(test_gene['member'] == 'F')]
-# mom = test_gene[(test_gene['member'] == 'M')]
-# nb = test_gene[(test_gene['member'] == 'NB')]
-#
-# #define function to check for differences in position
-# diff = lambda l1,l2: [x for x in l1 if x not in l2]
-#
-# #if there is more than one variant position per gene, a newborn het and parent variants at diff positions:
-# if test_gene.pos.nunique() > 1 and (len(test_gene[(test_gene['member']=='NB') & (test_gene['gt']=='0/1')]) > 1 ) \
-#     and len(list(set(dad.pos) - set(mom.pos))) > 0:
-#     #find nb het variants and matching parent variants
-#     nb_comp = test_gene[((test_gene['member'] == "NB") & (test_gene['gt'] == "0/1"))]
-#     mom_comp = mom[mom['variant_id'].isin(nb_comp.variant_id)]
-#     dad_comp = dad[dad['variant_id'].isin(nb_comp.variant_id)]
-#     #if mom_comps and dad_comps have different variants, append to comp_het list
-#     if len(diff(mom_comp.pos, dad_comp.pos)) > 0:
-#         comp_het.append(pd.concat([nb_comp, mom_comp, dad_comp]))
+# ###################
+# # find comp_hets ##
+# ###################
+comp_het = []
 
-#############
-# find MIE ##
-#############
-#create list to store mie candidates
-mie = []
+#group variants by gene name
+by_gene = query_df.groupby('gene_name')
 
-#split data set by gene:chr:pos
-by_variantId = query_df.groupby('variant_id')
+#define function to check for differences in position
+#diff = lambda l1,l2: [x for x in l1 if x not in l2]
 
-test = by_variantId.head(50)
+#if there is more than one variant position per gene, a newborn het and parent variants at diff positions:
+for name, group in by_gene:
+    if group.pos.nunique() > 1 and (len(group[(group['member']=='NB') & (group['gt']=='0/1')]) > 1 ) \
+        and len(list(set(group[(group['member'] == 'F')].pos) - set(group[(group['member'] == 'M')].pos))) > 0:
+        #find nb het variants and matching parent variants
+        nb_comp = group[((group['member'] == "NB") & (group['gt'] == "0/1"))]
+        comps = pd.DataFrame(group[(group['variant_id'].isin(nb_comp.variant_id))])
+        #if mom_comps and dad_comps have different variants, append to comp_het list
+        if len(set(comps[comps['member'] == "F"].pos) - set(comps[comps['member'] == "M"].pos)) > 0:
+           group['var_type'] = "comp_het"
+           print comps
+           #comp_het.append(comps)
+#print comp_het
 
-#if newborn is het and both parents at this position are homozygous
-if ((len(test[(test['member']=='NB') & (test['gt']=='0/1')]) > 0 ) &
-         len(test[(test['member']=='M') & (test['gt']=='0/0' | test['gt']=='1/1') > 0 )):
-     print test
-
-#if newborns is hom_alt and only one parent het for same alt
-
-
-# # if there are variants from each trio member and parents are het at this chr:pos
-# if (len(test[(test.member == "NB")]) > 0) and (len(test[(test['member']=='M') & (test['gt']=='0/1')]) > 0 )\
-#         and (len(test[(test['member']=='F') & (test['gt']=='0/1')]) > 0 ):
-#     # if the newborn is hom_ref
-#     if (len(test[(test['member']=='NB') & (test['gt']=='0/0')]) > 0 ):
-#         #mark as hom_ref
-#         hom_ref.append(test)
-#     #if the newborn is hom_alt
-#     if (len(test[(test['member']=='NB') & (test['gt']=='1/1')]) > 0 ):
-#         hom_alt.append(test)
-
+# #############
+# # find MIE ##
+# #############
+# #create list to store mie candidates
+# mie = []
 #
-# ########################
-# ## Find MIE in Het NB ##
-# #########################
-# nb_het = nb[which(nb$gt == "0/1"),]
+# #group variants by position
+# by_variantId = query_df.groupby('variant_id')
 #
-# #find matching variants from each parent
-# mom_vars = mom[grep(paste(nb_het$variant_id, collapse="|"), mom$variant_id),] #10 vars
-# dad_vars = dad[grep(paste(nb_het$variant_id, collapse="|"), dad$variant_id),] #9 vars
+# #if newborn is het and both parents at this position are homozygous
+# if ((len(test_df[(test_df['member']=='NB') & (test_df['gt']=='0/1')]) > 0 ) &
+#         ( (len(test_df[(test_df['member']=='M') & (test_df['gt'].any() in ['0/0', '1/1'])]) > 0)) and
+# (len(test_df[(test_df['member']=='F') & (test_df['gt'].any() in ['0/0', '1/1'])]) > 0)):
+#     test_df['var_type'] = "mie"
+#     mie.append(test_df)
 #
-# #merge together to find intersection of gene:chr:pos
-# mie_het_nb_mom = merge(nb_het, mom_vars, by = "variant_id")
-# mie_hets_nb_dad = merge(nb_het, dad_vars, by = "variant_id")
-# mie_hets = merge(mie_het_nb_mom, mie_hets_nb_dad, by= "variant_id")
+# #if newborn is hom_alt and only one parent het for same alt
+# if ((len(test_df[(test_df['member']=='NB') & (test_df['gt']=='1/1')]) > 0 ) &
+#         ( (len(test_df[(test_df['member']=='M') & (test_df['gt'] == '0/1')]) < 1) and
+#         (len(test_df[(test_df['member']=='F') & (test_df['gt'] == '0/1')]) < 1))):
+#     test_df['var_type'] = "mie"
+#     mie.append(test_df)
 #
-# #get rid of unnecessary columns
-# mie_hets = mie_hets[,c(1:13,25:26,38:39)]
-# colnames(mie_hets) = c("variant_id", "sample_id", "qual", "filter", "rsID", "kav_freqPct",
-#                        "kav_count", "gene_name", "chr", "pos", "ref", "nb_alt", "nb_gt",
-#                        "m_alt", "m_gt", "f_alt","f_gt")
-#
-# #variants not in mie_hets and not marked as comp_het are missing info from one parent
-# missing_info = nb_het[grep(paste(mie_hets$variant_id, collapse="|"), nb_het$variant_id, invert=TRUE),]
-# missing_info = missing_info[grep(paste(comp_het.df$variant_id, collapse="|"), missing_info$variant_id, invert=TRUE),]
-#
-# #find variants that are in congruence with MI laws
-# no_mie = rbind(
-#   #if the mother is 0/0 and father is 0/1, then the nb alt must match the father's alt or be null
-#   mie_hets[(mie_hets$m_gt == "0/0" & mie_hets$f_gt == "0/1" & (mie_hets$nb_alt == mie_hets$f_alt | mie_hets$nb_alt == "NULL")),],
-#   #if the father is 0/0 and the mother is 0/1, then the nb alt must match the mother's alt or be null
-#   mie_hets[(mie_hets$f_gt == "0/0" & mie_hets$m_gt == "0/1" & (mie_hets$nb_alt == mie_hets$m_alt| mie_hets$nb_alt == "NULL")),],
-#   #if both parents are het, nb alt and parent alts must be the same, or nb alt is null
-#   mie_hets[((mie_hets$m_gt == "0/1" & mie_hets$f_gt== "0/1") & (mie_hets$nb_alt == mie_hets$f_alt & mie_hets$nb_alt == mie_hets$m_alt)| (mie_hets$m_alt == mie_hets$f_alt & mie_hets$nb_alt == "NULL")),],
-#   #if the mother is 1/1, then the father must be 0/1 or 0/0 and the nb alt must match the mother's alt
-#   #or be null
-#   mie_hets[(mie_hets$m_gt == "1/1" & (mie_hets$f_gt == "0/1" | mie_hets$f_gt == "0/0") & (mie_hets$nb_alt == mie_hets$m_alt & mie_hets$nb_alt == mie_hets$f_alt | mie_hets$m_alt == mie_hets$f_alt & mie_hets$nb_alt == "NULL")),],
-#   #if the father is 1/1, then the mother must be 0/1 or 0/0 and the nb alt must match the fathers's alt
-#   mie_hets[(mie_hets$f_gt == "1/1" & (mie_hets$m_gt == "0/1" | mie_hets$m_gt == "0/0") & (mie_hets$nb_alt == mie_hets$f_alt & mie_hets$nb_alt == mie_hets$m_alt | mie_hets$f_alt == mie_hets$m_alt & mie_hets$nb_alt == "NULL")),])
-#
-# #if mie_het variants are not in no_mie set, then they are potentially MIE
-# het_mie = mie_hets[grep(paste(no_mie$variant_id, collapse="|"), mie_hets$variant_id, invert=TRUE),]
-#
-# ###################################
-# ## Find MIE in homozygous ref nb ##
-# ###################################
-# nb_hom_ref = nb[which(nb$gt == "0/0"),]
-#
-# #find equivalent variants in parents
-# mom_hom_vars = na.omit(mom[match(nb_hom_ref$variant_id, mom$variant_id),])
-# dad_hom_vars = na.omit(dad[match(nb_hom_ref$variant_id, dad$variant_id),])
-#
-# #merge together to find matching parent varients
-# mie_hom_nb_mom = merge(nb_hom_ref, mom_hom_vars, by = "variant_id")
-# mie_hom_nb_dad = merge(mie_hom_nb_mom, dad_hom_vars, by = "variant_id")
-# mie_homs = merge(mie_hom_nb_mom, mie_hom_nb_dad, by= "variant_id")
-#
-# #clean up results
-# mie_homs = mie_homs[,c(1:13,25:26,38:39)]
-# colnames(mie_homs) = c("variant_id", "sample_id", "qual", "filter", "rsID", "kav_freqPct",
-#                        "kav_count", "gene_name", "chr", "pos", "ref", "nb_alt", "nb_gt",
-#                        "m_alt", "m_gt", "f_alt","f_gt")
-#
-# #variants that are not in mie_homs and not marked hom ref are missing parent info
-# missing_info_miehoms = nb_hom_ref[grep(paste(mie_homs$variant_id, collapse="|"), nb_hom_ref$variant_id, invert=TRUE),]
-# missing_info_miehoms = missing_info[grep(paste(hom_ref.df$variant_id, collapse="|"), missing_info$variant_id, invert=TRUE),]
-# missing_info_miehoms
-#
-# #find variants that are in congruence with MI laws
-# no_mie_homs = rbind(
-#   #if the mother is 0/1, then the dad must be 0/0
-#   mie_homs[(mie_homs$m_gt == "0/1" & mie_homs$f_gt == "0/0"),],
-#   #if the father is 0/1, then the mother must be 0/0
-#   mie_homs[(mie_homs$d_gt == "0/1" & mie_homs$m_gt == "0/0"),],
-#   #both parents are 0/0
-#   mie_homs[(mie_homs$m_gt == "0/0" & mie_homs$f_gt== "0/0"),]
-# )
-#
-# #if nb_hom variants are not in no_mie_homs set, then they are MIE
-# hom_ref_mie = na.omit(nb_hom_ref[!match(nb_hom_ref$variant_id, no_mie_homs$variant_id),])
-#
-# ###################################
-# ## Find MIE in homozygous alt nb ##
-# ###################################
-# nb_hom_alt = nb[which(nb$gt == "1/1"),]
-#
-# #find equivalent variants in parents
-# mom_hom_alt = na.omit(mom[match(nb_hom_alt$variant_id, mom$variant_id),])
-# dad_hom_alt = na.omit(dad[match(nb_hom_alt$variant_id, dad$variant_id),])
-#
-# #merge together to find intersection of gene:chr:pos
-# mie_alt = merge(nb_hom_alt, mom_hom_alt, by = "variant_id")
-# mie_alt = merge(mie_alt, dad_hom_alt, by = "variant_id")
-#
-# #clean up resuts
-# mie_alts = mie_alt[,c(1:13,25:26,38:39)]
-# colnames(mie_alts) = c("variant_id", "qual", "filter", "rsID", "kav_pct",
-#                        "kav_count", "gene_name", "chr", "pos", "ref", "nb_alt",
-#                        "nb_gt", "m_alt", "m_gt", "f_alt", "f_gt")
-#
-# #find variants that are in congruence with MI laws
-# mie_hom_alt = rbind(
-#   #if the mother is 0/1, then the father must be 1/1
-#   mie_alts[(mie_alts$m_gt == "0/1" & mie_alts$f_gt == "1/1"),],
-#   #if the father is 0/1, then the mother must be 1/1
-#   mie_alts[(mie_alts$d_gt == "0/1" & mie_alts$m_gt == "1/1"),],
-#   #both parents are 1/1
-#   mie_alts[(mie_alts$m_gt == "1/1" & mie_alts$f_gt == "1/1"),]
-# )
-#
-# #if nb_hom variants are not in no_mie_homs set, then they are MIE
-# hom_alt_mie = na.omit(nb_hom_alt[!match(nb_hom_alt$variant_id, mie_hom_alt$variant_id),])
-#
-# ####################################
-# ## Merge Results and save to file ##
-# ####################################
-# #remove extraneous columns from comp hets
-# comp_het_nb.df = comp_het.df[,c(1:13)]
-#
-# #add parent information
-# comp_het_nb.df$m_alt = mom[match(comp_het_nb.df$variant_id, mom$variant_id),]$alt
-# comp_het_nb.df$m_gt = mom[match(comp_het_nb.df$variant_id, mom$variant_id),]$gt
-# comp_het_nb.df$f_alt = dad[match(comp_het_nb.df$variant_id, dad$variant_id),]$alt
-# comp_het_nb.df$f_gt = dad[match(comp_het_nb.df$variant_id, dad$variant_id),]$gt
-#
-# #make column names the same
-# colnames(comp_het_nb.df) = colnames(hom_alt.df)
-#
-# #add labels to each
-# if (dim(hom_alt.df)[1] > 0){
-#   hom_alt.df$vartype= "hom_alt"
-#   df_list = list("hom_alt.df")
-# }
-# if (dim(hom_ref.df)[1] > 0){
-#   hom_ref.df$vartype = "hom_ref"
-#   df_list = c(df_list, "hom_ref.df")
-# }
-# if (dim(comp_het.df)[1] > 0){
-#   comp_het_nb.df$vartype = "comp_het"
-#   df_list = c(df_list, "comp_het_nb.df")
-# }
-# if (dim(het_mie)[1] > 0){
-#   het_mie$vartype = "het_mie"
-#   df_list = c(df_list, "het_mie")
-# }
-# if (dim(hom_ref_mie)[1] > 0){
-#   hom_ref_mie$vartype = "hom_ref_mie"
-#   df_list = c(df_list, "hom_ref_mie")
-# }
-# if (dim(hom_alt_mie)[1] > 0){
-#   hom_alt_mie$vartype = "hom_alt_mie"
-#   df_list = c(df_list, "hom_alt_mie")
-# }
-#
-# results.df = unique(do.call("rbind", lapply(df_list, get)))
-
+# print hom_alt
+# print hom_ref
+# print comp_hets
+# print mie
