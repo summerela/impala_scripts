@@ -1,51 +1,53 @@
-# ######################
-# # process user args  #
-# ######################
-# import argparse
-# import sys
-#
-# try:
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("genes", help="list genes of interest, comma-sep ,no quotes,no spaces", type=str)
-#     parser.add_argument("db", help="enter database of variants to search", type=str)
-#     parser.add_argument("kav", help="enter max kaviar frequency to return", type=str)
-#     parser.add_argument("platform", help="cgi or illumina", type=str)
-#     args = parser.parse_args()
-# except:
-#     e = sys.exc_info()[0]
-#     print e
-#
-# ##################################################
-# # read in genes of interest and mark if wildcard #
-# ##################################################
-# # split gene list by comma
-# gene_args = args.genes.replace("'", "").split(',')
-#
-# # mark any wildcards in gene list
-# wildcards = []
-# gene_list = []
-# for gene in gene_args:
-#     if gene.endswith('%'):
-#         wildcards.append(gene)
-#     else:
-#         gene_list.append(gene)
-#
-# ###############
-# # Build Query #
-# ###############
-# print "Building query to look for " + args.platform + " variants in " + str(gene_list) + "\n" + \
-# "with Kaviar frequency of " + args.kav + "% or less..." + "\n"
-#
-# # create statements for genes and wildcards
-# if len(gene_list) > 0 and len(wildcards) < 1:
-#     gene_statement = "WHERE ens.gene_name IN ('" + "','".join(map(str, gene_list)) + "')"
-# if len(wildcards) > 0 and len(gene_list) < 1:
-#     gene_statement = 'WHERE ens.gene_name LIKE (' + "','".join(map(str, wildcards)) + "')"
-# if len(gene_list) > 0 and len(wildcards) > 0:
-#     gene_statement = "WHERE (ens.gene_name IN ('" + "','".join(
-#         map(str, gene_list)) + "') OR ens.gene_name LIKE ('" + "'," \
-#                                                                "'".join(map(str, wildcards)) + "'))"
-# #build illumina query
+######################
+# process user args  #
+######################
+import argparse
+import sys
+import pandas as pd
+pd.options.mode.chained_assignment = None
+
+try:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("genes", help="list genes of interest, comma-sep ,no quotes,no spaces", type=str)
+    parser.add_argument("db", help="enter database of variants to search", type=str)
+    parser.add_argument("kav", help="enter max kaviar frequency to return", type=str)
+    parser.add_argument("platform", help="cgi or illumina", type=str)
+    args = parser.parse_args()
+except:
+    e = sys.exc_info()[0]
+    print e
+
+##################################################
+# read in genes of interest and mark if wildcard #
+##################################################
+# split gene list by comma
+gene_args = args.genes.replace("'", "").split(',')
+
+# mark any wildcards in gene list
+wildcards = []
+gene_list = []
+for gene in gene_args:
+    if gene.endswith('%'):
+        wildcards.append(gene)
+    else:
+        gene_list.append(gene)
+
+###############
+# Build Query #
+###############
+print "Building query to look for " + args.platform + " variants in " + str(gene_list)+ " and", str(wildcards) + "\n" + \
+      "with Kaviar frequency of " + args.kav + "% or less..." + "\n"
+
+# create statements for genes and wildcards
+if len(gene_list) > 0 and len(wildcards) < 1:
+    gene_statement = "WHERE ens.gene_name IN ('" + "','".join(map(str, gene_list)) + "')"
+if len(wildcards) > 0 and len(gene_list) < 1:
+    gene_statement = 'WHERE ens.gene_name LIKE (' + "','".join(map(str, wildcards)) + "')"
+if len(gene_list) > 0 and len(wildcards) > 0:
+    gene_statement = "WHERE (ens.gene_name IN ('" + "','".join(
+        map(str, gene_list)) + "') OR ens.gene_name LIKE ('" + "'," \
+                                                               "'".join(map(str, wildcards)) + "'))"
+# build illumina query
 # if args.platform == 'illumina':
 #     query = """
 #             SELECT p.sample_id, p.qual, p.filter, k.id as rsID, (k.alle_freq * 100) as kav_pct, k.alle_cnt as
@@ -101,10 +103,9 @@
 # else:
 #     print "Did you select illumina or cgi as your platform? Please check and try again."
 #     sys.exit()
-#
-# #######################
-# # connect to database #
-# #######################
+#######################
+# connect to database #
+#######################
 # print "Connecting to impala..." + "\n"
 # from impala.dbapi import connect
 #
@@ -116,16 +117,15 @@
 # #########################
 # print "Running query on impala..." + "\n"
 # from impala.util import as_pandas
+#
 # cur.execute(query)
-# query_results = as_pandas(cur)
-# if len(query_results) > 0:
-#     print "Here's a preview of results found: \n" + (query_results)
+# query_df = as_pandas(cur)
+# if len(query_df) > 0:
+#     print "Here's a preview of results found: \n" + str(query_df)
 # else:
 #     print "No results found"
 
-# TESTING #
-import pandas as pd
-query_df = pd.read_csv('test_results.csv',  dtype=str)
+query_df = pd.DataFrame.from_csv("test_results.csv")
 
 ########################################
 # find hom_alt and hom_ref candidates ##
@@ -138,68 +138,67 @@ query_df = pd.read_csv('test_results.csv',  dtype=str)
 # by_variant = query_df.groupby('variant_id')
 #
 # for name, group in by_variant:
-#     #find positions where both parents are het
-#     if (len(group[(group['member']=='M') & (group['gt']=='0/1')]) > 0 )\
-#         and (len(group[(group['member']=='F') & (group['gt']=='0/1')]) > 0 ):
+#     # find positions where both parents are het
+#     if len(group[(group['member'] == 'M') & (group['gt'] == '0/1')]) > 0 \
+#         and (len(group[(group['member'] == 'F') & (group['gt'] == '0/1')]) > 0):
 #         # if the newborn is hom_ref
-#         if (len(group[(group['member']=='NB') & (group['gt']=='0/0')]) > 0 ):
-#             #mark as hom_ref
+#         if (len(group[(group['member'] == 'NB') & (group['gt'] == '0/0')]) > 0):
+#             # mark as hom_ref
 #             group['var_type'] = "hom_ref"
 #             hom_ref.append(group)
-#         #if the newborn is hom_alt
-#         elif (len(group[(group['member']=='NB') & (group['gt']=='1/1')]) > 0 ):
-#                 group['var_type'] = "hom_alt"
-#                 hom_alt.append(group)
-
+#         # if the newborn is hom_alt
+#         elif (len(group[(group['member'] == 'NB') & (group['gt'] == '1/1')]) > 0):
+#             group['var_type'] = "hom_alt"
+#             hom_alt.append(group)
+#
 # ###################
 # # find comp_hets ##
 # ###################
-comp_het = []
-
-#group variants by gene name
-by_gene = query_df.groupby('gene_name')
-
-#define function to check for differences in position
-#diff = lambda l1,l2: [x for x in l1 if x not in l2]
-
-#if there is more than one variant position per gene, a newborn het and parent variants at diff positions:
-for name, group in by_gene:
-    if group.pos.nunique() > 1 and (len(group[(group['member']=='NB') & (group['gt']=='0/1')]) > 1 ) \
-        and len(list(set(group[(group['member'] == 'F')].pos) - set(group[(group['member'] == 'M')].pos))) > 0:
-        #find nb het variants and matching parent variants
-        nb_comp = group[((group['member'] == "NB") & (group['gt'] == "0/1"))]
-        comps = pd.DataFrame(group[(group['variant_id'].isin(nb_comp.variant_id))])
-        #if mom_comps and dad_comps have different variants, append to comp_het list
-        if len(set(comps[comps['member'] == "F"].pos) - set(comps[comps['member'] == "M"].pos)) > 0:
-           group['var_type'] = "comp_het"
-           print comps
-           #comp_het.append(comps)
-#print comp_het
-
-# #############
-# # find MIE ##
-# #############
-# #create list to store mie candidates
-# mie = []
+# comp_het = []
 #
-# #group variants by position
-# by_variantId = query_df.groupby('variant_id')
+# # group variants by gene name
+# by_gene = query_df.groupby('gene_name')
 #
-# #if newborn is het and both parents at this position are homozygous
-# if ((len(test_df[(test_df['member']=='NB') & (test_df['gt']=='0/1')]) > 0 ) &
-#         ( (len(test_df[(test_df['member']=='M') & (test_df['gt'].any() in ['0/0', '1/1'])]) > 0)) and
-# (len(test_df[(test_df['member']=='F') & (test_df['gt'].any() in ['0/0', '1/1'])]) > 0)):
-#     test_df['var_type'] = "mie"
-#     mie.append(test_df)
+# # define function to check for differences in position
+# # diff = lambda l1,l2: [x for x in l1 if x not in l2]
 #
-# #if newborn is hom_alt and only one parent het for same alt
-# if ((len(test_df[(test_df['member']=='NB') & (test_df['gt']=='1/1')]) > 0 ) &
-#         ( (len(test_df[(test_df['member']=='M') & (test_df['gt'] == '0/1')]) < 1) and
-#         (len(test_df[(test_df['member']=='F') & (test_df['gt'] == '0/1')]) < 1))):
-#     test_df['var_type'] = "mie"
-#     mie.append(test_df)
-#
-# print hom_alt
-# print hom_ref
-# print comp_hets
-# print mie
+# for name, group in by_gene:
+#     # if there are variants at more than one position and there are nb het variants at diff pos
+#     if group.pos.nunique() > 1 and (len(group[((group['member'] == 'NB') & (group['gt'] == '0/1'))].pos) > 1):
+#         # pull out nb het positions
+#         nb_hets = group[((group['member'] == 'NB') & (group['gt'] == '0/1'))]
+#         # add parent positions for the gene
+#         moms = nb_hets.append(group[((group['member'] == "M") & (group['variant_id'].isin(nb_hets['variant_id'])))],
+#                               ignore_index=True)
+#         all_vars = moms.append(group[((group['member'] == "F") & (group['variant_id'].isin(nb_hets['variant_id'])))],
+#                                ignore_index=True)
+#         # if there are matching variants from both parents, mark as comp-het
+#         if (len(all_vars[(all_vars['member'] == 'F')]) > 0) and (len(all_vars[(all_vars['member'] == 'M')]) > 0):
+#             all_vars['var_type'] = "comp_het"
+#             comp_het.append(all_vars)
+
+#############
+# find MIE ##
+#############
+#create list to store mie candidates
+mie = []
+
+#group variants by position
+by_variantId = query_df.groupby('variant_id')
+
+for name, group in by_variantId:
+    # #if newborn is het and both parents at this position are homozygous
+    # if (len(group[(group['member']=='NB') & (group['gt']=='0/1')]) > 0 ) & \
+    #     (len(group[((group['member']=='M') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0) & \
+    #      (len(group[((group['member']=='F') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0):
+    #     group['var_type'] = "mie"
+    #     mie.append(group)
+    #if newborn is hom_alt and only one parent het for same alt
+    if  len(group[(group['member']=='F') & (group['gt']!='0/1')]) >  | (len(group[(group['member']=='M') & (
+                group['gt']=='0/1')]))  < 1 )):
+        group['var_type'] = "mie"
+        mie.append(group)
+
+print mie
+
+#((len(group[(group['member']=='NB') & (group['gt']=='1/1')]) > 0 )
