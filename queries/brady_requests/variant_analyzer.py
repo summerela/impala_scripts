@@ -187,18 +187,15 @@ mie = []
 by_variantId = query_df.groupby('variant_id')
 
 for name, group in by_variantId:
-    # #if newborn is het and both parents at this position are homozygous
-    # if (len(group[(group['member']=='NB') & (group['gt']=='0/1')]) > 0 ) & \
-    #     (len(group[((group['member']=='M') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0) & \
-    #      (len(group[((group['member']=='F') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0):
-    #     group['var_type'] = "mie"
-    #     mie.append(group)
+    #if newborn is het and both parents at this position are homozygous
+    if (len(group[(group['member']=='NB') & (group['gt']=='0/1')]) > 0 ) & \
+        (len(group[((group['member']=='M') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0) & \
+         (len(group[((group['member']=='F') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0):
+        group['var_type'] = "mie"
+        mie.append(group)
     #if newborn is hom_alt and only one parent het for same alt
-    if  len(group[(group['member']=='F') & (group['gt']!='0/1')]) >  | (len(group[(group['member']=='M') & (
-                group['gt']=='0/1')]))  < 1 )):
+    elif ((len(group[(group['member']=='NB') & (group['gt']=='1/1')]) > 0 ) & (len(group[(group['member']=='F') & (group['gt']!='0/1')]) < 1 )| (len(group[(group['member']=='M') & (group['gt']!='0/1')]) < 1)):
         group['var_type'] = "mie"
         mie.append(group)
 
 print mie
-
-#((len(group[(group['member']=='NB') & (group['gt']=='1/1')]) > 0 )
