@@ -181,7 +181,6 @@ print "Looking for compound heterozygosity..."
 #             comp_het.append(all_vars)
 
 
-
 #############
 # find MIE ##
 #############
@@ -192,20 +191,32 @@ print "Looking for compound heterozygosity..."
 # #group variants by position
 #by_variantId = query_df.groupby('variant_id')
 
-genos = []
-
-# for index, row in query_df.iterrows():
-#     if query_df['gt'] == '0/0':
-#         genos.append(0)
-#     if query_df['gt'] == '0/1':
-#         genos.append(1)
-#     if query_df['gt'] == '1/1':
-#         genos.append(1)
-
-
-# query_df['MAF'] = sum(genos)/(2.0*len(genos))
+# genos = []
+#
+#
+# if query_df['gt'] == '0/0':
+#     genos.append(0)
+# elif query_df['gt'] == '0/1':
+#     genos.append(1)
+# elif query_df['gt'] == '1/1':
+#     genos.append(1)
+# else:
+#     pass
 #
 # print sum(genos)
+
+query_df.insert(13, 'count', int)
+query_df.ix[query_df['gt'] =='0/0', ['count']] = 0
+query_df.ix[query_df['gt'] =='0/1', ['count']] = 1
+query_df.ix[query_df['gt'] =='1/1', ['count']] = 2
+#counts = [ x for x in map(int,query_df['count']) ]
+
+
+print sum([i for i in query_df['count']])
+
+#query_df['MAF'] = sum(genos)/(2.0*len(genos))
+
+#print sum(genos)
 
 
 
