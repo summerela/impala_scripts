@@ -4,6 +4,7 @@
 import argparse
 import sys
 import pandas as pd
+import numpy as np
 pd.options.mode.chained_assignment = None
 
 try:
@@ -130,6 +131,7 @@ query_df = pd.DataFrame.from_csv("test_results.csv")
 ########################################
 # find hom_alt and hom_ref candidates ##
 ########################################
+print "Looking for homozygous ref and alt from non-homozygous parents..."
 # create lists to store candidate variants
 # hom_alt = []
 # hom_ref = []
@@ -154,6 +156,7 @@ query_df = pd.DataFrame.from_csv("test_results.csv")
 # ###################
 # # find comp_hets ##
 # ###################
+print "Looking for compound heterozygosity..."
 # comp_het = []
 #
 # # group variants by gene name
@@ -177,25 +180,47 @@ query_df = pd.DataFrame.from_csv("test_results.csv")
 #             all_vars['var_type'] = "comp_het"
 #             comp_het.append(all_vars)
 
+
+
 #############
 # find MIE ##
 #############
-#create list to store mie candidates
-mie = []
+# print "Searching for MIE...."
+# #create list to store mie candidates
+# mie = []
+#
+# #group variants by position
+#by_variantId = query_df.groupby('variant_id')
 
-#group variants by position
-by_variantId = query_df.groupby('variant_id')
+genos = []
 
-for name, group in by_variantId:
-    #if newborn is het and both parents at this position are homozygous
-    if (len(group[(group['member']=='NB') & (group['gt']=='0/1')]) > 0 ) & \
-        (len(group[((group['member']=='M') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0) & \
-         (len(group[((group['member']=='F') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0):
-        group['var_type'] = "mie"
-        mie.append(group)
-    #if newborn is hom_alt and only one parent het for same alt
-    elif ((len(group[(group['member']=='NB') & (group['gt']=='1/1')]) > 0 ) & (len(group[(group['member']=='F') & (group['gt']!='0/1')]) < 1 )| (len(group[(group['member']=='M') & (group['gt']!='0/1')]) < 1)):
-        group['var_type'] = "mie"
-        mie.append(group)
+query_df['MAF'] = ""
+query_df['MAF'][(query_df['gt'] == '0/0')] = '0'
+query_df['MAF'][(query_df['gt'] == '0/1')] = '1'
+query_df['MAF'][(query_df['gt'] == '1/1')] = '2'
 
-print mie
+test = query_df['MAF'].sum(axis=1, numeric_only=True)
+print test
+# query_df['MAF'] = sum(genos)/(2.0*len(genos))
+#
+# print sum(genos)
+
+
+
+
+#
+# for name, group in by_variantId:
+#     #if newborn is het and both parents at this position are homozygous
+#     if (len(group[(group['member']=='NB') & (group['gt']=='0/1')]) > 0 ) & \
+#         (len(group[((group['member']=='M') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0) & \
+#          (len(group[((group['member']=='F') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0):
+#         group['var_type'] = "mie"
+#         mie.append(group)
+#     # if newborn is het
+#     elif ((len(group[(group['member']=='NB') & (group['gt']=='1/1')]) > 0 ) & ((len(group[( ((group['member']=='F') & (group['gt']=='1/1')) & ((group['member']=='M') & (group['gt']!='1/1')) )]) > 0 ) | (len(group[( ((group['member']=='M') & (group['gt']=='1/1')) & ((group['member']=='F') & (group['gt']!='1/1')) )]) > 0 ))):
+#         group['var_type'] = "mie"
+#         mie.append(group)
+#
+# print mie
+#
+# print "Results saved to current working directory...."
