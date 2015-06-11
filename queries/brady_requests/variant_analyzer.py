@@ -194,13 +194,15 @@ print "Looking for compound heterozygosity..."
 
 genos = []
 
-query_df['MAF'] = ""
-query_df['MAF'][(query_df['gt'] == '0/0')] = '0'
-query_df['MAF'][(query_df['gt'] == '0/1')] = '1'
-query_df['MAF'][(query_df['gt'] == '1/1')] = '2'
+# for index, row in query_df.iterrows():
+#     if query_df['gt'] == '0/0':
+#         genos.append(0)
+#     if query_df['gt'] == '0/1':
+#         genos.append(1)
+#     if query_df['gt'] == '1/1':
+#         genos.append(1)
 
-test = query_df['MAF'].sum(axis=1, numeric_only=True)
-print test
+
 # query_df['MAF'] = sum(genos)/(2.0*len(genos))
 #
 # print sum(genos)
