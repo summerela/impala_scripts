@@ -107,7 +107,7 @@ if len(gene_list) > 0 and len(wildcards) > 0:
 #######################
 # connect to database #
 #######################
-# print "Connecting to impala..." + "\n"
+# # print "Connecting to impala..." + "\n"
 # from impala.dbapi import connect
 #
 # conn = connect(host='glados19', port=21050)
@@ -125,7 +125,7 @@ if len(gene_list) > 0 and len(wildcards) > 0:
 #     print "Here's a preview of results found: \n" + str(query_df)
 # else:
 #     print "No results found"
-
+#
 query_df = pd.DataFrame.from_csv("test_results.csv")
 
 ########################################
@@ -180,6 +180,15 @@ print "Looking for compound heterozygosity..."
 #             all_vars['var_type'] = "comp_het"
 #             comp_het.append(all_vars)
 
+#####################
+# calc allele freq ##
+#####################
+query_df.insert(13, 'count', int)
+query_df.ix[query_df['gt'] =='0/0', ['count']] = 0
+query_df.ix[query_df['gt'] =='0/1', ['count']] = 1
+query_df.ix[query_df['gt'] =='1/1', ['count']] = 2
+query_df['count'] = query_df['count'].convert_objects(convert_numeric=True)
+query_df['MAF'] = query_df['count']/(query_df['count'].sum() * 2)
 
 #############
 # find MIE ##
@@ -191,32 +200,9 @@ print "Looking for compound heterozygosity..."
 # #group variants by position
 #by_variantId = query_df.groupby('variant_id')
 
-# genos = []
-#
-#
-# if query_df['gt'] == '0/0':
-#     genos.append(0)
-# elif query_df['gt'] == '0/1':
-#     genos.append(1)
-# elif query_df['gt'] == '1/1':
-#     genos.append(1)
-# else:
-#     pass
-#
-# print sum(genos)
-
-query_df.insert(13, 'count', int)
-query_df.ix[query_df['gt'] =='0/0', ['count']] = 0
-query_df.ix[query_df['gt'] =='0/1', ['count']] = 1
-query_df.ix[query_df['gt'] =='1/1', ['count']] = 2
-#counts = [ x for x in map(int,query_df['count']) ]
 
 
-print sum([i for i in query_df['count']])
 
-#query_df['MAF'] = sum(genos)/(2.0*len(genos))
-
-#print sum(genos)
 
 
 
