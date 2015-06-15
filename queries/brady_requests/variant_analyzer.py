@@ -5,6 +5,7 @@ import argparse
 import sys
 import pandas as pd
 import numpy as np
+
 pd.options.mode.chained_assignment = None
 
 try:
@@ -36,8 +37,8 @@ for gene in gene_args:
 ###############
 # Build Query #
 ###############
-print "Building query to look for " + args.platform + " variants in " + str(gene_list)+ " and", str(wildcards) + "\n" + \
-      "with Kaviar frequency of " + args.kav + "% or less..." + "\n"
+print "Building query to look for " + args.platform + " variants in " + str(gene_list) + " and", str(wildcards) + "\n" + \
+                                                                                                 "with Kaviar frequency of " + args.kav + "% or less..." + "\n"
 
 # create statements for genes and wildcards
 if len(gene_list) > 0 and len(wildcards) < 1:
@@ -50,7 +51,7 @@ if len(gene_list) > 0 and len(wildcards) > 0:
                                                                "'".join(map(str, wildcards)) + "'))"
 # build illumina query
 # if args.platform == 'illumina':
-#     query = """
+# query = """
 #             SELECT p.sample_id, p.qual, p.filter, k.id as rsID, (k.alle_freq * 100) as kav_pct, k.alle_cnt as
 #              kav_count, gene_name, p.chr, p.pos, p.ref, p.alt, p.gt,
 #                    CASE  WHEN SUBSTRING(p.sample_id, -2) = '01' THEN 'M'
@@ -180,46 +181,39 @@ print "Looking for compound heterozygosity..."
 #             all_vars['var_type'] = "comp_het"
 #             comp_het.append(all_vars)
 
-#####################
-# calc allele freq ##
-#####################
-query_df.insert(13, 'count', int)
-query_df.ix[query_df['gt'] =='0/0', ['count']] = 0
-query_df.ix[query_df['gt'] =='0/1', ['count']] = 1
-query_df.ix[query_df['gt'] =='1/1', ['count']] = 2
-query_df['count'] = query_df['count'].convert_objects(convert_numeric=True)
-query_df['MAF'] = query_df['count']/(query_df['count'].sum() * 2)
-
 #############
 # find MIE ##
 #############
-# print "Searching for MIE...."
-# #create list to store mie candidates
-# mie = []
-#
-# #group variants by position
-#by_variantId = query_df.groupby('variant_id')
+print "Searching for MIE...."
+#create list to store mie candidates
+mie = []
+
+# group variants by variant id (gene:chr:pos)
+by_variantId = query_df.groupby('variant_id')
+
+# het variants
+for name, group in by_variantId:
+    #if newborn is het
+    if (len(group[(group['member']=='NB') & (group['gt']=='0/1')]) > 0 ):
+        # and both parents at this position are homozygous
+        if (len(group[((group['member']=='M') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0) & \
+         (len(group[((group['member']=='F') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0):
+            group['var_type'] = "mie"
+            mie.append(group)
+        # or newborn variant is not from either parent
+        elif (group[(group['member'] == 'NB')].alt.any() != (group[(group['member'] == 'F')].alt.any() \
+                                                                     or group[(group['member'] == 'M')].alt.any())):
+            group['var_type'] = "mie"
+            mie.append(group)
+print mie
+
+#hom variants
+for name, group in by_variantId:
+    # if newborn is homozygous for minor allele
+    if ((len(group[(group['member']=='NB') & (group['gt']=='1/1')]) > 0 ) & ((len(group[( ((group['member']=='F') & (group['gt']=='1/1')) & ((group['member']=='M') & (group['gt']!='1/1')) )]) > 0 ) | (len(group[( ((group['member']=='M') & (group['gt']=='1/1')) & ((group['member']=='F') & (group['gt']!='1/1')) )]) > 0 ))):
+        #     group['var_type'] = "mie"
+        #     mie.append(group)
 
 
-
-
-
-
-
-
-#
-# for name, group in by_variantId:
-#     #if newborn is het and both parents at this position are homozygous
-#     if (len(group[(group['member']=='NB') & (group['gt']=='0/1')]) > 0 ) & \
-#         (len(group[((group['member']=='M') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0) & \
-#          (len(group[((group['member']=='F') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0):
-#         group['var_type'] = "mie"
-#         mie.append(group)
-#     # if newborn is het
-#     elif ((len(group[(group['member']=='NB') & (group['gt']=='1/1')]) > 0 ) & ((len(group[( ((group['member']=='F') & (group['gt']=='1/1')) & ((group['member']=='M') & (group['gt']!='1/1')) )]) > 0 ) | (len(group[( ((group['member']=='M') & (group['gt']=='1/1')) & ((group['member']=='F') & (group['gt']!='1/1')) )]) > 0 ))):
-#         group['var_type'] = "mie"
-#         mie.append(group)
-#
-# print mie
-#
-# print "Results saved to current working directory...."
+        #
+        # print "Results saved to current working directory...."
