@@ -43,9 +43,9 @@ print "Building query to look for " + args.platform + " variants in " + str(gene
 # create statements for genes and wildcards
 if len(gene_list) > 0 and len(wildcards) < 1:
     gene_statement = "WHERE ens.gene_name IN ('" + "','".join(map(str, gene_list)) + "')"
-if len(wildcards) > 0 and len(gene_list) < 1:
+elif len(wildcards) > 0 and len(gene_list) < 1:
     gene_statement = 'WHERE ens.gene_name LIKE (' + "','".join(map(str, wildcards)) + "')"
-if len(gene_list) > 0 and len(wildcards) > 0:
+elif len(gene_list) > 0 and len(wildcards) > 0:
     gene_statement = "WHERE (ens.gene_name IN ('" + "','".join(
         map(str, gene_list)) + "') OR ens.gene_name LIKE ('" + "'," \
                                                                "'".join(map(str, wildcards)) + "'))"
@@ -105,6 +105,7 @@ if len(gene_list) > 0 and len(wildcards) > 0:
 # else:
 #     print "Did you select illumina or cgi as your platform? Please check and try again."
 #     sys.exit()
+
 #######################
 # connect to database #
 #######################
@@ -129,42 +130,48 @@ if len(gene_list) > 0 and len(wildcards) > 0:
 #
 query_df = pd.DataFrame.from_csv("test_results.csv")
 
+############################
+# create sets and subsets ##
+############################
+
+colnames = query_df.columns
+
+# create lists to store candidate variants
+hom_alt = []
+hom_ref = []
+comp_het = []
+mie = []
+missing = []
+
+# group by variant id to locate variants at same chr and pos
+by_variant = query_df.groupby('variant_id')
+
+# group variants by gene name
+by_gene = query_df.groupby('gene_name')
+
 ########################################
 # find hom_alt and hom_ref candidates ##
 ########################################
-print "Looking for homozygous ref and alt from non-homozygous parents..."
-# create lists to store candidate variants
-# hom_alt = []
-# hom_ref = []
-#
-# # group by variant id to locate variants at same chr and pos
-# by_variant = query_df.groupby('variant_id')
-#
-# for name, group in by_variant:
-#     # find positions where both parents are het
-#     if len(group[(group['member'] == 'M') & (group['gt'] == '0/1')]) > 0 \
-#         and (len(group[(group['member'] == 'F') & (group['gt'] == '0/1')]) > 0):
-#         # if the newborn is hom_ref
-#         if (len(group[(group['member'] == 'NB') & (group['gt'] == '0/0')]) > 0):
-#             # mark as hom_ref
-#             group['var_type'] = "hom_ref"
-#             hom_ref.append(group)
-#         # if the newborn is hom_alt
-#         elif (len(group[(group['member'] == 'NB') & (group['gt'] == '1/1')]) > 0):
-#             group['var_type'] = "hom_alt"
-#             hom_alt.append(group)
-#
+print "Examining homozygous variants from het parents..."
+
+for name, group in by_variant:
+    # find positions where both parents are het
+    if len(group[(group['member'] == 'M') & (group['gt'] == '0/1')]) > 0 \
+        and (len(group[(group['member'] == 'F') & (group['gt'] == '0/1')]) > 0):
+        # if the newborn is hom_ref
+        if (len(group[(group['member'] == 'NB') & (group['gt'] == '0/0')]) > 0):
+            # mark as hom_ref
+            group['var_type'] = "hom_ref"
+            hom_ref.append(group)
+        # if the newborn is hom_alt
+        elif (len(group[(group['member'] == 'NB') & (group['gt'] == '1/1')]) > 0):
+            group['var_type'] = "hom_alt"
+            hom_alt.append(group)
+
 # ###################
 # # find comp_hets ##
 # ###################
-print "Looking for compound heterozygosity..."
-# comp_het = []
-#
-# # group variants by gene name
-# by_gene = query_df.groupby('gene_name')
-#
-# # define function to check for differences in position
-# # diff = lambda l1,l2: [x for x in l1 if x not in l2]
+# print "Looking for compound heterozygosity..."
 #
 # for name, group in by_gene:
 #     # if there are variants at more than one position and there are nb het variants at diff pos
@@ -180,40 +187,82 @@ print "Looking for compound heterozygosity..."
 #         if (len(all_vars[(all_vars['member'] == 'F')]) > 0) and (len(all_vars[(all_vars['member'] == 'M')]) > 0):
 #             all_vars['var_type'] = "comp_het"
 #             comp_het.append(all_vars)
+#
+# # #############
+# # # find MIE ##
+# # #############
+# print "Searching for MIE...."
+#
+# # het variants
+# for name, group in by_variant:
+#     #if newborn is het
+#     if (len(group[(group['member']=='NB') & (group['gt']=='0/1')]) > 0 ):
+#         # and both parents at this position are homozygous
+#         if (len(group[((group['member']=='M') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0) & \
+#          (len(group[((group['member']=='F') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0):
+#             if (len(group[(group['member'] == 'F')]) > 0) & (len(group[(group['member'] == 'M')]) > 0):
+#                 group['var_type'] = "mie"
+#                 mie.append(group)
+#             else:
+#                 group['var_type'] = "missing_parent"
+#                 missing.append(group)
+#         # or newborn variant is not from either parent
+#         elif (group[(group['member'] == 'NB')].alt.any() != (group[(group['member'] == 'F')].alt.any() \
+#                                                                      or group[(group['member'] == 'M')].alt.any())):
+#             if (len(group[(group['member'] == 'F')]) > 0) & (len(group[(group['member'] == 'M')]) > 0):
+#                 group['var_type'] = "mie"
+#                 mie.append(group)
+#             else:
+#                 group['var_type'] = "missing_parent"
+#                 missing.append(group)
+#
+# # hom variants
+# for name, group in by_variant:
+#     # if newborn is homozygous
+#     if (len(group[(group['member']=='NB') & (group['gt']=='1/1')]) > 0 ):
+#         # and only one parent is het for alt allele
+#         if ((len(group[( ((group['member']=='F') & (group['gt']=='1/1')) & ((group['member']=='M') & (group['gt']!='1/1')) )]) > 0 ) | (len(group[( ((group['member']=='M') & (group['gt']=='1/1')) & ((group['member']=='F') & (group['gt']!='1/1')) )]) > 0 )):
+#             if (len(group[(group['member'] == 'F')]) > 0) & (len(group[(group['member'] == 'M')]) > 0):
+#                 group['var_type'] = "mie"
+#                 mie.append(group)
+#             else:
+#                 group['var_type'] = "missing_parent"
+#                 missing.append(group)
+#         #or nb variant is not from either parent
+#         elif (group[(group['member'] == 'NB')].alt.any() != (group[(group['member'] == 'F')].alt.any() \
+#                                                                      or group[(group['member'] == 'M')].alt.any())):
+#             if (len(group[(group['member'] == 'F')]) > 0) & (len(group[(group['member'] == 'M')]) > 0):
+#                 group['var_type'] = "mie"
+#                 mie.append(group)
+#             else:
+#                 group['var_type'] = "missing_parent"
+#                 missing.append(group)
 
-#############
-# find MIE ##
-#############
-print "Searching for MIE...."
-#create list to store mie candidates
-mie = []
+###########################
+# merge and save results ##
+###########################
+print "Saving results to current working directory...."
 
-# group variants by variant id (gene:chr:pos)
-by_variantId = query_df.groupby('variant_id')
+colnames = query_df.columns
+results = pd.DataFrame(data=np.zeros((0,len(colnames))), columns=colnames)
 
-# het variants
-for name, group in by_variantId:
-    #if newborn is het
-    if (len(group[(group['member']=='NB') & (group['gt']=='0/1')]) > 0 ):
-        # and both parents at this position are homozygous
-        if (len(group[((group['member']=='M') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0) & \
-         (len(group[((group['member']=='F') & ((group['gt'] == '0/0')| (group['gt'] == '1/1')))]) > 0):
-            group['var_type'] = "mie"
-            mie.append(group)
-        # or newborn variant is not from either parent
-        elif (group[(group['member'] == 'NB')].alt.any() != (group[(group['member'] == 'F')].alt.any() \
-                                                                     or group[(group['member'] == 'M')].alt.any())):
-            group['var_type'] = "mie"
-            mie.append(group)
-print mie
+#create list of groupby result lists
+groups = []
+groups.append([hom_alt, hom_ref, comp_het, mie, missing])
 
-#hom variants
-for name, group in by_variantId:
-    # if newborn is homozygous for minor allele
-    if ((len(group[(group['member']=='NB') & (group['gt']=='1/1')]) > 0 ) & ((len(group[( ((group['member']=='F') & (group['gt']=='1/1')) & ((group['member']=='M') & (group['gt']!='1/1')) )]) > 0 ) | (len(group[( ((group['member']=='M') & (group['gt']=='1/1')) & ((group['member']=='F') & (group['gt']!='1/1')) )]) > 0 ))):
-        #     group['var_type'] = "mie"
-        #     mie.append(group)
+for df in enumerate(groups):
+    if len(df) > 0:
+        results.append(pd.concat(df, axis=0, join='outer'))
+
+print results
 
 
-        #
-        # print "Results saved to current working directory...."
+
+# import csv
+# f = open("./variant_analyzer_results.csv", 'wb')
+# writer = csv.writer(f)
+# for row, group in final:
+#     writer.writerows(final)
+# f.close()
+
+
