@@ -1,9 +1,10 @@
+__author__ = 'Summer Elasady for ISB'
+
 #################
 # load modules  #
 #################
 import argparse
 import sys
-import os
 import pandas as pd
 from impala.dbapi import connect
 from impala.util import as_pandas
