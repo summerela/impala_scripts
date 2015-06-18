@@ -18,10 +18,9 @@ pd.options.mode.chained_assignment = None
 ###################
 try:
     parser = argparse.ArgumentParser()
-    parser.add_argument("chr", help="chromosome of interest, type 'all' for all chromosomes, type=str)
-    parser.add_argument("samples", help="enter sample types to examine as M,F,NB; if more than one, comma-separate "
-                                        "with no spaces", type=str)
-    parser.add_argument("kav", help="enter max kaviar frequency to return", type=str)
+    parser.add_argument("chr", help="chromosome as 7,8,9 or all", type=str)
+    parser.add_argument("samples", help="trio members as M,F,NB; or all", type=str)
+    parser.add_argument("kav", help="max kaviar frequency as 10 for 10%", type=str)
     parser.add_argument("platform", help="cgi or illumina", type=str)
     args = parser.parse_args()
 except:
