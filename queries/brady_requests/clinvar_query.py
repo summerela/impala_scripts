@@ -29,34 +29,19 @@ except:
     e = sys.exc_info()[0]
     print e
 
-
-
-lists = [[] for _ in range(len(getattr(args, arg)))]
-print lists
-
-for arg in vars(args):
-    lists = [[] for _ in range(len(getattr(args, arg)))]
-    if getattr(args, arg) != 'all':
-        print "whoopie!"
-    else:
-        print "no whoopie"
-
 ####################
 # format user args #
 ####################
-#create lists to hold args
-# chr_args = []
-# sample_args =[]
-# member_args =[]
-# kav_args=[]
-# platform_arg=[]
-#
-# #split gene list by comma if not 'all'
-#
-# if args.chr != 'all':
-#     chr_args = "('" +"','".join(map(str, args.chr.replace("'", "").split(',')))+"')"
-# else:
-#     chr_args = None
+
+def process_args(arg, val):
+    if val != 'all' and (',' in val):
+        print "WHERE clin.{0} IN ('" + "'".join(map(str, val)) + "')".format(arg)
+    else:
+        print "WHERE clin.{0} = {1}".format(arg,val)
+
+for key, value in vars(args).items():
+    process_args(key, value)
+
 
 
 

@@ -17,10 +17,14 @@ pd.options.mode.chained_assignment = None
 ###################
 try:
     parser = argparse.ArgumentParser()
-    parser.add_argument("genes", help="list genes of interest, comma-sep ,no quotes,no spaces", type=str)
-    parser.add_argument("db", help="enter database of variants to search", type=str)
-    parser.add_argument("kav", help="enter max kaviar frequency to return", type=str)
-    parser.add_argument("platform", help="cgi or illumina", type=str)
+    parser.add_argument("--genes", help="list genes of interest, comma-sep ,no quotes,no spaces", \
+                        default=None, type=str)
+    parser.add_argument("--db", help="enter database of variants to search", \
+                        default="p7_ptb.illumina_variant", type=str)
+    parser.add_argument("--kav", help="enter max kaviar frequency to return", \
+                        default="10", type=str)
+    parser.add_argument("--platform", help="cgi or illumina", \
+                        default="illumina", type=str)
     args = parser.parse_args()
 except:
     e = sys.exc_info()[0]
@@ -30,7 +34,10 @@ except:
 # read in genes of interest and mark if wildcard #
 ##################################################
 # split gene list by comma
-gene_args = args.genes.replace("'", "").split(',')
+if args.genes is not None:
+    gene_args = args.genes.replace("'", "").split(',')
+else: 
+    gene_args = []
 
 # mark any wildcards in gene list
 wildcards = []
@@ -38,24 +45,32 @@ gene_list = []
 for gene in gene_args:
     if gene.endswith('%'):
         wildcards.append(gene)
-    else:
+    elif len(gene_args) > 0:
         gene_list.append(gene)
 
 ###############
 # Build Query #
 ###############
-print "Building query to look for " + args.platform + " variants in " + str(gene_list) + " and", str(wildcards) + "\n" + \
-    "with Kaviar frequency of " + args.kav + "% or less..." + "\n"
-
 # create statements for genes and wildcards
 if len(gene_list) > 0 and len(wildcards) < 1:
-    gene_statement = "WHERE ens.gene_name IN ('" + "','".join(map(str, gene_list)) + "')"
+    gene_statement = "AND ens.gene_name IN ('" + "','".join(map(str, gene_list)) + "')"
+    print "Building query to look for " + args.platform + " variants in " + str(gene_list) + " and", str(wildcards) + "\n" + \
+    "with Kaviar frequency of " + args.kav + "% or less..." + "\n"
 elif len(wildcards) > 0 and len(gene_list) < 1:
-    gene_statement = 'WHERE ens.gene_name LIKE (' + "','".join(map(str, wildcards)) + "')"
+    gene_statement = 'AND ens.gene_name LIKE (' + "','".join(map(str, wildcards)) + "')"
+    print "Building query to look for " + args.platform + " variants in " + str(gene_list) + " and", str(wildcards) + "\n" + \
+    "with Kaviar frequency of " + args.kav + "% or less..." + "\n"
 elif len(gene_list) > 0 and len(wildcards) > 0:
-    gene_statement = "WHERE (ens.gene_name IN ('" + "','".join(
+    gene_statement = "AND (ens.gene_name IN ('" + "','".join(
         map(str, gene_list)) + "') OR ens.gene_name LIKE ('" + "'," \
-                                                               "'".join(map(str, wildcards)) + "'))"
+                                                           "'".join(map(str, wildcards)) + "'))"
+    print "Building query to look for " + args.platform + " variants in " + str(gene_list) + " and", str(wildcards) + "\n" + \
+    "with Kaviar frequency of " + args.kav + "% or less..." + "\n"
+else:
+    gene_statement = ""
+    print "Building query to look for " + args.platform + " variants with " + \
+    "with Kaviar frequency of " + args.kav + "% or less..." + "\n"
+
 #build query
 if args.platform == 'illumina':
     query = """
@@ -68,8 +83,8 @@ if args.platform == 'illumina':
              FROM
              (SELECT DISTINCT p.sample_id, p.qual, p.filter, ens.gene_name, p.chr, p.pos, p.ref, p.alt, p.gt
              FROM public_hg19.ensembl_genes ens, {0:s} AS p
+             WHERE ens.chromosome NOT LIKE 'H%'
              {1:s}
-             AND ens.chromosome NOT LIKE 'H%'
              AND ens.chromosome = p.chr
              AND (p.pos >= ens.start AND p.pos <= ens.stop)
              AND p.gt IS NOT NULL  ) AS p
@@ -95,8 +110,8 @@ elif args.platform == 'cgi':
 p.start, p.stop,
              p.ref, p.allele1seq, p.allele2seq, p.zygosity
              FROM public_hg19.ensembl_genes ens, {0:s} AS p
+             WHERE ens.chromosome NOT LIKE 'H%'
              {1:s}
-             AND ens.chromosome NOT LIKE 'H%'
              AND ens.chromosome = p.chr
              AND (p.start >= ens.start AND p.stop <= ens.stop)
              AND p.zygosity IS NOT NULL) AS p
