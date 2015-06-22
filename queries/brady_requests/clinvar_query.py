@@ -32,16 +32,26 @@ except:
 ####################
 # format user args #
 ####################
+import re
+
+conditionals = []
 
 def process_args(arg, val):
     if val != 'all' and (',' in val):
-        print "WHERE clin.{0} IN ('" + "'".join(map(str, val)) + "')".format(arg)
+        if '-' in val:
+            conditionals.append(" clin.{0} IN ('".format(arg) + "','".join(val.split(',')) + "')")
+        else:
+            conditionals.append(" clin.{0} IN ('".format(arg) + "'".join(map(str, val)) + "')")
+    elif val!= 'all' and  (',' not in val):
+        conditionals.append(" clin.{0} = {1}".format(arg,val))
     else:
-        print "WHERE clin.{0} = {1}".format(arg,val)
+        pass
+
 
 for key, value in vars(args).items():
     process_args(key, value)
 
+print conditionals
 
 
 
