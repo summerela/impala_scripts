@@ -7,7 +7,7 @@
 ##           determine if the variants are rare according to a user-specified kaviar frequency. Only 
 ##           variants below this kaviar frequency, or not in kaviar, are returned. This script returns
 ##           information about heritability, including: MIE, compound-heterozygosity, and homozygous alt
-##           and homozygous ref alleles that were inhereted from none homozygous parents. 
+##           and homozygous ref alleles that were inherited from none homozygous parents.
 ##
 ##  INPUT:   Enter arguments for gene, db and kav as follows: 
 ##           --gene  - Comma separated list of genes of interest, comma-separated, no spaces

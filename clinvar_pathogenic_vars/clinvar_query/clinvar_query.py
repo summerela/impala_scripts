@@ -7,26 +7,10 @@ import argparse
 import sys
 import pandas as pd
 from impala.dbapi import connect
-import re
 from impala.util import as_pandas
 
 #ignore irrelevant pandas warnings
 pd.options.mode.chained_assignment = None
-
-# function to process user args
-def process_args(arg, val):
-    # if arg is not 'all' and there are more than one argument
-    if val != 'all' and (',' in val):
-        conditionals.append(" vcf.{0} IN ('".format(arg) + "','".join(val.split(',')) + "')")
-    # if arg is not 'all' but there is only one arg
-    elif val!= 'all' and  (',' not in val):
-        conditionals.append(" vcf.{0} = '{1}'".format(arg,val))
-    #if arg is 'all' leave blank
-    elif val == 'all':
-        pass
-    #if arg not any of above, error and halt
-    else:
-        sys.exit("Check that your command line args are properly formatted and try again.")
 
 ###################
 # parse user args #
@@ -123,7 +107,7 @@ WHERE ((FIND_IN_SET('4', clin.clin_sig) > 0) OR (FIND_IN_SET('5', clin.clin_sig)
             """.format(query_args)
 else:
     print "Did you select illumina or cgi as your platform? Please check and try again."
-
+print query
 ######################
 # connect to database #
 ######################
@@ -148,58 +132,11 @@ if len(query_df) > 0:
     print "Results saved to current working directory as clinvar_results.csv..."
     #save to csv
     query_df.to_csv('clinvar_results.csv', header=True, encoding='utf-8', index=False)
-    #####################
-    ## Generate Report ##
-    #####################
-    print "Generating an html report..."
-    # make sql query pretty
-    rep = {'FROM':'<br> FROM', 'JOIN':'<br>JOIN', 'ON':'<br>ON', 'AND':'<br>AND', 'WHERE':'<br>WHERE'}
-    rep = dict((re.escape(k), v) for k, v in rep.iteritems())
-    pattern = re.compile("|".join(rep.keys()))
-    pretty_query= pattern.sub(lambda m: rep[re.escape(m.group(0))], query)
-    #make results pretty
-    summary_table_1 = query_df.to_html(index=False).replace('<table border="1" class="dataframe">','<table class="table table-striped">')
-    #Create html report
-    html_string = '''
-    <html>
-        <head>
-            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
-            <style>body{ margin:0 100; background:whitesmoke; }</style>
-        </head>
-        <body>
-            <h1>Clinvar Annotation of Variants</h1>
-            <h2>Specifications: </h2>
-                <p> Clinvar was used to annotate variants falling in regions marked with a clinical significance of 4 or 5,
-                but not 2 or 3. The following paramaters were specified: <br>
-                <ul>
-                <li>Chromosome(s) of interest =  ''' + args.chr + '''</li>
-                <li>Gene(s) of interest =  ''' + args.genes + '''</li>
-                <li>Zygosity =  ''' + args.zygosity + '''</li>
-                <li>Trio Member(s) =  ''' + args.member + '''</li>
-                <li>Sample ID'(s) =  ''' + args.sample_id + '''</li>
-                <li>Platform =  ''' + args.platform + '''</li>
-                </ul>
-            <!-- *** Query *** --->
-                <h2>Query: </h2>
-                <p>The following query was run on impala: <br><br>''' + pretty_query + '''</p>
-            <!-- *** Results *** --->
-                <h2>Results: </h2>
-                <p>The following results were found:<br>
-                <ul>
-                <li>Total Variants Found:''' + len(query_df) + '''</li>
-                <li>Total Variants Found:''' + pd.unique(df.column_name.ravel()) + '''</li>
-                </p>
-        </body>
-        </html>'''
 else:
     print "No results found"
 
 
 
-
-f = open('test.html','w')
-f.write(html_string)
-f.close()
 
 #close all the things
 cur.close()
@@ -211,7 +148,3 @@ sys.exit()
 # illumina variants file needs gt,zygosity fields added
 # also need to add member column to both cgi and illumina in impala
 # parse zygosity depending on platform
-# add filtering options
-# link to gene info
-# link to dbSNP
-# scrollable, filterable table
