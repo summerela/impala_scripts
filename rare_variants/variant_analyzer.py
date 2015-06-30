@@ -168,21 +168,21 @@ by_gene = query_df.groupby('gene_name')
 #######################################
 # find hom_alt and hom_ref candidates ##
 #######################################
-print "Examining homozygous variants from het parents..."
-
-for name, group in by_variant:
-    # find positions where both parents are het
-    if len(group[(group['member'] == 'M') & (group['gt'] == '0/1')]) > 0 \
-        and (len(group[(group['member'] == 'F') & (group['gt'] == '0/1')]) > 0):
-        # if the newborn is hom_ref
-        if (len(group[(group['member'] == 'NB') & (group['gt'] == '0/0')]) > 0):
-            # mark as hom_ref
-            group['var_type'] = "hom_ref"
-            hom_ref.append(group)
-        # if the newborn is hom_alt
-        elif (len(group[(group['member'] == 'NB') & (group['gt'] == '1/1')]) > 0):
-            group['var_type'] = "hom_alt"
-            hom_alt.append(group)
+# print "Examining homozygous variants from het parents..."
+#
+# for name, group in by_variant:
+#     # find positions where both parents are het
+#     if len(group[(group['member'] == 'M') & (group['gt'] == '0/1')]) > 0 \
+#         and (len(group[(group['member'] == 'F') & (group['gt'] == '0/1')]) > 0):
+#         # if the newborn is hom_ref
+#         if (len(group[(group['member'] == 'NB') & (group['gt'] == '0/0')]) > 0):
+#             # mark as hom_ref
+#             group['var_type'] = "hom_ref"
+#             hom_ref.append(group)
+#         # if the newborn is hom_alt
+#         elif (len(group[(group['member'] == 'NB') & (group['gt'] == '1/1')]) > 0):
+#             group['var_type'] = "hom_alt"
+#             hom_alt.append(group)
 ###################
 # find comp_hets ##
 ###################
