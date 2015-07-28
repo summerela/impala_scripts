@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb" afterPath="$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/query_impala..ipynb" afterPath="$PROJECT_DIR$/query_impala..ipynb" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="impala_scripts.iws" />
@@ -22,6 +23,7 @@
     <SUITE FILE_PATH="coverage/impala_scripts$Unnamed.coverage" NAME="inheritence_check Coverage Results" MODIFIED="1433897749989" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/impala_scripts/queries/brady_requests" />
     <SUITE FILE_PATH="coverage/impala_scripts$inheritence_check.coverage" NAME="inheritence_check Coverage Results" MODIFIED="1434495756059" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/impala_scripts/queries/brady_requests" />
     <SUITE FILE_PATH="coverage/impala_annot$testing.coverage" NAME="testing Coverage Results" MODIFIED="1435600504578" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/clinvar_pathogenic_vars/clinvar_query" />
+    <SUITE FILE_PATH="coverage/impala_annot$query_impala.coverage" NAME="query impala Coverage Results" MODIFIED="1438126683523" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/impala_annot$variant_query_notebook.coverage" NAME="variant_query_notebook Coverage Results" MODIFIED="1437455161456" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="CreatePatchCommitExecutor">
@@ -51,11 +53,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="query_impala..ipynb" pinned="false" current-in-tab="false">
+      <file leaf-file-name="query_impala..ipynb" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/query_impala..ipynb">
           <provider selected="true" editor-type-id="ipnb-editor">
             <state>
-              <selected id="36" />
+              <selected id="50" />
             </state>
           </provider>
         </entry>
@@ -69,11 +71,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="nbs_genes.ipynb" pinned="false" current-in-tab="true">
+      <file leaf-file-name="nbs_genes.ipynb" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb">
           <provider selected="true" editor-type-id="ipnb-editor">
             <state>
-              <selected id="6" />
+              <selected id="2" />
             </state>
           </provider>
         </entry>
@@ -108,9 +110,9 @@
         <option value="$PROJECT_DIR$/rare_variants/variant_analyzer.ipynb" />
         <option value="$PROJECT_DIR$/rare_variants/variant_analyzer.py" />
         <option value="$PROJECT_DIR$/clinvar_pathogenic_vars/clinvar_query/clinvar_pathogenic.ipynb" />
-        <option value="$PROJECT_DIR$/query_impala..ipynb" />
         <option value="$PROJECT_DIR$/PharmGKB_vars.ipynb" />
         <option value="$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb" />
+        <option value="$PROJECT_DIR$/query_impala..ipynb" />
       </list>
     </option>
   </component>
@@ -122,7 +124,7 @@
     <order />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="2291" />
+    <option name="x" value="2084" />
     <option name="y" value="-35" />
     <option name="width" value="1413" />
     <option name="height" value="1019" />
@@ -267,7 +269,7 @@
       <recent name="D:\Documents\GitHub\impala_scripts" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.variant_query_notebook">
+  <component name="RunManager" selected="Python.query impala">
     <configuration default="true" type="DjangoTestsConfigurationType" factoryName="Django tests">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -456,24 +458,6 @@
       <option name="USE_KEYWORD" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="variant_query_notebook" type="PythonConfigurationType" factoryName="Python">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="/usr/local/Cellar/python/2.7.9/Frameworks/Python.framework/Versions/2.7/bin/python2.7" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="impala_annot" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/query_impala..ipynb" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <method />
-    </configuration>
     <configuration default="false" name="clinvar_query" type="PythonConfigurationType" factoryName="Python">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -510,10 +494,28 @@
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
     </configuration>
+    <configuration default="false" name="query impala" type="PythonConfigurationType" factoryName="Python">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$USER_HOME$/anaconda/bin/python" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="impala_annot" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/query_impala..ipynb" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <method />
+    </configuration>
     <list size="3">
-      <item index="0" class="java.lang.String" itemvalue="Python.variant_query_notebook" />
-      <item index="1" class="java.lang.String" itemvalue="Python.clinvar_query" />
-      <item index="2" class="java.lang.String" itemvalue="Python.testing" />
+      <item index="0" class="java.lang.String" itemvalue="Python.clinvar_query" />
+      <item index="1" class="java.lang.String" itemvalue="Python.testing" />
+      <item index="2" class="java.lang.String" itemvalue="Python.query impala" />
     </list>
   </component>
   <component name="ShelveChangesManager" show_recycled="false" />
@@ -587,7 +589,13 @@
       <option name="project" value="LOCAL" />
       <updated>1438110752885</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Added ipython notebook for nbs genes">
+      <created>1438119903446</created>
+      <option name="number" value="00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1438119903446</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TodoView">
@@ -600,28 +608,28 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="2291" y="-35" width="1413" height="1019" extended-state="0" />
+    <frame x="2084" y="-35" width="1413" height="1019" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32503662" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3277439" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Remote Host" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3299293" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39975095" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.31375" sideWeight="0.5027855" order="12" side_tool="true" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.29115853" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3277439" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.12882954" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Remote Host" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3299293" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.14077316" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32650074" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.31375" sideWeight="0.5027855" order="12" side_tool="true" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.29115853" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.19644839" sideWeight="0.4972145" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3292683" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39975095" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.19753087" sideWeight="0.4972145" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
     </layout>
@@ -672,7 +680,8 @@
     <MESSAGE value="adding function to determine how to join db" />
     <MESSAGE value="added function to join query, need to save results and create __main__ module" />
     <MESSAGE value="Added ipython notebook for pharmgkb and restructured directory" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added ipython notebook for pharmgkb and restructured directory" />
+    <MESSAGE value="Added ipython notebook for nbs genes" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added ipython notebook for nbs genes" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -836,13 +845,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/query_impala..ipynb">
-      <provider selected="true" editor-type-id="ipnb-editor">
-        <state>
-          <selected id="36" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Annotation Scripts/rare_variants/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-0.0">
@@ -889,6 +891,13 @@
       <provider selected="true" editor-type-id="ipnb-editor">
         <state>
           <selected id="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/query_impala..ipynb">
+      <provider selected="true" editor-type-id="ipnb-editor">
+        <state>
+          <selected id="50" />
         </state>
       </provider>
     </entry>
