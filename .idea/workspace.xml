@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/query_impala.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb" afterPath="$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/query_impala..ipynb" afterPath="$PROJECT_DIR$/query_impala..ipynb" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/query_impala.py" afterPath="$PROJECT_DIR$/query_impala.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="impala_scripts.iws" />
@@ -39,7 +38,7 @@
               <entry file="file://$PROJECT_DIR$/query_impala..ipynb">
                 <provider selected="true" editor-type-id="ipnb-editor">
                   <state>
-                    <selected id="50" />
+                    <selected id="48" />
                   </state>
                 </provider>
               </entry>
@@ -82,17 +81,17 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="query_impala.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="query_impala.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/query_impala.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-2.9629629">
-              <caret line="78" column="7" selection-start-line="78" selection-start-column="7" selection-end-line="78" selection-end-column="7" />
+            <state vertical-scroll-proportion="-0.2912482">
+              <caret line="83" column="7" selection-start-line="83" selection-start-column="7" selection-end-line="83" selection-end-column="7" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="nbs_genes.ipynb" pinned="false" current-in-tab="true">
+      <file leaf-file-name="nbs_genes.ipynb" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb">
           <provider selected="true" editor-type-id="ipnb-editor">
             <state>
@@ -132,9 +131,9 @@
         <option value="$PROJECT_DIR$/rare_variants/variant_analyzer.py" />
         <option value="$PROJECT_DIR$/clinvar_pathogenic_vars/clinvar_query/clinvar_pathogenic.ipynb" />
         <option value="$PROJECT_DIR$/PharmGKB_vars.ipynb" />
+        <option value="$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb" />
         <option value="$PROJECT_DIR$/query_impala..ipynb" />
         <option value="$PROJECT_DIR$/query_impala.py" />
-        <option value="$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb" />
       </list>
     </option>
   </component>
@@ -635,7 +634,13 @@
       <option name="project" value="LOCAL" />
       <updated>1438202081186</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="Creating module for querying impala&#10;Added ensembl annotaiton to nbs_genes, next annotate with nbs gene list">
+      <created>1438215120661</created>
+      <option name="number" value="00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1438215120661</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TodoView">
@@ -724,7 +729,8 @@
     <MESSAGE value="Figured out workaround for saving results to impala (woo!)" />
     <MESSAGE value="Add user option for output file name/table name to query_impala and cleaned up connection string&#10;Added ensembl annotatoin to nbs_genes" />
     <MESSAGE value="Updated query_impala save options&#10;Updated filtering query for nbs_genes" />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated query_impala save options&#10;Updated filtering query for nbs_genes" />
+    <MESSAGE value="Creating module for querying impala&#10;Added ensembl annotaiton to nbs_genes, next annotate with nbs gene list" />
+    <option name="LAST_COMMIT_MESSAGE" value="Creating module for querying impala&#10;Added ensembl annotaiton to nbs_genes, next annotate with nbs gene list" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -930,25 +936,25 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb">
+      <provider selected="true" editor-type-id="ipnb-editor">
+        <state>
+          <selected id="9" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/query_impala..ipynb">
       <provider selected="true" editor-type-id="ipnb-editor">
         <state>
-          <selected id="46" />
+          <selected id="48" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/query_impala.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-2.9629629">
-          <caret line="78" column="7" selection-start-line="78" selection-start-column="7" selection-end-line="78" selection-end-column="7" />
+        <state vertical-scroll-proportion="-0.2912482">
+          <caret line="83" column="7" selection-start-line="83" selection-start-column="7" selection-end-line="83" selection-end-column="7" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb">
-      <provider selected="true" editor-type-id="ipnb-editor">
-        <state>
-          <selected id="9" />
         </state>
       </provider>
     </entry>

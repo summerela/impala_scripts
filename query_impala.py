@@ -84,6 +84,8 @@ def merge_query(query_arg, merge_list):
     '''
     if query_arg:
         merge_list.append(query_arg)
+    impala_query= ' '.join(merge_list).replace('AND', 'WHERE', 1)
+    return impala_query
 
 # create list of columns to return from the query
 def get_cols(db, col_arg):
@@ -106,4 +108,117 @@ def get_cols(db, col_arg):
             print "Check your search_db_cols and annot_db_cols arguments and try again please."
             col_query = ''
     return col_query
+
+# check if tables contain start/stop or pos, and ref columns
+def check_colnames(cursor, table_name, print_out=True):
+    '''
+    :param cursor: impala database connection object
+    :param table_name: name of table to check
+    :param print_out: print out the list to screen
+    :return: a list of columns in the specified impala table
+    '''
+    cur.execute('DESCRIBE {0}'.format(table_name))
+    info = cur.fetchall()
+    cols = []
+    for col in info:
+         cols.append(col[0])
+    return cols
+
+# function to match cgi with annot_db
+def join_annot_to_cgi(annot_db):
+    '''
+    :param annot_db: name of annotation source, example 'ensemble_genes'
+    :return: returns query statements used to match tables on position/ref/alt etc.
+    '''
+    # check for ref columns
+    if 'ref' in annot_cols:
+        # if there is a start column
+        if 'start' in annot_cols:
+            # if there is a stop position reported
+            if 'stop' in annot_cols:
+                using_statement = "USING (start,stop,ref,alt)"
+                match_statement = " AND {0}.start = {1}.start AND {0}.stop = {1}.stop AND {0}.ref = {1}.ref AND { \
+                                  0}.alt = {1}.alt ".format(search_db, annot_db)
+            # there is start but no stop position
+            else:
+                using_statement = "USING (start,ref,alt)"
+                match_statement = " AND {0}.start = {1}.start AND {0}.ref = {1}.ref AND { \
+                                  0}.alt = {1}.alt ".format(search_db, annot_db)
+        # there is pos column instead of start
+        elif 'pos' in annot_cols:
+            using_statement = "USING (pos,ref,alt)"
+            match_statement = " AND ({1}.pos BETWEEN {0}.start AND {0}.stop) AND {0}.ref = {1}.ref \
+            AND {0}.alt = {1}.alt ".format(search_db, annot_db)
+    elif 'ref' not in annot_cols:
+        # if there is a start column
+        if 'start' in annot_cols:
+            # if there is a stop position reported
+            if 'stop' in annot_cols:
+                using_statement = "USING (start,stop)"
+                match_statement = " AND ({0}.start >= {1}.start AND {0}.stop <= {1}.stop) ".format(search_db, annot_db)
+            # there is start but no stop position
+            else:
+                using_statement = "USING (start)"
+                match_statement = " AND {0}.start = {1}.start ".format(search_db, annot_db)
+        # there is pos column instead of start
+        elif 'pos' in annot_cols:
+            using_statement = "USING (pos)"
+            match_statement = " AND ({1}.pos BETWEEN {0}.start AND {0}.stop) ".format(search_db, annot_db)
+    # if no start, stop or pos, match on gene name
+    elif 'gene_name' in annot_cols:
+        using_statement = "USING (gene_name)"
+        match_statement = " AND {0}.gene_name = {1}.gene_name ".format(search_db, annot_db)
+    else:
+        print "Cannot find method for joining tables."
+    return using_statement,match_statement
+
+# function to match illumina with annot_db
+def join_annot_to_illumina(annot_db):
+    '''
+    :param annot_db: name of annotation source, example 'ensemble_genes'
+    :return: returns query statements used to match tables on position/ref/alt etc.
+    '''
+    # check for ref columns
+    if 'ref' in annot_cols:
+        # if there is a start column
+        if 'start' in annot_cols:
+            # if there is a stop position reported
+            if 'stop' in annot_cols:
+                using_statement = "USING (start,stop,ref,alt)"
+                match_statement = " AND ({0}.pos BETWEEN {1}.start AND {1}.stop) AND {0}.ref = {1}.ref \
+                                  AND {0}.alt = {1}.alt ".format(search_db, annot_db)
+            # there is start but no stop position
+            else:
+                using_statement = "USING (start,ref,alt)"
+                match_statement = " AND {0}.pos = {1}.start AND {0}.ref = {1}.ref AND { \
+                                  0}.alt = {1}.alt ".format(search_db, annot_db)
+        # there is pos column instead of start
+        elif 'pos' in annot_cols:
+            using_statement = "USING (pos,ref,alt)"
+            match_statement = " AND {0}.pos = {1}.pos AND {0}.ref = {1}.ref \
+            AND {0}.alt = {1}.alt ".format(search_db, annot_db)
+    elif 'ref' not in annot_cols:
+        # if there is a start column
+        if 'start' in annot_cols:
+            # if there is a stop position reported
+            if 'stop' in annot_cols:
+                using_statement = "USING (start,stop)"
+                match_statement = " AND ({0}.pos BETWEEN {1}.start AND {1}.stop) ".format(search_db,annot_db)
+            # there is start but no stop position
+            else:
+                using_statement = ""
+                match_statement = " AND {0}.pos = {1}.start ".format(search_db, annot_db)
+        # there is pos column instead of start
+        elif 'pos' in annot_cols:
+            using_statement = "USING (pos)"
+            match_statement = " AND {0}.pos = {1}.pos ".format(search_db, annot_db)
+    # if no start, stop or pos, match on gene name
+    elif 'gene_name' in annot_cols:
+        using_statement = "USING (gene_name)"
+        match_statement = " AND {0}.gene_name = {1}.gene_name ".format(search_db, annot_db)
+    else:
+        print "Cannot find method for joining tables."
+        using_statement = ""
+        match_statement = ""
+    return using_statement, match_statement
 
