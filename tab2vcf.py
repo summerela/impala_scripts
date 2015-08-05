@@ -21,11 +21,11 @@ import datetime
 ################################################################################
 import argparse
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        'input_tsv', metavar='i', help='Enter the full file path to the tsv file')
-    args = parser.parse_args()
+parser = argparse.ArgumentParser()
+parser.add_argument('input_tsv', metavar='i', help='Enter the full file path to the tsv file')
+args = parser.parse_args()
+
+print args.input_tsv
 
 ACCEPTED_CHR = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
                 "20", "21", "22", "X", "Y", "MT"]
@@ -118,6 +118,7 @@ def tab2vcf(filename, sep='\t'):
     fh.close()
     fh_out.close()
 
+filename = args.input_tsv
 
 def run(filename):
     if os.path.exists(filename) and os.path.isfile(filename):
@@ -125,16 +126,5 @@ def run(filename):
     else:
         print("File does not exist " + filename)
 
-
-filename = ''
-while True:
-    filename= ''
-    if os.path.exists(filename) and os.path.isfile(filename):
-        break
-    else:
-        print 'File ' + filename + ' does not exists'
-
-print 'You entered ' + filename
-
 if __name__ == "__main__":
-    run(filename=filename)
+    run(filename)
