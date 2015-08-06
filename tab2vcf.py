@@ -42,81 +42,140 @@ def find_first_index(lst, elem):
     return -1
 
 
+# def vcfheader(filename):
+#     """ Generates VCF header """
+#     filename = os.path.basename(filename)
+#     filename = os.path.splitext(filename)[0]
+#     now = datetime.datetime.now()
+#     curdate = str(now.year) + '-' + str(now.month) + '-' + str(now.day)
+#     lines = []
+#     lines.append('##fileformat=VCFv4.0')
+#     lines.append('##fileDate=' + curdate)
+#     lines.append('##reference=1000Genomes-NCBI37')
+#     lines.append(
+#         '#CHROM' + '\t' + 'POS' + '\t' + 'ID' + '\t' + 'REF' + '\t' + 'ALT' + '\t' + 'QUAL' + '\t' + 'FILTER' + '\t' + 'INFO' + '\t' + 'FORMAT' + '\t' + 'Genotype')
+#     return '\n'.join(lines)
+#
+#
+# def tab2vcf(filename, sep='\t'):
+#     outfile = filename + '.vcf'
+#     fh_out = open(outfile, "w")
+#     fh_out.write(vcfheader(filename) + '\n')
+#     fh = open(filename)
+#     linenum = 0
+#     chromind = -1
+#     posind = -1
+#     refind = -1
+#     altind = -1
+#     rsind = -1
+#
+#     for line in fh:
+#         line = line.strip()
+#         fields = line.split(sep)
+#         if linenum == 0:
+#             chromind = find_first_index(fields, 'chrom')
+#             posind = find_first_index(fields, 'pos')
+#             refind = find_first_index(fields, 'ref')
+#             altind = find_first_index(fields, 'alt')
+#             rsind = find_first_index(fields, 'id')
+#             sampleind = find_first_index(fields, 'sample_id')
+#             geneind = find_first_index(fields, 'gene')
+#             qualind = find_first_index(fields, 'qual')
+#             filterind = find_first_index(fields, 'filter')
+#             gtind = find_first_index(fields, 'gt')
+#
+#             print(
+#             str(chromind) + ' ' + str(posind) + ' ' + str(refind) + ' ' + str(altind) + ' ' + str(rsind) + ' ' + str(
+#                 sampleind) + ' ' + str(geneind) + ' ' + str(qualind) + ' ' + str(filterind) + ' ' + str(gtind))
+#
+#             if (chromind < 0 or posind < 0 or refind < 0 or altind < 0):
+#                 print("Column names chrom, pos, ref and alt are mandatory")
+#                 break;
+#         else:
+#
+#             chr = fields[chromind].strip().replace('chr', '')
+#             pos = str(fields[posind]).strip()
+#             ref = str(fields[refind]).strip()
+#             alt = str(fields[altind]).strip()
+#             id = str(fields[rsind]).strip()
+#             sample_id = str(fields[sampleind]).strip()
+#             gene = str(fields[geneind]).strip()
+#             qual = str(fields[qualind]).strip()
+#             filter = str(fields[filterind]).strip()
+#             gt = str(fields[gtind]).strip()
+#
+#             if len(fields) > 4:
+#                 info = gene
+#             if (alt != ref) and (find_first_index(ACCEPTED_CHR, chr.strip()) > -1):
+#                 l = (
+#                 chr + sep + pos + sep + id + sep + ref + sep + alt + sep + qual + sep + filter + sep + "gene={},sample_id={}".format(
+#                     info, sample_id) + sep + "GT" + sep + gt).strip()
+#                 # print l
+#             fh_out.write(l + '\n')
+#
+#         linenum = linenum + 1
+#
+#     fh.close()
+#     fh_out.close()
+
 def vcfheader(filename):
     """ Generates VCF header """
     filename = os.path.basename(filename)
     filename = os.path.splitext(filename)[0]
     now = datetime.datetime.now()
-    curdate = str(now.year) + '-' + str(now.month) + '-' + str(now.day)
-    lines = []
+    curdate=str(now.year)+'-'+str(now.month)+'-'+str(now.day)
+    lines=[]
     lines.append('##fileformat=VCFv4.0')
-    lines.append('##fileDate=' + curdate)
+    lines.append('##fileDate='+curdate)
     lines.append('##reference=1000Genomes-NCBI37')
-    lines.append(
-        '#CHROM' + '\t' + 'POS' + '\t' + 'ID' + '\t' + 'REF' + '\t' + 'ALT' + '\t' + 'QUAL' + '\t' + 'FILTER' + '\t' + 'INFO' + '\t' + 'FORMAT' + '\t' + 'Genotype')
+    lines.append('#CHROM'+'\t'+'POS'+'\t'+'ID'+'\t'+'REF'+'\t'+'ALT'+'\t'+'QUAL'+'\t'+'FILTER'+'\t'+'INFO'+'\t'+'FORMAT' + '\t'+ filename)
     return '\n'.join(lines)
 
-
 def tab2vcf(filename, sep='\t'):
-    outfile = filename + '.vcf'
+
+    outfile=filename+'.vcf'
     fh_out = open(outfile, "w")
-    fh_out.write(vcfheader(filename) + '\n')
+    fh_out.write(vcfheader(filename)+'\n')
     fh = open(filename)
     linenum = 0
     chromind = -1
     posind = -1
     refind = -1
     altind = -1
-    rsind = -1
 
     for line in fh:
-        line = line.strip()
-        fields = line.split(sep)
-        if linenum == 0:
-            chromind = find_first_index(fields, 'chrom')
-            posind = find_first_index(fields, 'pos')
-            refind = find_first_index(fields, 'ref')
-            altind = find_first_index(fields, 'alt')
-            rsind = find_first_index(fields, 'id')
-            sampleind = find_first_index(fields, 'sample_id')
-            geneind = find_first_index(fields, 'gene')
-            qualind = find_first_index(fields, 'qual')
-            filterind = find_first_index(fields, 'filter')
-            gtind = find_first_index(fields, 'gt')
+        line=line.strip()
+        fields=line.split(sep)
+        if linenum==0:
+            chromind=find_first_index(fields, 'chrom')
+            posind=find_first_index(fields, 'pos')
+            refind=find_first_index(fields, 'ref')
+            altind=find_first_index(fields, 'alt')
 
-            print(
-            str(chromind) + ' ' + str(posind) + ' ' + str(refind) + ' ' + str(altind) + ' ' + str(rsind) + ' ' + str(
-                sampleind) + ' ' + str(geneind) + ' ' + str(qualind) + ' ' + str(filterind) + ' ' + str(gtind))
+            print(str(chromind) + ' ' +  str(posind) + ' ' +  str(refind) + ' ' +  str(altind))
 
-            if (chromind < 0 or posind < 0 or refind < 0 or altind < 0):
-                print("Column names chrom, pos, ref and alt are mandatory")
+            if(chromind < 0 or posind < 0 or refind < 0 or altind < 0):
+                print("Column names CHROM, POS, REF and ALT are mandatory")
                 break;
         else:
 
-            chr = fields[chromind].strip().replace('chr', '')
-            pos = str(fields[posind]).strip()
-            ref = str(fields[refind]).strip()
-            alt = str(fields[altind]).strip()
-            id = str(fields[rsind]).strip()
-            sample_id = str(fields[sampleind]).strip()
-            gene = str(fields[geneind]).strip()
-            qual = str(fields[qualind]).strip()
-            filter = str(fields[filterind]).strip()
-            gt = str(fields[gtind]).strip()
-
-            if len(fields) > 4:
-                info = gene
+            chr=fields[chromind].strip().replace('chr', '')
+            pos=str(fields[posind]).strip()
+            ref=str(fields[refind]).strip()
+            alt=str(fields[altind]).strip()
+            info='.'
+            if len(fields)>4:
+                info=';'.join( map (str, fields[4:len(fields)]) )
             if (alt != ref) and (find_first_index(ACCEPTED_CHR, chr.strip()) > -1):
-                l = (
-                chr + sep + pos + sep + id + sep + ref + sep + alt + sep + qual + sep + filter + sep + "gene={},sample_id={}".format(
-                    info, sample_id) + sep + "GT" + sep + gt).strip()
-                # print l
-            fh_out.write(l + '\n')
+                l= (chr + sep + pos + sep + '.' +sep + ref + sep + alt + sep + '.' + sep + 'PASS' + sep + info + sep + 'GT' + sep + './.' ).strip()
+                #print l
+                fh_out.write(l+'\n')
 
-        linenum = linenum + 1
+        linenum=linenum+1
 
     fh.close()
     fh_out.close()
+
 
 filename = args.input_tsv
 
