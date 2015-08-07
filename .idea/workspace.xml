@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb" afterPath="$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb" />
+    <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="adding">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/newborns.tsv.vcf" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="impala_scripts.iws" />
@@ -671,7 +671,13 @@
       <option name="project" value="LOCAL" />
       <updated>1438904921951</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="added summary section">
+      <created>1438907169974</created>
+      <option name="number" value="00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1438907169974</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
     <servers />
   </component>
   <component name="TodoView">
@@ -765,7 +771,8 @@
     <MESSAGE value="finalized comp-het function, verified logic&#10;need to finish VEP and save to file" />
     <MESSAGE value="Added SnpEff annotations&#10;Save to file and then done" />
     <MESSAGE value="Added DANN&#10;finished basic script&#10;adding summary section" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added DANN&#10;finished basic script&#10;adding summary section" />
+    <MESSAGE value="added summary section" />
+    <option name="LAST_COMMIT_MESSAGE" value="added summary section" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
