@@ -3,6 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Annotation Scripts/PharmGKB/PharmGKB_vars.ipynb" afterPath="$PROJECT_DIR$/Annotation Scripts/PharmGKB/PharmGKB_vars.ipynb" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb" afterPath="$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/newborns.tsv.vcf" afterPath="$PROJECT_DIR$/newborns.tsv.vcf" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="impala_scripts.iws" />
@@ -34,16 +36,16 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="nbs_genes.ipynb" pinned="false" current-in-tab="false">
+      <file leaf-file-name="nbs_genes.ipynb" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb">
           <provider selected="true" editor-type-id="ipnb-editor">
             <state>
-              <selected id="5" />
+              <selected id="25" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="PharmGKB_vars.ipynb" pinned="false" current-in-tab="true">
+      <file leaf-file-name="PharmGKB_vars.ipynb" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Annotation Scripts/PharmGKB/PharmGKB_vars.ipynb">
           <provider selected="true" editor-type-id="ipnb-editor">
             <state>
@@ -90,8 +92,8 @@
         <option value="$PROJECT_DIR$/quick_query..ipynb" />
         <option value="/code.py" />
         <option value="$PROJECT_DIR$/tab2vcf.py" />
-        <option value="$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb" />
         <option value="$PROJECT_DIR$/Annotation Scripts/PharmGKB/PharmGKB_vars.ipynb" />
+        <option value="$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb" />
       </list>
     </option>
   </component>
@@ -103,10 +105,10 @@
     <order />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="683" />
-    <option name="y" value="43" />
-    <option name="width" value="1233" />
-    <option name="height" value="964" />
+    <option name="x" value="201" />
+    <option name="y" value="3" />
+    <option name="width" value="1719" />
+    <option name="height" value="1022" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <OptionsSetting value="true" id="Add" />
@@ -131,7 +133,6 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
@@ -243,6 +244,7 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -672,7 +674,13 @@
       <option name="project" value="LOCAL" />
       <updated>1438923597250</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="saving  changes">
+      <created>1439167352104</created>
+      <option name="number" value="00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1439167352104</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TodoView">
@@ -685,7 +693,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="683" y="43" width="1233" height="964" extended-state="0" />
+    <frame x="201" y="3" width="1719" height="1022" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3277439" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -693,10 +701,10 @@
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32643119" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.29115853" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.35069886" sideWeight="0.4937304" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3372781" sideWeight="0.4937304" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3226601" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Remote Host" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3299293" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.22231759" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Remote Host" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3299293" sideWeight="0.5" order="4" side_tool="true" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.0" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.12882954" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -768,7 +776,8 @@
     <MESSAGE value="Added DANN&#10;finished basic script&#10;adding summary section" />
     <MESSAGE value="added summary section" />
     <MESSAGE value="adding SnpEff files" />
-    <option name="LAST_COMMIT_MESSAGE" value="adding SnpEff files" />
+    <MESSAGE value="saving  changes" />
+    <option name="LAST_COMMIT_MESSAGE" value="saving  changes" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -1124,17 +1133,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb">
-      <provider selected="true" editor-type-id="ipnb-editor">
-        <state>
-          <selected id="5" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Annotation Scripts/PharmGKB/PharmGKB_vars.ipynb">
       <provider selected="true" editor-type-id="ipnb-editor">
         <state>
-          <selected id="8" />
+          <selected id="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Annotation Scripts/NBS Genes/nbs_genes.ipynb">
+      <provider selected="true" editor-type-id="ipnb-editor">
+        <state>
+          <selected id="25" />
         </state>
       </provider>
     </entry>
