@@ -29,3 +29,8 @@ kg['exon_starts'] = new_exon_starts
 
 # # save as tsv file
 kg.to_csv('ucsc_knowngene.tsv', index=False, sep='\t')
+
+if object == other_object:
+    then do stuff
+else:
+    whatever
