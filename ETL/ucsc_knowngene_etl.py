@@ -1,7 +1,6 @@
-__author__ = 'selasady'
+# module to transform ucsc_knowngene.txt for uploading into impala
 
 import pandas as pd
-import locale
 
 # import txt file from ucsc
 kg = pd.read_table('/Users/selasady/Downloads/knownGene.txt')
@@ -28,14 +27,5 @@ for x in kg['exon_starts']:
     new_exon_starts.append(','.join(value_list))
 kg['exon_starts'] = new_exon_starts
 
-# # comment quotes for saving to csv
-# kg['exon_starts'] = '"' + kg['exon_starts'] + '"'
-# kg['exon_stops'] = '"' + kg['exon_stops'] + '"'
-
-import csv
-f = open('ucsc_knowngene.csv', 'wb')
-w = csv.writer(f, delimiter=',')
-w.writerows([x.split(',') for x in kg])
-f.close()
-# save as tsv file
-#kg.to_csv('ucsc_knowngene.csv', index=False)
+# # save as tsv file
+kg.to_csv('ucsc_knowngene.tsv', index=False, sep='\t')
