@@ -2,111 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/rare_variants/__init__.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/add_annots/run_snpeff.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/add_annots/user_config.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/xml_map.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/xml_reduce.py" />
-      <change type="DELETED" beforePath="D:\Documents\GitHub\impala_scripts\Annotation Scripts\NBS Genes\nbs_genes.ipynb" afterPath="" />
-      <change type="DELETED" beforePath="D:\Documents\GitHub\impala_scripts\Annotation Scripts\clinvar_pathogenic_vars\clinvar_query\__init__.py" afterPath="" />
-      <change type="DELETED" beforePath="D:\Documents\GitHub\impala_scripts\tab2vcf.py" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/bowties.jpg" afterPath="$PROJECT_DIR$/queries/testing/clinvar/bowties.jpg" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/old_scripts/clinvar_acmg_itmi_adult_hits_df5_and_allele_freqs_01.12.2015.xlsx" afterPath="$PROJECT_DIR$/old_scripts/clinvar_acmg_itmi_adult_hits_df5_and_allele_freqs_01.12.2015.xlsx" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/clinvar_all_itmi_adult_hits_df5_and_allele_freqs_01.12.2015 (1).xlsx" afterPath="$PROJECT_DIR$/queries/testing/clinvar/clinvar_all_itmi_adult_hits_df5_and_allele_freqs_01.12.2015 (1).xlsx" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/old_scripts/clinvar_all_itmi_adult_hits_df5_and_allele_freqs_01.12.2015.xlsx" afterPath="$PROJECT_DIR$/old_scripts/clinvar_all_itmi_adult_hits_df5_and_allele_freqs_01.12.2015.xlsx" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/clinvar_testing.pdf" afterPath="$PROJECT_DIR$/queries/testing/clinvar/clinvar_testing.pdf" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/compare_clinvar_query_df.pdf" afterPath="$PROJECT_DIR$/queries/testing/clinvar/compare_clinvar_query_df.pdf" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/illumina_chr7_pass.csv" afterPath="$PROJECT_DIR$/queries/testing/illumina_chr7_pass.csv" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ucsc/kgXref.txt.gz" afterPath="$PROJECT_DIR$/queries/testing/ucsc/kgXref.txt.gz" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ucsc/pid.2011.3-S1.doc" afterPath="$PROJECT_DIR$/queries/testing/ucsc/pid.2011.3-S1.doc" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/old_scripts/project_2_workflow_12.05.2014.pdf" afterPath="$PROJECT_DIR$/old_scripts/project_2_workflow_12.05.2014.pdf" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ensembl/rand_gene_query.xls" afterPath="$PROJECT_DIR$/queries/testing/ensembl/rand_gene_query.xls" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/nbs_genes/snpeff_functional_ratings.xlsx" afterPath="$PROJECT_DIR$/nbs_genes/snpeff_functional_ratings.xlsx" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ucsc/ucsc_query_result.csv" afterPath="$PROJECT_DIR$/queries/testing/ucsc/ucsc_query_result.csv" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/.Rhistory" afterPath="$PROJECT_DIR$/queries/.Rhistory" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/.name" afterPath="$PROJECT_DIR$/.idea/.name" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/.idea/.name" afterPath="$PROJECT_DIR$/queries/testing/clinvar/.idea/.name" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tutorials/Connect to Impala.ipynb" afterPath="$PROJECT_DIR$/tutorials/Connect to Impala.ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tutorials/Connect_Python.html" afterPath="$PROJECT_DIR$/tutorials/Connect_Python.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tutorials/Impala_connect_R.html" afterPath="$PROJECT_DIR$/tutorials/Impala_connect_R.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tutorials/Impala_connect_R_windows.html" afterPath="$PROJECT_DIR$/tutorials/Impala_connect_R_windows.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tutorials/RODBC_impala.ipynb" afterPath="$PROJECT_DIR$/tutorials/RODBC_impala.ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/RODBC_query.Rmd" afterPath="$PROJECT_DIR$/queries/RODBC_query.Rmd" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/RODBC_query.html" afterPath="$PROJECT_DIR$/queries/RODBC_query.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tutorials/Rimpala_test.R" afterPath="$PROJECT_DIR$/tutorials/Rimpala_test.R" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ETL/__init__.py" afterPath="$PROJECT_DIR$/ETL/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/nbs_genes/__init__.py" afterPath="$PROJECT_DIR$/nbs_genes/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/old_scripts/annotate.py" afterPath="$PROJECT_DIR$/old_scripts/annotate.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/brady_requests/annotate_variants.R" afterPath="$PROJECT_DIR$/queries/brady_requests/annotate_variants.R" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/brady_clinvar.R" afterPath="$PROJECT_DIR$/queries/testing/clinvar/brady_clinvar.R" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/brady_clinvar.txt" afterPath="$PROJECT_DIR$/queries/testing/clinvar/brady_clinvar.txt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Scripts/calc_maf.py" afterPath="$PROJECT_DIR$/Scripts/calc_maf.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/old_scripts/cgfvariants.py" afterPath="$PROJECT_DIR$/old_scripts/cgfvariants.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ensembl/cgi_results.csv" afterPath="$PROJECT_DIR$/queries/testing/ensembl/cgi_results.csv" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/clinvar_testing (1).html" afterPath="$PROJECT_DIR$/queries/testing/clinvar/clinvar_testing (1).html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/clinvar_testing.html" afterPath="$PROJECT_DIR$/queries/testing/clinvar/clinvar_testing.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/compare_clinvar_query_df.Rmd" afterPath="$PROJECT_DIR$/queries/testing/clinvar/compare_clinvar_query_df.Rmd" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/encodings.xml" afterPath="$PROJECT_DIR$/.idea/encodings.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/.idea/encodings.xml" afterPath="$PROJECT_DIR$/queries/testing/clinvar/.idea/encodings.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ensembl/ensembl_cgi_testing (1).html" afterPath="$PROJECT_DIR$/queries/testing/ensembl/ensembl_cgi_testing (1).html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ensembl/ensembl_cgi_testing.Rmd" afterPath="$PROJECT_DIR$/queries/testing/ensembl/ensembl_cgi_testing.Rmd" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ensembl/ensembl_cgi_testing.html" afterPath="$PROJECT_DIR$/queries/testing/ensembl/ensembl_cgi_testing.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ensembl/ensembl_illumina_testing.Rmd" afterPath="$PROJECT_DIR$/queries/testing/ensembl/ensembl_illumina_testing.Rmd" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ensembl/ensembl_illumina_testing.html" afterPath="$PROJECT_DIR$/queries/testing/ensembl/ensembl_illumina_testing.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/ensembl_queries_cgi.Rmd" afterPath="$PROJECT_DIR$/queries/ensembl_queries_cgi.Rmd" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/ensembl_queries_cgi.md.md" afterPath="$PROJECT_DIR$/queries/ensembl_queries_cgi.md.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/ensembl_queries_illumina.Rmd" afterPath="$PROJECT_DIR$/queries/ensembl_queries_illumina.Rmd" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/ensembl_queries_illumina.html" afterPath="$PROJECT_DIR$/queries/ensembl_queries_illumina.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/ensembl_queries_illumina.md.md" afterPath="$PROJECT_DIR$/queries/ensembl_queries_illumina.md.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ensembl/ensembl_query_result.csv" afterPath="$PROJECT_DIR$/queries/testing/ensembl/ensembl_query_result.csv" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/impala_annot.iml" afterPath="$PROJECT_DIR$/.idea/impala_annot.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/.idea/impala_annot.iml" afterPath="$PROJECT_DIR$/queries/testing/clinvar/.idea/impala_annot.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tutorials/impala_connect.py" afterPath="$PROJECT_DIR$/tutorials/impala_connect.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tutorials/impala_connect_mac.ipynb" afterPath="$PROJECT_DIR$/tutorials/impala_connect_mac.ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/impala_query_results.csv" afterPath="$PROJECT_DIR$/queries/testing/clinvar/impala_query_results.csv" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ensembl/intergenic_cgi.csv" afterPath="$PROJECT_DIR$/queries/testing/ensembl/intergenic_cgi.csv" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ucsc/intergenic_query_result.csv" afterPath="$PROJECT_DIR$/queries/testing/ucsc/intergenic_query_result.csv" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ensembl/intergenic_test.csv" afterPath="$PROJECT_DIR$/queries/testing/ensembl/intergenic_test.csv" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/old_scripts/mirbase.py" afterPath="$PROJECT_DIR$/old_scripts/mirbase.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules.xml" afterPath="$PROJECT_DIR$/.idea/modules.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/.idea/modules.xml" afterPath="$PROJECT_DIR$/queries/testing/clinvar/.idea/modules.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/nbs_genes/nbs_genes.ipynb" afterPath="$PROJECT_DIR$/nbs_genes/nbs_genes.ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Scripts/normalize.py" afterPath="$PROJECT_DIR$/Scripts/normalize.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/packrat/packrat.opts" afterPath="$PROJECT_DIR$/packrat/packrat.opts" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/queryImpala.py" afterPath="$PROJECT_DIR$/queries/queryImpala.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/query_impala..ipynb" afterPath="$PROJECT_DIR$/query_impala..ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/query_impala.py" afterPath="$PROJECT_DIR$/query_impala.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/quick_query..ipynb" afterPath="$PROJECT_DIR$/quick_query..ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ensembl/rand_gene_query.txt" afterPath="$PROJECT_DIR$/queries/testing/ensembl/rand_gene_query.txt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/.idea/scopes/scope_settings.xml" afterPath="$PROJECT_DIR$/queries/testing/clinvar/.idea/scopes/scope_settings.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/testing.py" afterPath="$PROJECT_DIR$/testing.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ucsc/ucsc_cgi_query.csv" afterPath="$PROJECT_DIR$/queries/testing/ucsc/ucsc_cgi_query.csv" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ucsc/ucsc_cgi_testing.Rmd" afterPath="$PROJECT_DIR$/queries/testing/ucsc/ucsc_cgi_testing.Rmd" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/ucsc_illumina_queries.Rmd" afterPath="$PROJECT_DIR$/queries/ucsc_illumina_queries.Rmd" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/ucsc/ucsc_illumina_testing.Rmd" afterPath="$PROJECT_DIR$/queries/testing/ucsc/ucsc_illumina_testing.Rmd" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ETL/ucsc_knowngene_etl.py" afterPath="$PROJECT_DIR$/ETL/ucsc_knowngene_etl.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/uniprot/uniprot_illumina_testing.Rmd" afterPath="$PROJECT_DIR$/queries/testing/uniprot/uniprot_illumina_testing.Rmd" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/old_scripts/unique.py" afterPath="$PROJECT_DIR$/old_scripts/unique.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/old_scripts/vannotator.py" afterPath="$PROJECT_DIR$/old_scripts/vannotator.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Scripts/vcf_to_dbDef.R" afterPath="$PROJECT_DIR$/Scripts/vcf_to_dbDef.R" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/.idea/vcs.xml" afterPath="$PROJECT_DIR$/queries/testing/clinvar/.idea/vcs.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/clarity_acmg_genes.tsv" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/clarity_acmg_genes.vcf" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queries/testing/clinvar/.idea/workspace.xml" afterPath="$PROJECT_DIR$/queries/testing/clinvar/.idea/workspace.xml" />
-      <change type="MOVED" beforePath="D:\Documents\GitHub\impala_scripts\Annotation Scripts\NBS Genes\tab2vcf.py" afterPath="$PROJECT_DIR$/nbs_genes/tab2vcf.py" />
-      <change type="MOVED" beforePath="D:\Documents\GitHub\impala_scripts\Annotation Scripts\PharmGKB\PharmGKB_vars.ipynb" afterPath="$PROJECT_DIR$/pharmGKB/PharmGKB_vars.ipynb" />
-      <change type="MOVED" beforePath="D:\Documents\GitHub\impala_scripts\Annotation Scripts\__init__.py" afterPath="$PROJECT_DIR$/clinvar_pathogenic_vars/__init__.py" />
-      <change type="MOVED" beforePath="D:\Documents\GitHub\impala_scripts\Annotation Scripts\clinvar_pathogenic_vars\__init__.py" afterPath="$PROJECT_DIR$/clinvar_pathogenic_vars/clinvar_query/__init__.py" />
-      <change type="MOVED" beforePath="D:\Documents\GitHub\impala_scripts\Annotation Scripts\clinvar_pathogenic_vars\annotating_cinvar_results.Rmd" afterPath="$PROJECT_DIR$/clinvar_pathogenic_vars/annotating_cinvar_results.Rmd" />
-      <change type="MOVED" beforePath="D:\Documents\GitHub\impala_scripts\Annotation Scripts\clinvar_pathogenic_vars\clinvar_query\clinvar_pathogenic.ipynb" afterPath="$PROJECT_DIR$/clinvar_pathogenic_vars/clinvar_query/clinvar_pathogenic.ipynb" />
-      <change type="MOVED" beforePath="D:\Documents\GitHub\impala_scripts\Annotation Scripts\clinvar_pathogenic_vars\clinvar_query\clinvar_query.py" afterPath="$PROJECT_DIR$/clinvar_pathogenic_vars/clinvar_query/clinvar_query.py" />
-      <change type="MOVED" beforePath="D:\Documents\GitHub\impala_scripts\Annotation Scripts\rare_variants\__init__.py" afterPath="$PROJECT_DIR$/add_annots/__init__.py" />
-      <change type="MOVED" beforePath="D:\Documents\GitHub\impala_scripts\Annotation Scripts\rare_variants\variant_analyze.R" afterPath="$PROJECT_DIR$/rare_variants/variant_analyze.R" />
-      <change type="MOVED" beforePath="D:\Documents\GitHub\impala_scripts\Annotation Scripts\rare_variants\variant_analyzer.ipynb" afterPath="$PROJECT_DIR$/rare_variants/variant_analyzer.ipynb" />
-      <change type="MOVED" beforePath="D:\Documents\GitHub\impala_scripts\Annotation Scripts\rare_variants\variant_analyzer.py" afterPath="$PROJECT_DIR$/rare_variants/variant_analyzer.py" />
     </list>
     <ignored path="impala_scripts.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -120,15 +18,15 @@
   </component>
   <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/impala_scripts$Unnamed.coverage" NAME="inheritence_check Coverage Results" MODIFIED="1433897749989" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/impala_scripts/queries/brady_requests" />
-    <SUITE FILE_PATH="coverage/impala_annot$clinvar_query.coverage" NAME="clinvar_query Coverage Results" MODIFIED="1435167144418" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/clinvar_pathogenic_vars/clinvar_query" />
-    <SUITE FILE_PATH="coverage/impala_scripts$inheritence_check.coverage" NAME="inheritence_check Coverage Results" MODIFIED="1434495756059" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/impala_scripts/queries/brady_requests" />
-    <SUITE FILE_PATH="coverage/impala_annot$testing.coverage" NAME="testing Coverage Results" MODIFIED="1440716134022" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/impala_annot$Unnamed.coverage" NAME="nbs_genes Coverage Results" MODIFIED="1439574280249" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Annotation Scripts/NBS Genes" />
-    <SUITE FILE_PATH="coverage/impala_annot$variant_query_notebook.coverage" NAME="variant_query_notebook Coverage Results" MODIFIED="1437455161456" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/impala_annot$inheritence_check.coverage" NAME="inheritence_check Coverage Results" MODIFIED="1435600777165" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/rare_variants" />
     <SUITE FILE_PATH="coverage/impala_annot$nbs_genes.coverage" NAME="nbs_genes Coverage Results" MODIFIED="1441216761408" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/nbs_genes" />
+    <SUITE FILE_PATH="coverage/impala_annot$inheritence_check.coverage" NAME="inheritence_check Coverage Results" MODIFIED="1435600777165" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/rare_variants" />
+    <SUITE FILE_PATH="coverage/impala_annot$clinvar_query.coverage" NAME="clinvar_query Coverage Results" MODIFIED="1435167144418" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/clinvar_pathogenic_vars/clinvar_query" />
+    <SUITE FILE_PATH="coverage/impala_scripts$Unnamed.coverage" NAME="inheritence_check Coverage Results" MODIFIED="1433897749989" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/impala_scripts/queries/brady_requests" />
+    <SUITE FILE_PATH="coverage/impala_scripts$inheritence_check.coverage" NAME="inheritence_check Coverage Results" MODIFIED="1434495756059" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/impala_scripts/queries/brady_requests" />
+    <SUITE FILE_PATH="coverage/impala_annot$Unnamed.coverage" NAME="nbs_genes Coverage Results" MODIFIED="1439574280249" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Annotation Scripts/NBS Genes" />
+    <SUITE FILE_PATH="coverage/impala_annot$testing.coverage" NAME="testing Coverage Results" MODIFIED="1440716134022" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/impala_annot$query_impala.coverage" NAME="query impala Coverage Results" MODIFIED="1438902331216" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/impala_annot$variant_query_notebook.coverage" NAME="variant_query_notebook Coverage Results" MODIFIED="1437455161456" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="CreatePatchCommitExecutor">
     <option name="PATCH_PATH" value="$PROJECT_DIR$" />
@@ -144,69 +42,7 @@
     <favorites_list name="impala_scripts" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="nbs_genes.ipynb" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/nbs_genes/nbs_genes.ipynb">
-          <provider selected="true" editor-type-id="ipnb-editor">
-            <state>
-              <selected id="23" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="user_config.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/add_annots/user_config.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="17" column="0" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="run_snpeff.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/add_annots/run_snpeff.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="9" column="3" selection-start-line="9" selection-start-column="3" selection-end-line="9" selection-end-column="3" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="testing.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/testing.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.61759084">
-              <caret line="19" column="0" selection-start-line="19" selection-start-column="0" selection-end-line="19" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="xml_reduce.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/xml_reduce.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="4" column="26" selection-start-line="4" selection-start-column="26" selection-end-line="4" selection-end-column="26" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="xml_map.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/xml_map.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="11" column="0" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
-              <folding>
-                <element signature="e#22#32#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -266,10 +102,10 @@
     <order />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="520" />
-    <option name="y" value="58" />
-    <option name="width" value="1266" />
-    <option name="height" value="936" />
+    <option name="x" value="1971" />
+    <option name="y" value="-20" />
+    <option name="width" value="1477" />
+    <option name="height" value="977" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -310,6 +146,7 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -344,7 +181,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
       <pane id="Scope" />
     </panes>
   </component>
@@ -599,8 +435,8 @@
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
-        <env name="PYTHONPATH" value="$USER_HOME$/impala_scripts:$PROJECT_DIR$/nbs_genes:$USER_HOME$/impala_scripts:$PROJECT_DIR$/nbs_genes;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts" />
         <env name="PYTHONUNBUFFERED" value="1" />
+        <env name="PYTHONPATH" value="$USER_HOME$/impala_scripts:$PROJECT_DIR$/nbs_genes:$USER_HOME$/impala_scripts:$PROJECT_DIR$/nbs_genes;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts;D:\Documents\GitHub\impala_scripts\nbs_genes;D:\Documents\GitHub\impala_scripts" />
         <env name="LC_CTYPE" value="en_US.UTF-8" />
         <env name="PYCHARM_HOSTED" value="1" />
         <env name="PYTHONIOENCODING" value="windows-1252" />
@@ -864,53 +700,53 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="520" y="58" width="1266" height="936" extended-state="0" />
-    <editor active="true" />
+    <frame x="1971" y="-20" width="1477" height="977" extended-state="0" />
+    <editor active="false" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.20112179" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.31548312" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.29081634" sideWeight="0.50961536" order="12" side_tool="true" content_ui="tabs" />
-      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Database" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329737" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3117914" sideWeight="0.49713877" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2887078" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.29081634" sideWeight="0.4903846" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.13005273" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.217695" sideWeight="0.49157113" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.31548312" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Database" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329737" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.13005273" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.20108327" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3117914" sideWeight="0.49713877" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329737" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39813736" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.29081634" sideWeight="0.50961536" order="12" side_tool="true" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2887078" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3993015" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Remote Host" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3290627" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32843137" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32843137" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Remote Host" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3290627" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39813736" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3993015" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.29081634" sideWeight="0.4903846" order="2" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.31548312" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32171893" sideWeight="0.5028612" order="12" side_tool="true" content_ui="tabs" />
-      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3993015" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3117914" sideWeight="0.49713877" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2887078" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.29081634" sideWeight="0.490701" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.217695" sideWeight="0.49157113" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Remote Host" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3290627" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.20112179" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Database" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329737" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32843137" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.13005273" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329737" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32843137" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Database" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329737" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
+      <window_info id="Remote Host" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3290627" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39813736" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329737" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32171893" sideWeight="0.5028612" order="12" side_tool="true" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2887078" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.31548312" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.13005273" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.20112179" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3117914" sideWeight="0.49713877" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3993015" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.29081634" sideWeight="0.490701" order="2" side_tool="false" content_ui="tabs" />
     </layout-to-restore>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -958,6 +794,55 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/nbs_genes/nbs_genes.ipynb">
+      <provider selected="true" editor-type-id="ipnb-editor">
+        <state>
+          <selected id="-1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/add_annots/user_config.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="17" column="0" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/add_annots/run_snpeff.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="9" column="3" selection-start-line="9" selection-start-column="3" selection-end-line="9" selection-end-column="3" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/xml_reduce.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="4" column="26" selection-start-line="4" selection-start-column="26" selection-end-line="4" selection-end-column="26" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/xml_map.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="11" column="0" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+          <folding>
+            <element signature="e#22#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/quick_query..ipynb">
       <provider selected="true" editor-type-id="ipnb-editor">
         <state>
@@ -1122,33 +1007,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pharmGKB/pharmGKB_genes.txt">
-      <provider editor-type-id="com.intellij.database.editor.CsvTableFileEditorProvider">
-        <state />
-      </provider>
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/nbs_genes/tab2vcf.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-11.71875">
           <caret line="118" column="84" selection-start-line="118" selection-start-column="84" selection-end-line="118" selection-end-column="84" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pharmGKB/pharmGKB_edit.csv">
-      <provider editor-type-id="com.intellij.database.editor.CsvTableFileEditorProvider">
-        <state />
-      </provider>
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1163,7 +1025,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1171,30 +1032,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/nbs_genes/nbs_genes.ipynb">
-      <provider selected="true" editor-type-id="ipnb-editor">
-        <state>
-          <selected id="23" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/add_annots/run_snpeff.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="9" column="3" selection-start-line="9" selection-start-column="3" selection-end-line="9" selection-end-column="3" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/add_annots/user_config.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="17" column="0" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1218,9 +1055,32 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.61759084">
+        <state vertical-scroll-proportion="0.3446191">
           <caret line="19" column="0" selection-start-line="19" selection-start-column="0" selection-end-line="19" selection-end-column="0" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/add_annots/run_snpeff.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.16324063">
+          <caret line="9" column="3" selection-start-line="9" selection-start-column="3" selection-end-line="9" selection-end-column="3" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/add_annots/user_config.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.3083434">
+          <caret line="17" column="0" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/nbs_genes/nbs_genes.ipynb">
+      <provider selected="true" editor-type-id="ipnb-editor">
+        <state>
+          <selected id="23" />
         </state>
       </provider>
     </entry>
