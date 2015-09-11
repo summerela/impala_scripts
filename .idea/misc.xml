@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="IpnbSettings">
-    <option name="URL" value="" />
-  </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="python_2.7.9" project-jdk-type="Python SDK" />
   <component name="SvnBranchConfigurationManager">
     <option name="mySupportsUserInfoFilter" value="true" />
