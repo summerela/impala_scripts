@@ -1,19 +1,11 @@
-from xml.dom import minidom
+import ibis
+import os
 
-xmldoc = minidom.parse('interpro.xml')
-itemlist = xmldoc.getElementsByTagName('dbinfo')
-print(len(itemlist))
-print(itemlist[0].attributes['dbname'].value)
-# for s in itemlist:
-#     print(s.attributes['dbname'].value), (s.childNodes[0].nodeValue)
+ic = ibis.impala.connect(host='glados19', port=21050)
+
+con = ibis.make_client(ic)
 
 
-with open('test_out.csv', 'w') as fout:
-      fieldnames = ['db', 'info']
-      writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-      writer.writeheader()
-      for e in doc.xpath('dbinfo'):
-         title, authors = e.xpath('author/text()'), e.xpath('title/text()')[0]
-         writer.writerow({'title': titleValue, 'author': authors.join(';')})
+table = con.table('clinvar', database='public_hg19')
 
-#/opt/cloudera/parcels/CDH/lib/hadoop-mapreduce/hadoop-streaming.jar
+print table.limit(10)
