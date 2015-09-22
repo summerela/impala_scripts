@@ -1,0 +1,249 @@
+---
+title: "ClinVar Results"
+output: pdf_document
+---
+#Comparison of impala ClinVar query with Brady's analysis
+After performing an initial comparison on Chromosome 7, that information was used to fine tune and perform another query on all chromosomes. All variants found in Brady's results were compared with all variants found using the impala query with the following parameters: 
+
+- Homozygous alt  and hom ref
+- Mothers and Fathers only  
+- Clinical significance of 4 or 5, but never 2 or 3  
+- ClinVar positions falling between cgi start and cgi stop
+- ClinVar ref matches cgi ref  
+- CGI allele1seq or allele2seq matches ClinVar alt 
+
+## Query
+After analysing the results from chromosome 7, the masterVar files were examined to find variants reported in Brady's analysis but not showing up in impala. Several of these variants were found on the cgi stop site, instead of the start site, so the query was revised to search for all variants falling between the cgi start and stop position. A column was added marking each variant as hom-ref or hom-alt for further use in downstream analysis. 
+
+```sql
+WITH clin AS
+(SELECT clin.chrom, clin.pos, clin.ref, clin.alt, clin.id AS rsID, clin.gene, clin.accession, 
+ clin.clin_sig, clin.clin_hgvs, clin.clin_dbn, acmg.phenotype AS acmg_phen, 
+ acmg.age_onset AS acmg_age_onset, acmg.inheritance as acmg_moi, 
+ acmg.variants_to_report as acmg_pathogenicity
+FROM public_hg19.clinvar AS clin
+LEFT JOIN users_selasady.acmg_genes AS acmg
+ON clin.gene = acmg.gene
+WHERE (clin_sig NOT REGEXP '3|2[^5]'
+AND clin_sig REGEXP '4|[^25]5')
+)
+
+SELECT cgi.sample_id, cgi.chr, cgi.start, cgi.ref, cgi.allele1seq, cgi.allele2seq, cgi.allele1varquality,
+cgi.allele2varquality, cgi.totalreadcount, cgi.zygosity, clin.rsid, clin.gene, clin.accession, clin.clin_sig, 
+clin.clin_hgvs, clin.clin_dbn, clin.acmg_phen, clin.acmg_age_onset, clin.acmg_moi, cgi.vartype, 
+CASE 
+  WHEN (clin.alt = cgi.allele1seq AND clin.alt = allele2seq) THEN "hom_alt"
+  WHEN (clin.alt <> cgi.allele1seq AND clin.alt <> allele2seq) THEN "hom_ref"
+  ELSE 'other'
+  END as alt_call     
+FROM p7_platform.wgs_comgen_variant cgi, clin
+WHERE (cgi.sample_id LIKE '%F'OR cgi.sample_id LIKE '%M')
+AND cgi.zygosity = 'hom'
+AND clin.chrom = cgi.chr
+AND clin.ref = cgi.ref
+AND (clin.pos BETWEEN cgi.start and cgi.stop)
+AND (clin.alt = cgi.allele1seq OR clin.alt = cgi.allele2seq)
+```
+
+## Analysis
+- The results of the impala query were read into R as "all_chr". 
+- The results of Brady's analysis were read into R as "brady".  
+- The sample id's used in Brady's analysis were read into R as a text file called "sample_ids"  
+- The results of the impala query were subset to keep only the sample id's used in Brady's anaysis  
+- A variant id was created to compare variants found in each analysis, in the followin format: gene:chr:pos:alt->ref:sample_id
+
+```{r}
+library(readxl)
+library(readr)
+
+#read in brady's results 
+brady = read_excel("./brady_results.xlsx")
+all_chr = read_csv("./all_chr.csv")
+
+#read in list of sample id's used in brady's test 
+sample_ids = data.frame(id= read_lines("./101_samples.txt"))
+#subset for only parents
+bsamps = data.frame(sample_id = sample_ids[(grep("^F|^M", sample_ids$id)),])
+bsamps$sample_id = lapply(strsplit(as.character(bsamps$sample_id), "-"), 
+                          function(x) paste(x[2], x[3], x[1], sep="-"))
+
+#subset to just sample_id's included in brady's analysis
+all.df = all_chr[(all_chr$sample_id %in% bsamps$sample_id),]
+
+#create variant ids for comparison
+brady$var_id = paste(brady$gene_name, brady$chr, brady$dna_change, brady$sample_id, sep=":")
+all.df$var_id = paste(all.df$gene, all.df$chr, paste(all.df$ref, "->", all.df$allele1seq, sep=""), all.df$sample_id, sep=":")
+
+#view sample id's in impala but not in bradys analysis 
+paste("Sample(s) found in impala but not included in Brady's analysis:")
+all_chr[!(all_chr$sample_id %in% bsamps$sample_id),]
+```
+
+##Checking regex on pathogenicity ratings
+Clinvar signifance ratings were determined using regular expressions for each analysis. Differences in regex results could account for differences in results retunred: 
+
+```{r}
+#check brady's clinvar significance ratings
+bp = unique(brady$pathogenicity)
+bp 
+#subset brady's results to remove "5|3" rating
+brady = brady[!(brady$pathogenicity == "5|3"),]
+```
+
+Clin sig ratings in Brady's results have some differences from those found in the impala query. No ratings including 4 were found in Brady's results.: 
+
+```{r}
+#check impala clin sig ratings
+b_sigs = unique(brady$pathogenicity)
+imp_sigs = unique(all.df$clin_sig)
+
+b_sigs[!(b_sigs %in% imp_sigs)]
+
+all.df[(all.df$clin_sig=="5|5|1")]
+
+
+grep("4|2", brady$pathogenicity)
+
+imp = unique(all.df$clin_sig)
+
+print("Ratings found in brady's results not in impala query:")
+bp[!(bp %in% imp)]
+
+
+acmg = read_csv("~/Documents/acmg_genes.csv")
+acmg = acmg[,c(1:8)]
+write.csv(acmg, "~/Documents/acmg_genes.csv", row.names=FALSE, quote = FALSE)
+
+head(acmg)
+```
+
+
+## Results in Brady's analysis not in the impala query
+First I looked for variants that were in Brady's results that were not in the impala results: 
+
+```{r}
+#copmare results
+brady7[!(brady7$var_id %in% test.df$var_id),]
+```
+
+I found the two sample ID's listed above were not in the impala wgs_comgen_variant table: 
+- 101-758-M  
+- 101-919-M  
+
+All other variants found in Brady's analysis were found in the imapala query. 
+
+## Results in the impala Query not in Brady's analysis
+
+There are 258 variants found in the impala query that were not found in Brady's analysis: 
+
+```{r}
+
+#pull out results that are not in brady's results
+diffs = test.df[!(test.df$var_id %in% brady7$var_id),]
+
+diffs[(grep("NOS3", diffs$gene)),]
+
+dim(diffs)
+```
+
+
+
+
+
+
+
+### Results in Brady's analysis not in the impala query
+Brady's results were subset to remove chr7 and compared to the results in the impala query: 
+
+```{r}
+#remove chr7 results
+brady_all = brady[(brady$chr != "7"),]
+#16231 variants not in chr 7
+
+#add variant id column for comparison
+brady_all$var_id = paste(brady_all$gene_name, brady_all$chr, brady_all$dna_change, brady_all$sample_id, sep=":")
+
+#copmare results
+not_in_impala = brady_all[!(brady_all$var_id %in% all.df$var_id),]
+dim(not_in_impala)
+
+```
+
+6512 variants found in Brady's analysis were found in the impala query. 
+
+```{r}
+head(not_in_impala)
+```
+
+Of these 6512 variants, there were a total of 61 unique genes reported: 
+
+```{r}
+unique(not_in_impala)
+```
+
+Of these 6512 variants, there were a total of 982 unqiue sample id's reported. 
+```{r}
+length(unique(not_in_impala))
+```
+
+###Checking that sample id's from Brady's results are loaded into impala
+Of the 982 sample id's reported, were there any sample id's that have not been uploaded to impala? 
+```{r}
+brady_diff_ids = unique(not_in_impala$sample_id)
+
+#load library and connect to impala
+library(RODBC)
+#connect using the DSN name you created on your machine
+conn <- odbcConnect("Impala DSN")
+
+#create impala query with list of sample id's that are found in brady's data but not in impala query
+sample_id_query = paste("SELECT DISTINCT(cgi.sample_id) FROM p7_platform.wgs_comgen_variant cgi WHERE cgi.sample_id IN ('", paste(brady_diff_ids, collapse= "','"), "')", sep="")
+
+#run the query, saving results as sample_status data frame
+sample_status = sqlQuery(conn, sample_id_query)
+
+#how many sample id's are in brady's study that are not on impala? 
+length(brady_diff_ids) - dim(sample_status)[1]
+```
+
+There are 244 sample id's found in Brady's study that are not loaded into impala. 
+
+Double-checking that the 244 sample id's are not found in impala:  
+
+```{r}
+#find sample id's in brady's results that are not in impala
+dim(brady_diff_ids[!(brady_diff_ids %in% sample_status$sample_id)])
+#length = 244, so matches above
+
+#double check if any of the sample id's exist in impala
+sqlQuery(conn, paste("SELECT cgi.sample_id FROM p7_platform.wgs_comgen_variant cgi WHERE cgi.sample_id IN ('", paste(brady_diff_ids[!(brady_diff_ids %in% sample_status$sample_id)], collapse="','"), "')", sep=""))
+
+```
+The 244 sample id's are missing from impala. Saving results and sending to Joe. If these sample id's exist on ITMI's impala, I will rerun this analysis there after I examine the remaning 5971 variants. 
+
+###Checking masterVar files to verify if variants exist before being loaded into impala
+The following query was run on impala for a variant found in Brady's results, but not in the impala results: 
+```{r}
+
+sqlQuery(conn, 'SELECT * FROM p7_platform.wgs_comgen_variant cgi WHERE cgi.chr = "1" AND cgi.start = 31347320 AND cgi.sample_id = "101-827-F"')
+
+```
+
+The query turned up no results. To examine if this variant was present before loading the genome into impala, the following query was run on impala to find the mapping information: 
+
+```{r}
+sqlQuery(conn, 'SELECT * FROM p7_platform.itmi_mapping mp WHERE mp.subject_id = "F-101-827"')
+```
+
+The vcf file was downloaded from s3 and examined for all variants at this position: 
+```{r}
+system(paste('cat /Users/selasady/impala_scripts/masterVarBeta-GS000020653-ASM.tsv | egrep "#CHROM|31347320"'))
+```
+
+
+
+##Saving Results
+```{r, echo=FALSE}
+write.table(diffs, file="./impala_vs_brady.tsv", quote=FALSE, col.names=TRUE, row.names=FALSE, sep="\t")
+
+```
