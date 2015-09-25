@@ -113,17 +113,7 @@ def df_to_snpeff(input_df, snpeff_path, out_name):
     else:
         print "Make sure you entered the correct path to snpEff.jar"
 
-def drop_y(df):
-    """
-    drop extra columns ending in _y from df merge
-    :param df: pandas dataframe to remove _y from column names
-    :return:same pandas dataframe, with column names parsed
-    """
-    for col in df:
-        if col.endswith('_y'):
-            df.drop(col, axis=1, inplace=True)
-
-def parse_snpeff(tx_df, notx_df, input_vcf):
+def parse_snpeff(input_df, input_vcf):
     """
     match snpeff annotations back to data frame
     :param tx_df: dataframe of variants that contain transcript id's
@@ -134,54 +124,126 @@ def parse_snpeff(tx_df, notx_df, input_vcf):
     """
     # read in snpeff vcf file
     annot_vcf = pd.read_csv(input_vcf, sep='\t', skiprows=8)
-    # split info field into separate rows for each transcript
-    info_df = pd.Series([j for i in annot_vcf['INFO'].str.split(',') for j in i])
-    # split each rown into separate columns by the pipe
-    info_df = pd.DataFrame(list(info_df.str.split('|')))
-    # drop emtpy/unnecessary columns
-    info_df = info_df[list(info_df.columns[0:11])]
-    info_df.columns = ['alt', 'effect', 'impact', 'gene_name', 'gene_id', 'feature_type', 'transcript_id',
-                     'tx_biotype', 'rank', 'hgvs_c', 'hgvs_p']
+    # split info field into separate rows for each consequence
+    temp = pd.concat([pd.Series(row['ID'], row['INFO'].split(','))
+                    for _, row in annot_vcf.iterrows()]).reset_index()
+    # split each row into separate columns by the pipe
+    info_df = pd.DataFrame(list(temp['index'].str.split('|')))
+    # add variant id to beginning of data frame
+    info_df.insert(0, 'var_id', temp[0])
+    # # drop emtpy/unnecessary columns
+    info_df = info_df[list(info_df.columns[0:12])]
+    info_df.columns = ['var_id', 'alt', 'effect', 'impact', 'gene_name', 'gene_id', 'feature_type', 'transcript_id',
+                       'tx_biotype', 'rank', 'hgvs_c', 'hgvs_p']
     # remove the annotation header 'ANN=' from the alt field
     info_df['alt'] = info_df['alt'].str.replace('ANN=', '')
     # keep only transcript level feature types
     info_df = info_df[(info_df['feature_type'] == 'transcript')]
+    # drop extraneous columns
+    info_df.drop(info_df.columns[[1,4,6]], axis=1, inplace=True)
+    # recombine info_df with annot_df
+    snp_df = pd.merge(annot_vcf, info_df, left_on=['ID'], right_on=['var_id'])
+    # drop extraneous snp_df columns
+    snp_df.drop(snp_df.columns[[2, 7]], axis=1, inplace=True)
+    # edit col names to lower case for matching
+    snp_df.columns = map(str.lower, snp_df.columns)
+    snp_df.columns = snp_df.columns.str.replace('#','')
+    # drop duplicates from each df before merge
+    snp_df.drop_duplicates(inplace=True)
+    info_df.drop_duplicates(inplace=True)
     # merge annotations with variant table
-    tx_functional = pd.merge(tx_df, info_df, on=['transcript_id', 'alt'], how='left')
-    notx_functional = pd.merge(notx_df, info_df, on=['chrom', 'pos', 'ref', 'alt'], how='left')
-    # drop y columns
-    drop_y(tx_functional)
-    drop_y(notx_functional)
-    # rename columns ending in _x from merge (TODO combine first then parse)
-    tx_functional.rename(columns=lambda x: x.replace('_x', ''), inplace=True)
-    tx_functional.drop_duplicates(inplace=True)
-    notx_functional.rename(columns=lambda x: x.replace('_x', ''), inplace=True)
-    notx_functional.drop_duplicates(inplace=True)
-    # merge data frames back together
-    functional_annot = pd.concat([tx_functional, notx_functional]).drop_duplicates().reset_index(drop=True)
-    return functional_annot
+    annot_vars = pd.merge(input_df, snp_df, on=['var_id'], how='left')
+    # # remove all duplicated columns from merge ending in _y
+    cols = [c for c in annot_vars.columns if not c.endswith('_y')]
+    annotated_df =annot_vars[cols]
+    # rename columns ending in _x from merge
+    annotated_df.rename(columns=lambda x: x.replace('_x', ''), inplace=True)
+    # drop duplicate rows
+    annotated_df.drop_duplicates(inplace=True)
+    # add family id
+    annotated_df['family_id'] = annotated_df['sample_id'].apply(lambda x: x.split('-')[1])
+    return annotated_df
 
-# # function to match snpeff annotations back to data frame
-# # when no tx id available by genomic pos
-# def snpeff_notx(input_df, input_vcf):
-#     # read in snpeff vcf file
-#     annot_vcf = pd.read_csv(input_vcf, sep='\t', skiprows=8)
-#     # split info field into separate rows for each transcript
-#     info_df = pd.Series([j for i in annot_vcf['INFO'].str.split(',') for j in i])
-#     # split each rown into separate columns by the pipe
-#     info_df = pd.DataFrame(list(info_df.str.split('|')))
-#     # drop emtpy/unnecessary columns
-#     info_df = info_df[list(info_df.columns[0:11])]
-#     info_df.columns = ['alt', 'effect', 'impact', 'gene_name', 'gene_id', 'feature_type', 'transcript_id',
-#                      'tx_biotype', 'rank', 'hgvs_c', 'hgvs_p']
-#     # remove the annotation header 'ANN=' from the alt field
-#     info_df['alt'] = info_df['alt'].str.replace('ANN=', '')
-#     # keep only transcript level feature types
-#     info_df = info_df[(info_df['feature_type'] == 'transcript')]
-#     #merge annotations with variant table
-#     df_functional =
-#     drop_y(df_functional)
-#     # rename columns ending in _x from merge
-#     df_functional.rename(columns=lambda x: x.replace('_x', ''), inplace=True)
-#     df_functional.drop_duplicates(inplace=True)
-#     return df_functional
+def label_predictive(input_df):
+    """
+    create a column to label variants as predictive if
+    they are marked as pathogenic in clinvar or
+    are rare in kaviar and are high impact or predicted to
+    be determintal by dbNSFP
+    :param input_df: dataframe of variants to label
+    :return: same database with new column 'predictive'
+    """
+    input_df['predictive'] = ((input_df['clin_patho'] == 'Y') |
+                           ((input_df['kaviar_rare'] == 'Y') &
+                           ((input_df['impact'] == 'HIGH')
+                           | (input_df['dbnfsp_predicted'] == 'Y'))))
+
+def find_AR_cands(input_df):
+    """
+    subset dataframe for predictive heterozygous AR variants, used in comp-het analysis
+    :param input_df: dataframe of variants to subset
+    :return: five data frames, one for mom, dad, nb1, nb2, and nb3
+    :use: momAR, dadAR, nb1Ar,nb2Ar,nb2AR = find_AR_cands(input_df)
+    """
+    #subset for het AR parent variants
+    mom_AR = input_df[((input_df['member'] == 'M') & (input_df['gt'] == '0/1')\
+                      & (input_df['predictive'] == True) & (input_df['inheritance'] == 'AR'))]
+    dad_AR = input_df[((input_df['member'] == 'F') & (input_df['gt'] == '0/1')\
+                      & (input_df['predictive'] == True) & (input_df['inheritance'] == 'AR'))]
+    #subset newborn het AR variants
+    nb1_AR = input_df[((input_df['member'] == 'NB') & (input_df['gt'] == '0/1')\
+                     & (input_df['predictive'] == True) & (input_df['inheritance'] == 'AR'))]
+    nb2_AR = input_df[((input_df['member'] == 'NB2') & (input_df['gt'] == '0/1')\
+                     & (input_df['predictive'] == True)& (input_df['inheritance'] == 'AR'))]
+    nb3_AR = input_df[((input_df['member'] == 'NB3') & (input_df['gt'] == '0/1')\
+                     & (input_df['predictive'] == True)& (input_df['inheritance'] == 'AR'))]
+    return mom_AR, dad_AR, nb1_AR, nb2_AR, nb3_AR
+
+def find_dominant_nb(input_df):
+    """
+    subset dataframe for predictive newborn dominant disorders
+    :param input_df: data frame to subset
+    :return: nb_dominant dataframe of predictive newborn variants
+    """
+    # subset newborn variants by variant MOI and/or zygosity
+    nb_dominant = input_df[((input_df['member'] == 'NB') & (input_df['inheritance'].isin(['AD'])) \
+                            & (input_df['predictive'] == True))]
+    nb_dominant.name = 'dominant'
+    return nb_dominant
+
+def find_hom_rec(input_df):
+    """
+    subset dataframe for predictive newborn hom_rec disorders
+    :param input_df: data frame to subset
+    :return: nb_hom_red dataframe of homozygous alt, predictive newborn variants
+    """
+    # subset newborn variants by variant MOI and/or zygosity
+    nb_hom_rec = input_df[((input_df['member'] == 'NB') & (input_df['inheritance'].isin(['AR'])) \
+                           & (input_df['gt'] == '1/1') & (input_df['predictive'] == True))]
+    nb_hom_rec.name = 'hom_recessive'
+    return nb_hom_rec
+
+# function to find matching parent variants
+def find_parent_vars(nb_df, parent_df):
+    # merge dataframes on by variant position
+    merged_df = pd.merge(nb_df, parent_df, on=['chrom', 'pos', 'ref', 'alt'], how='inner')
+    # rename parent sample_id column to avoid dropping when removing '_y' cols
+    merged_df.rename(columns = {'member_y':'from_parent'}, inplace=True)
+    # drop extra y columns from merge with fathers
+    drop_y(merged_df)
+    #remove _x from colnames
+    merged_df.rename(columns=lambda x: x.replace('_x', ''), inplace=True)
+    return merged_df
+
+# run function for each group of newborns
+def match_parents(nb_df):
+    if (len(mom_hets) > 0) and (len(dad_hets) > 0):
+        nb_and_mom = find_parent_vars(nb_df, mom_hets)
+        nb_and_dad = find_parent_vars(nb_df, dad_hets)
+        # merge variants found in either mother or father
+        het_cands = pd.concat([nb_and_mom,nb_and_dad]).drop_duplicates().reset_index(drop=True)
+        # group variants by gene name
+        by_gene = het_cands.groupby(['gene_name', 'family_id'])
+        return by_gene
+    else:
+        print "No compound het variants"
