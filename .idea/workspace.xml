@@ -2,10 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/parse_impala/tab2vcf.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/clarity/clarity_acmg..ipynb" afterPath="$PROJECT_DIR$/clarity/clarity_acmg..ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/impala_annot.iml" afterPath="$PROJECT_DIR$/.idea/impala_annot.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/nbs_genes/nbs_pipeline..ipynb" afterPath="$PROJECT_DIR$/nbs_genes/nbs_pipeline..ipynb" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/parse_impala/parse_impala.py" afterPath="$PROJECT_DIR$/parse_impala/parse_impala.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
@@ -46,7 +42,7 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="nbs_pipeline..ipynb" pinned="false" current-in-tab="false">
+      <file leaf-file-name="nbs_pipeline..ipynb" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/nbs_genes/nbs_pipeline..ipynb">
           <provider selected="true" editor-type-id="ipnb-editor">
             <state>
@@ -55,14 +51,14 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="parse_impala.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="parse_impala.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/parse_impala/parse_impala.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.3881748">
-              <caret line="226" column="39" selection-start-line="226" selection-start-column="39" selection-end-line="226" selection-end-column="39" />
+            <state vertical-scroll-proportion="0.0">
+              <caret line="229" column="46" selection-start-line="229" selection-start-column="46" selection-end-line="229" selection-end-column="46" />
               <folding>
                 <element signature="e#25#57#0" expanded="true" />
-                <marker date="1443143389460" expanded="true" signature="2732:2761" placeholder="DROP TABLE I..." />
+                <marker date="1443150322450" expanded="true" signature="2732:2761" placeholder="DROP TABLE I..." />
               </folding>
             </state>
           </provider>
@@ -721,7 +717,13 @@
       <option name="project" value="LOCAL" />
       <updated>1443121499512</updated>
     </task>
-    <option name="localTasksCounter" value="37" />
+    <task id="LOCAL-00037" summary="re-worked snpeff matching by adding variant position to info dataframe. need to check results. complete adding all functions to module.">
+      <created>1443143433063</created>
+      <option name="number" value="00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1443143433063</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -739,16 +741,16 @@
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.18045649" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.31548312" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3292232" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.29081634" sideWeight="0.50961536" order="12" side_tool="true" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329737" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.28156567" sideWeight="0.49713877" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.28818896" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2811344" sideWeight="0.49713877" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.28729963" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.13005273" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.21969697" sideWeight="0.49157113" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21948212" sideWeight="0.49157113" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329737" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32954547" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3993015" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
@@ -796,7 +798,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="Added ipython notebook for pharmgkb and restructured directory" />
     <MESSAGE value="Added ipython notebook for nbs genes" />
     <MESSAGE value="Figured out workaround for saving results to impala (woo!)" />
     <MESSAGE value="Add user option for output file name/table name to query_impala and cleaned up connection string&#10;Added ensembl annotatoin to nbs_genes" />
@@ -821,7 +822,8 @@
     <MESSAGE value="fixed issue with comp_het and added error checking, need to turn into package" />
     <MESSAGE value="moving code to module for nbs genes. need to complete migration and deploy as package with dependencies." />
     <MESSAGE value="added module to parse user input and create impala queries" />
-    <option name="LAST_COMMIT_MESSAGE" value="added module to parse user input and create impala queries" />
+    <MESSAGE value="re-worked snpeff matching by adding variant position to info dataframe. need to check results. complete adding all functions to module." />
+    <option name="LAST_COMMIT_MESSAGE" value="re-worked snpeff matching by adding variant position to info dataframe. need to check results. complete adding all functions to module." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -841,7 +843,7 @@
           <caret line="113" column="68" selection-start-line="113" selection-start-column="68" selection-end-line="113" selection-end-column="68" />
           <folding>
             <element signature="e#25#57#0" expanded="true" />
-            <marker date="1443143389460" expanded="true" signature="2732:2761" placeholder="DROP TABLE I..." />
+            <marker date="1443150322450" expanded="true" signature="2732:2761" placeholder="DROP TABLE I..." />
           </folding>
         </state>
       </provider>
@@ -1143,6 +1145,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-1.2310536">
           <caret line="72" column="19" selection-start-line="72" selection-start-column="19" selection-end-line="72" selection-end-column="19" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1181,21 +1184,21 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/parse_impala/parse_impala.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="229" column="46" selection-start-line="229" selection-start-column="46" selection-end-line="229" selection-end-column="46" />
+          <folding>
+            <element signature="e#25#57#0" expanded="true" />
+            <marker date="1443150322450" expanded="true" signature="2732:2761" placeholder="DROP TABLE I..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/nbs_genes/nbs_pipeline..ipynb">
       <provider selected="true" editor-type-id="ipnb-editor">
         <state>
           <selected id="36" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/parse_impala/parse_impala.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.3881748">
-          <caret line="226" column="39" selection-start-line="226" selection-start-column="39" selection-end-line="226" selection-end-column="39" />
-          <folding>
-            <element signature="e#25#57#0" expanded="true" />
-            <marker date="1443143389460" expanded="true" signature="2732:2761" placeholder="DROP TABLE I..." />
-          </folding>
         </state>
       </provider>
     </entry>

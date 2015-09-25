@@ -223,8 +223,19 @@ def find_hom_rec(input_df):
     nb_hom_rec.name = 'hom_recessive'
     return nb_hom_rec
 
-# function to find matching parent variants
+# function to drop extra columns ending in _y from df merge
+def drop_y(df):
+    for col in df:
+        if col.endswith('_y'):
+            df.drop(col, axis=1, inplace=True)
+
 def find_parent_vars(nb_df, parent_df):
+    """
+    match pathogenic het nb variants with pathogenic het parents variants
+    :param input_df: dataframe of het newborn, mother and father pathogenic vars
+    :return: merged dataframe of one row for each nb variant and a 'from_parent'
+    column notating which parent the variant was inherited from
+    """
     # merge dataframes on by variant position
     merged_df = pd.merge(nb_df, parent_df, on=['chrom', 'pos', 'ref', 'alt'], how='inner')
     # rename parent sample_id column to avoid dropping when removing '_y' cols
@@ -235,8 +246,14 @@ def find_parent_vars(nb_df, parent_df):
     merged_df.rename(columns=lambda x: x.replace('_x', ''), inplace=True)
     return merged_df
 
-# run function for each group of newborns
-def match_parents(nb_df):
+def match_parents(nb_df, mom_hets, dad_hets):
+    """
+    if there are at least one variant from each parent, find matches
+    and group by gene name and family id
+    :param input_df: newborn variant df, dataframe of mother and father
+    het pathogenic variants
+    :return: merged data frame of variants grouped by gene name and family
+    """
     if (len(mom_hets) > 0) and (len(dad_hets) > 0):
         nb_and_mom = find_parent_vars(nb_df, mom_hets)
         nb_and_dad = find_parent_vars(nb_df, dad_hets)
