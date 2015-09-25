@@ -4,28 +4,6 @@ import sys
 import os.path
 import datetime
 
-################################################################################
-
-#  Purpose: Converts tabular format to VCF.
-#  #Column names CHROM, POS, REF, ALT  are required for parsing
-#  Input: Text file in the tab format
-#  Output: VCF format
-
-
-#  Arguments:
-#  infile - name of tabular file
-
-#  To run:
-#  python tab2vcf.py input_file_path
-#
-################################################################################
-import argparse
-
-parser = argparse.ArgumentParser()
-parser.add_argument('input_tsv', metavar='i', help='Enter the full file path to the tsv file')
-args = parser.parse_args()
-
-filename = args.input_tsv
 
 ACCEPTED_CHR = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
                 "20", "21", "22", "X", "Y", "MT"]
@@ -41,28 +19,10 @@ def find_first_index(lst, elem):
         ind = ind + 1
     return -1
 
-
-# code to make full vcf file
-
-def vcfheader(filename):
-    """ Generates VCF header """
-    filename = os.path.basename(filename)
-    filename = os.path.splitext(filename)[0]
-    now = datetime.datetime.now()
-    curdate = str(now.year) + '-' + str(now.month) + '-' + str(now.day)
-    lines = []
-    lines.append('##fileformat=VCFv4.0')
-    lines.append('##fileDate=' + curdate)
-    lines.append('##reference=1000Genomes-NCBI37')
-    lines.append(
-        '#CHROM' + '\t' + 'POS' + '\t' + 'ID' + '\t' + 'REF' + '\t' + 'ALT' + '\t' + 'QUAL' + '\t' + 'FILTER' + '\t' + 'INFO' + '\t' + 'FORMAT' + '\t' + 'Genotype')
-    return '\n'.join(lines)
-
-
 # code to make vcf file for snpeff annotation
 def vcfheader(filename):
     """ Generates VCF header """
-    filename = args.input_tsv.split('.')[-0]
+    filename = filename.split('.')[-0]
     now = datetime.datetime.now()
     curdate=str(now.year)+'-'+str(now.month)+'-'+str(now.day)
     lines=[]
@@ -73,7 +33,7 @@ def vcfheader(filename):
     return '\n'.join(lines)
 
 def tab2vcf(filename, sep='\t'):
-    outfile= args.input_tsv.split('.')[-0] + '.vcf'
+    outfile= filename.split('.')[-0] + '.vcf'
     fh_out = open(outfile, "w")
     fh_out.write(vcfheader(filename)+'\n')
     fh = open(filename)
@@ -124,8 +84,6 @@ def tab2vcf(filename, sep='\t'):
 
     fh.close()
     fh_out.close()
-
-
 
 def run(filename):
     if os.path.exists(filename) and os.path.isfile(filename):

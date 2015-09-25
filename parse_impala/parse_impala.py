@@ -4,6 +4,7 @@ from impala.dbapi import connect
 import os
 import subprocess as subp
 import pandas as pd
+import tab2vcf as tv
 
 def label_member(tbl_name, trio_arg):
     """
@@ -102,8 +103,9 @@ def df_to_snpeff(input_df, snpeff_path, out_name):
         # write to file for conversion to vcf
         df.to_csv(tsv_outname, header=True, encoding='utf-8', sep="\t", index=False)
         # run tab2vcf and upon success, run snpeff
-        vcf_process = subp.Popen(['python', './nbs_genes/tab2vcf.py', tsv_outname])
-        vcf_process.wait()
+        tv.run_tab2vcf(tsv_outname)
+        #vcf_process = subp.Popen(['python', 'tab2vcf.py', tsv_outname])
+        #vcf_process.wait()
         # command to run snpeff
         snpeff_cmd = 'java -Xmx4g -jar {}  -t -v -noStats GRCh37.74 {} > {}_snpeff.vcf'.format(
             snpeff_path, vcf_outname, out_name)
