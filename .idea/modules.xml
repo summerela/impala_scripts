@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/impala_annot.iml" filepath="$PROJECT_DIR$/.idea/impala_annot.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/impala_scripts.iml" filepath="$PROJECT_DIR$/.idea/impala_scripts.iml" />
     </modules>
   </component>
 </project>
