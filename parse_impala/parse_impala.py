@@ -84,6 +84,34 @@ def run_query(query_name, remove_name, out_db, out_name):
     print 'Query finished. Closing connection.'
     cur.close()
     conn.close()
+    
+# create vcf header
+def create_header(outfile_name):
+   # create vcf header
+    lines=[]
+    lines.append('##fileformat=VCFv4.0')
+    lines.append('##fileDate='+ time.strftime("%y%m%d"))
+    lines.append('##reference=grch37 v.74 \n')
+    header = '\n'.join(lines)
+    out = open(outfile_name', 'wb')
+    out.write(header)
+    out.close()
+               
+# create vcf and append to file with header
+def impala_to_vcf(input_df, outfile_name):
+    # these columns are output to vcf file
+    df = input_df[['chrom', 'pos', 'var_id', 'ref', 'alt']]
+    # add blank columns for vcf format and format col names
+    df['QUAL'] = '.'
+    df['FILTER'] = '.'
+    df['INFO'] = '.'
+    df['FORMAT'] = '.'
+    df['GT'] = '.'
+    df.columns = [x.upper() for x in df.columns]
+    df=df.rename(columns = {'CHROM':'#CHROM'})
+    # write to file for conversion to vcf
+    df.to_csv(outfile_name, header=True, encoding='utf-8', sep="\t", index=False, mode='a')
+
 
 def df_to_snpeff(input_df, snpeff_path, out_name):
     """
