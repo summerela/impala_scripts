@@ -5,6 +5,7 @@ import os
 import subprocess as subp
 import pandas as pd
 import tab2vcf as tv
+import time
 
 def label_member(tbl_name, trio_arg):
     """
@@ -93,7 +94,7 @@ def create_header(outfile_name):
     lines.append('##fileDate='+ time.strftime("%y%m%d"))
     lines.append('##reference=grch37 v.74 \n')
     header = '\n'.join(lines)
-    out = open(outfile_name', 'wb')
+    out = open(outfile_name, 'wb')
     out.write(header)
     out.close()
                
@@ -102,13 +103,20 @@ def impala_to_vcf(input_df, outfile_name):
     # these columns are output to vcf file
     df = input_df[['chrom', 'pos', 'var_id', 'ref', 'alt']]
     # add blank columns for vcf format and format col names
-    df['QUAL'] = '.'
-    df['FILTER'] = '.'
+    df['QUAL'] = '30'
+    df['FILTER'] = 'PASS'
     df['INFO'] = '.'
-    df['FORMAT'] = '.'
-    df['GT'] = '.'
+    df['FORMAT'] = 'GT'
+    df['GT'] = '0/1'
     df.columns = [x.upper() for x in df.columns]
     df=df.rename(columns = {'CHROM':'#CHROM'})
+    df=df.rename(columns = {'VAR_ID':'ID'})
+    # order chromosomes to match ref fastas
+    chroms = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y']
+    df['#CHROM'] = df['#CHROM'].astype("category")
+    df['#CHROM'].cat.set_categories(chroms, inplace=True)
+    # sort file by chrom then pos
+    df = df.sort(['#CHROM', 'POS'])
     # write to file for conversion to vcf
     df.to_csv(outfile_name, header=True, encoding='utf-8', sep="\t", index=False, mode='a')
 
