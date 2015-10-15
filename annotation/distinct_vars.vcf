@@ -1,5 +1,5 @@
 ##fileformat=VCFv4.0
-##fileDate=151014
+##fileDate=151015
 ##reference=grch37 v.74 
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	GT
 1	64548	1:64548:A:C	A	C	30	PASS	.	GT	0/1
