@@ -176,7 +176,7 @@ print "Uploading results to HDFS... \n"
 if hdfs.exists(hdfs_path):
         hdfs.rmdir(hdfs_path)
         hdfs.mkdir(hdfs_path)
-        hdfs.put(hdfs_path, final_out, verbose=True)
+#        hdfs.put(hdfs_path, final_out, verbose=True)
 
 # upload file to hdfs
 hdfs.put(hdfs_path, final_out, overwrite=True, verbose=True)
