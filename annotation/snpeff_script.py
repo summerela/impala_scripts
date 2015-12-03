@@ -139,53 +139,60 @@ subprocess.call([java_path, "-Xmx32g", "-jar", gatk_jar, "-T ", \
 ###############################
 ##  Split VCF by chromosome  ##
 ###############################
-print "Splitting VCF by chromosome... \n"
+#print "Splitting VCF by chromosome... \n"
+split_cmd = 'cat {} | {}'.format(vcf_out, chrom_splitter)
+split_proc = subprocess.Popen(split_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+split_proc.communicate()[0]
 
-# ##############################################################
-# ##  Annotate variants with coding consequences using snpeff ##
-# ##############################################################
-# snpeff_out = out_name + '_snpeff.vcf'
-# print "Running snpeff... \n"
-# f = open(snpeff_out, "w")
-# subprocess.call([java_path, "-Xmx32g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.74", vcf_out], stdout=f)
+snpeff_out = out_name + '_snpeff.vcf'
+print "Running snpeff... \n"
+f = open(snpeff_out, "a")
+import os
+chroms = [filename for filename in os.listdir('.') if filename.startswith("chr")]
+for file in chroms:
+    subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.74", file], stdout=f)
 
-# ###########################################################
-# ## Output SnpEff effects as tsv file, one effect per line ##
-# ############################################################
-# tsv_out = out_name + '.tsv'
-# print "Parsing snpeff output... \n"
+##############################################################
+##  Annotate variants with coding consequences using snpeff ##
+##############################################################
+snpeff_out = out_name + '_snpeff.vcf'
+print "Running snpeff... \n"
+f = open(snpeff_out, "w")
+subprocess.call([java_path, "-Xmx32g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.74", vcf_out], stdout=f)
 
-# # call processes and pipe
-# snpout_cmd = 'cat {} |{} | {} -jar {} extractFields \
-#             - CHROM POS REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
-#             "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" \
-#             "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(snpeff_out, snpeff_oneperline_perl, \
-#                                                          java_path, snpsift_jar,tsv_out)
-# ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-# output = ps.communicate()[0]
-# print output
+###########################################################
+## Output SnpEff effects as tsv file, one effect per line ##
+############################################################
+tsv_out = out_name + '.tsv'
+print "Parsing snpeff output... \n"
+
+# call processes and pipe
+snpout_cmd = 'cat {} |{} | {} -jar {} extractFields \
+    - CHROM POS REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
+    "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" \
+    "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(snpeff_out, snpeff_oneperline_perl, \
+    java_path, snpsift_jar,tsv_out)
+ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+ps.communicate()[0]
             
-# ######################################
-# ## Remove Header and convert to csv ##
-# ######################################
-# print "Converting results to csv for upload to impala... \n"
-# final_out = out_name + '.csv'
-# csv_cmd = "sed '1d' {} | tr '/\t' ',' > {}".format(tsv_out, final_out)
-# csv_proc = subprocess.Popen(csv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-# csv_proc.communicate()[0]
+######################################
+## Remove Header and convert to csv ##
+######################################
+print "Converting results to csv for upload to impala... \n"
+final_out = out_name + '.csv'
+csv_cmd = "sed '1d' {} | tr '/\t' ',' > {}".format(tsv_out, final_out)
+csv_proc = subprocess.Popen(csv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+csv_proc.communicate()[0]
 
-# ############################
-# ## upload results to hdfs ##
-# ############################
-# print "Uploading results to HDFS... \n"
-# # create directory
-# if hdfs.exists(hdfs_path):
-#         hdfs.rmdir(hdfs_path)
-#         hdfs.mkdir(hdfs_path)
-# #        hdfs.put(hdfs_path, final_out, verbose=True)
-
-# # upload file to hdfs
-# hdfs.put(hdfs_path, final_out, overwrite=True, verbose=True)
+############################
+## upload results to hdfs ##
+############################
+print "Uploading results to HDFS... \n"
+# create directory
+if hdfs.exists(hdfs_path):
+    hdfs.rmdir(hdfs_path)
+    hdfs.mkdir(hdfs_path)
+    hdfs.put(hdfs_path, final_out, verbose=True)
 
 ## create table manually until delimited file connector working properly in ibis
 
@@ -193,27 +200,27 @@ print "Splitting VCF by chromosome... \n"
 ## convert csv into table ##
 ############################
 # define table schema for tsv file
-#schema = ibis.schema([
-#     ('chrom', 'string'), 
-#     ('pos', 'int32'),
-#     ('ref', 'string'),
-#     ('alt', 'string'),
-#     ('gene', 'string'),
-#     ('gene_id', 'string'),
-#     ('effect', 'string'),
-#     ('impact', 'string'),
-#     ('feature', 'string'),
-#     ('feature_id', 'string'),
-#     ('biotype', 'string'),
-#     ('rank', 'int32'),
-#     ('hgvs_c', 'string'),
-#     ('hgvs_p', 'string')
-#])
+schema = ibis.schema([
+     ('chrom', 'string'), 
+     ('pos', 'int32'),
+     ('ref', 'string'),
+     ('alt', 'string'),
+     ('gene', 'string'),
+     ('gene_id', 'string'),
+     ('effect', 'string'),
+     ('impact', 'string'),
+     ('feature', 'string'),
+     ('feature_id', 'string'),
+     ('biotype', 'string'),
+     ('rank', 'int32'),
+     ('hgvs_c', 'string'),
+     ('hgvs_p', 'string')
+])
 
-#table_name = out_name + '_snpeff'
+table_name = out_name + '_snpeff'
 
 # create ibis object from  tsv
-#print "Creating impala table... \n"
-#con.create_table(table_name, con.delimited_file(hdfs_path, schema, delimiter=','), database=input_db, force=True)
+print "Creating impala table... \n"
+con.create_table(table_name, con.delimited_file(hdfs_path, schema, delimiter=','), database=input_db, force=True)
 
 print "Snpeff pipeline complete."
