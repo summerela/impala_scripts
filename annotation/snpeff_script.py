@@ -5,6 +5,14 @@
 ## input = fill out variables in the first section
 ## output = impala table of variants with snpeff coding consequence annotations
 
+## Requirements:
+##    SnpEff: http://snpeff.sourceforge.net/
+##    GATK: to validate vcf file https://www.broadinstitute.org/gatk/download/
+##    1000 genomes hg37 reference fasta: ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/human_g1k_v37.fasta.gz
+##    Matching index file: ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/human_g1k_v37.fasta.fai
+##    Mathching dict file (created using Picard tools): https://github.com/summerela/impala_scripts/blob/master/annotation/human_g1k_v37.dict
+##    Ibis: 'pip install ibis-framework'
+
 ##############################################
 ## update the following variables, then run ##
 ##############################################
@@ -59,7 +67,8 @@ import pandas as pd
 # disable extraneous pandas warning
 pd.options.mode.chained_assignment = None
 
-def create_vcf(tbl_name, db_name):
+# download table and turn into vcf for each chromosome
+def create_vcf(tbl_name, db_name, chrom):
     # create ibis object from distinct vars table
     distinct_vars = con.table(tbl_name, database=db_name) 
     # limit table to just the columns we need to output to vcf
@@ -67,11 +76,9 @@ def create_vcf(tbl_name, db_name):
     # download table from ibis table connection object to local memory
     distinct_df = distinct_df.execute(limit=100000000000)
     # add blank fields for vcf format
-    distinct_df['QUAL'] = '30'
-    distinct_df['FILTER'] = 'PASS'
+    distinct_df['QUAL'] = '.'
+    distinct_df['FILTER'] = '.'
     distinct_df['INFO'] = '.'
-    distinct_df['FORMAT'] = 'GT:'
-    distinct_df['subject'] = './.'
     # rename chrom column to match vcf header
     distinct_df =distinct_df.rename(columns = {'CHROM':'#CHROM'})
     # rename rs_id column to match vcf header
@@ -84,14 +91,16 @@ def create_vcf(tbl_name, db_name):
     distinct_df['ID'].replace([None], ['.'], inplace=True)
     return distinct_df
 
-# download table from ibis table connection object to local memory
-print "Downloading variants... \n"
-distinct_df = create_vcf(input_table, input_db)
+# download table from ibis table connection object to local memory by chromosome
+print "Downloading variants by chromosome... \n"
+chroms = ['1', '2']
+for chrom in chroms:
+    distinct_df = create_vcf(input_table, input_db)
 
 # display preview of results
-print "Variants downloaded... \n" 
-print distinct_df.head(5) 
-print "\n Total rows = " + str(len(distinct_df))
+# print "Variants downloaded... \n"
+# print distinct_df.head(5)
+# print "\n Total rows = " + str(len(distinct_df))
 
 ###################
 ## format as vcf ##
@@ -122,11 +131,11 @@ def impala_to_vcf(input_df, outfile_name):
     # write to file for conversion to vcf
     input_df.to_csv(outfile_name, header=True, encoding='utf-8', sep="\t", index=False, mode='a')
 
-vcf_out = out_name + '.vcf'
-
-print "Formatting as VCF file... \n"
-create_header(vcf_out)
-impala_to_vcf(distinct_df, vcf_out)
+# vcf_out = out_name + '.vcf'
+#
+# print "Formatting as VCF file... \n"
+# create_header(vcf_out)
+# impala_to_vcf(distinct_df, vcf_out)
 
 ####################################################
 ##  Verify VCF format using GATK ValidateVariants ##
