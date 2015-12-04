@@ -189,7 +189,6 @@ for chrom in chroms:
 ###############################
 load_query = '''
 load data inpath '{}' into table p7_product.coding_consequences
-partition (partcol1 = chrom)
 '''.format(out_path)
 cur.execute(load_query)
 
