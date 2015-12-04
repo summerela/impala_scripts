@@ -17,8 +17,8 @@ out_name = 'test_vars'
 # path to place file on hdfs
 hdfs_path = '/user/selasady/'
 
-# work mac
-java_path = 'java'
+# unix
+java_path = '/tools/java/jdk1.7/bin/java'
 gatk_jar =  '/users/selasady/my_titan_itmi/tools/GenomeAnalysisTK.jar'
 ref_fasta = '/users/selasady/my_titan_itmi/tools/human_g1k_v37.fasta'
 snpeff_jar = '/users/selasady/my_titan_itmi/tools/snpEff/snpEff.jar'
@@ -133,7 +133,7 @@ for chrom in chroms:
 ## Remove Header  ##
 ####################
 for chrom in chroms:
-    print "Removing header for upload to impala... \n"
+    print "Removing header for chromosome {} upload to impala... \n".format(chrom)
     tsv_in = 'chr' + chrom + '_' + out_name + '.tsv'
     tsv_out = 'chr' + chrom + '_' + out_name + '_final.tsv'
     tsv_cmd = "sed '1d' {} | tr '/\t' ',' > {}".format(tsv_in,tsv_out)
