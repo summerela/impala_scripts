@@ -18,22 +18,22 @@ out_name = 'test_vars'
 hdfs_path = '/user/selasady/'
 
 # work mac
-# java_path = 'java'
-# gatk_jar =  '/Users/selasady/tools/GenomeAnalysisTK.jar'
-# ref_fasta = '/Users/selasady/tools/human_g1k_v37.fasta'
-# snpeff_jar = '/Users/selasady/tools/snpEff/snpEff.jar'
-# snpeff_oneperline_perl = '/Users/selasady/tools/snpEff/scripts/vcfEffOnePerLine.pl'
-# snpsift_jar = '/Users/selasady/tools/snpEff//SnpSift.jar'
-# chrom_splitter = '/Users/selasady/tools/snpEff/scripts/splitChr.pl'
+java_path = 'java'
+gatk_jar =  '/Users/selasady/tools/GenomeAnalysisTK.jar'
+ref_fasta = '/Users/selasady/tools/human_g1k_v37.fasta'
+snpeff_jar = '/Users/selasady/tools/snpEff/snpEff.jar'
+snpeff_oneperline_perl = '/Users/selasady/tools/snpEff/scripts/vcfEffOnePerLine.pl'
+snpsift_jar = '/Users/selasady/tools/snpEff//SnpSift.jar'
+chrom_splitter = '/Users/selasady/tools/snpEff/scripts/splitChr.pl'
 
 # home pc
-java_path = 'java'
-gatk_jar =  'D:/Documents/tools/GenomeAnalysisTK.jar'
-ref_fasta = 'D:/Documents/tools/human_g1k_v37.fasta'
-snpeff_jar = 'D:/Documents/tools/snpEff/snpEff.jar'
-snpeff_oneperline_perl = 'D;/Documents/tools/snpEff/scripts/vcfEffOnePerLine.pl'
-snpsift_jar = 'D:/Documents/tools/snpEff//SnpSift.jar'
-chrom_splitter = 'D:/Documents/tools/snpEff/scripts/splitChr.pl'
+# java_path = 'java'
+# gatk_jar =  'D:/Documents/tools/GenomeAnalysisTK.jar'
+# ref_fasta = 'D:/Documents/tools/human_g1k_v37.fasta'
+# snpeff_jar = 'D:/Documents/tools/snpEff/snpEff.jar'
+# snpeff_oneperline_perl = 'D;/Documents/tools/snpEff/scripts/vcfEffOnePerLine.pl'
+# snpsift_jar = 'D:/Documents/tools/snpEff//SnpSift.jar'
+# chrom_splitter = 'D:/Documents/tools/snpEff/scripts/splitChr.pl'
 
 #################################
 ## create connection to impala ##
@@ -96,24 +96,24 @@ def create_vcf(db_name, table_name, chrom_name):
 #chroms = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'M', 'MT']
 chroms = ['1','2','3']
 
-# for chrom in chroms:
-#     print "Creating VCF files for chromosome {}... \n".format(chrom)
-#     create_vcf(input_db, input_table, chrom)
+for chrom in chroms:
+    print "Creating VCF files for chromosome {}... \n".format(chrom)
+    create_vcf(input_db, input_table, chrom)
 
-#############################################################
-## annotate variants with coding consequences using snpeff ##
-#############################################################
-# for chrom in chroms:
-#     print "Annotating coding consequences for chromosome {} with snpeff... \n".format(chrom)
-#     vcf_in = 'chr' + chrom + '_' + out_name + '.vcf'
-#     vcf_out = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
-#     f = open(vcf_out, "w")
-#     try:
-#         subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.74", vcf_in], stdout=f)
-#     except subprocess.CalledProcessError as e:
-#         print e.output
+############################################################
+# annotate variants with coding consequences using snpeff ##
+############################################################
+for chrom in chroms:
+    print "Annotating coding consequences for chromosome {} with snpeff... \n".format(chrom)
+    vcf_in = 'chr' + chrom + '_' + out_name + '.vcf'
+    vcf_out = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
+    f = open(vcf_out, "w")
+    try:
+        subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.74", vcf_in], stdout=f)
+    except subprocess.CalledProcessError as e:
+        print e.output
 
-###########################################################
+##########################################################
 ## Output SnpEff effects as tsv file, one effect per line ##
 ############################################################
 for chrom in chroms:
@@ -176,7 +176,7 @@ snpeff_schema = ibis.schema([
 
 # create empty table to store snpeff output
 table_name = out_name + '_snpeff'
-con.create(table_name, schema=snpeff_schema)
+con.create_table(table_name, schema=snpeff_schema)
 
 #connect to empty table for inserting snpeff results
 snpeff_table = con.table(table_name, db=input_db)

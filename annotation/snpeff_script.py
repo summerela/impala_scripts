@@ -36,12 +36,15 @@ input_table = 'vars_to_snpeff'
 #      qual string,
 #      filter string,
 #      info string
+#      form string, #format was a reserved word
+#      sample string
 #     )
 # partitioned by (chrom string);
 #
 # insert into p7_product.vars_to_snpeff partition (chrom)
-# SELECT DISTINCT pos, rs_id as id, ref, alt, '.' as qual,  '.' as filter, '.' as info, chrom
+# SELECT DISTINCT pos, rs_id as id, ref, alt, '.' as qual,  '.' as filter, '.' as info, '.' as form, '.' as sample, chrom
 # from all_vars;
+# order by chrom, pos ASC;
 #
 # compute stats p7_product.vars_to_snpeff;
 
