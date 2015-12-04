@@ -188,7 +188,7 @@ for chrom in chroms:
 ## Insert results into table ##
 ###############################
 load_query = '''
-load data inpath {} into table 'p7_product.coding_consequences'
+load data inpath '{}' into table p7_product.coding_consequences
 partition (chrom string)
 '''.format(out_path)
 cur.execute(load_query)

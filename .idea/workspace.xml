@@ -47,7 +47,7 @@
         <entry file="file://$PROJECT_DIR$/annotation/testing.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.5322896">
-              <caret line="190" column="63" selection-start-line="190" selection-start-column="63" selection-end-line="190" selection-end-column="63" />
+              <caret line="190" column="21" selection-start-line="190" selection-start-column="21" selection-end-line="190" selection-end-column="21" />
               <folding>
                 <element signature="e#1519#1530#0" expanded="true" />
               </folding>
@@ -702,7 +702,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449270843133</updated>
     </task>
-    <option name="localTasksCounter" value="45" />
+    <task id="LOCAL-00045" summary="fixing syntax on load data statement">
+      <created>1449271090625</created>
+      <option name="number" value="00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1449271090625</updated>
+    </task>
+    <option name="localTasksCounter" value="46" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -777,7 +783,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="Updated query_impala save options&#10;Updated filtering query for nbs_genes" />
     <MESSAGE value="Creating module for querying impala&#10;Added ensembl annotaiton to nbs_genes, next annotate with nbs gene list" />
     <MESSAGE value="Fine-tuning functions" />
     <MESSAGE value="finalized comp-het function, verified logic&#10;need to finish VEP and save to file" />
@@ -802,7 +807,8 @@
     <MESSAGE value="converted vcf writer script to function" />
     <MESSAGE value="fixed connection with ibis, working on spliltting input by chromosome and processing in parallel" />
     <MESSAGE value="updating test file for processing impala table in chunks" />
-    <option name="LAST_COMMIT_MESSAGE" value="updating test file for processing impala table in chunks" />
+    <MESSAGE value="fixing syntax on load data statement" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixing syntax on load data statement" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1024,7 +1030,7 @@
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.5322896">
-          <caret line="190" column="63" selection-start-line="190" selection-start-column="63" selection-end-line="190" selection-end-column="63" />
+          <caret line="190" column="21" selection-start-line="190" selection-start-column="21" selection-end-line="190" selection-end-column="21" />
           <folding>
             <element signature="e#1519#1530#0" expanded="true" />
           </folding>
