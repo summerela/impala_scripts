@@ -24,7 +24,26 @@ hdfs_port_number = '50070'
 
 # specify input variants db and table to annotate with snpeff
 input_db = 'p7_product'
-input_table = 'all_vars'
+input_table = 'vars_to_snpeff'
+
+## created with the following sql statment from the all_vars table
+
+# create table p7_product.vars_to_snpeff
+#     (pos int,
+#      id string,
+#      ref string,
+#      alt string,
+#      qual string,
+#      filter string,
+#      info string
+#     )
+# partitioned by (chrom string);
+#
+# insert into p7_product.vars_to_snpeff partition (chrom)
+# SELECT DISTINCT pos, rs_id as id, ref, alt, '.' as qual,  '.' as filter, '.' as info, chrom
+# from all_vars;
+#
+# compute stats p7_product.vars_to_snpeff;
 
 # prefix for output files
 out_name = 'all_vars'
