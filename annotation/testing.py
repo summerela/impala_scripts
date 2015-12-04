@@ -68,77 +68,77 @@ ibis.options.interactive = True
 #################################################
 ## create vcf files by row for each chromosome ##
 #################################################
-# # create vcf header
-# def create_header(outfile_name):
-#    # create vcf header
-#     lines=[]
-#     lines.append('##fileformat=VCFv4.0')
-#     lines.append('##fileDate='+ time.strftime("%y%m%d"))
-#     lines.append('##reference=grch37 v.74')
-#     lines.append('#CHROM\t' + 'POS\t' + 'ID\t' + 'REF\t' + 'ALT\t' + 'QUAL\t'+ 'FILTER\t' + 'INFO\t' + 'FORMAT\t' + 'SAMPLE\t' + '\n')
-#     header = '\n'.join(lines)
-#     out = open(outfile_name, 'wb')
-#     out.write(header)
-#     out.close()
-#
-# ### download variants by row and chromosome
-# def create_vcf(db_name, table_name, chrom_name):
-#      vcf_out = 'chr' + chrom_name + '_' + out_name + '.vcf'
-#      create_header(vcf_out)
-#      # connect to vars_to_snpeff table
-#      get_vars = "SELECT chrom, pos, id, ref, alt, qual, filter, info, form, sample from {}.{} WHERE chrom = '{}' order by pos limit 5".format(input_db, input_table, chrom_name)
-#      cur.execute(get_vars)
-#      for row in cur:
-#          with open(vcf_out, 'a') as csvfile:
-#              writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n')
-#              writer.writerow(row)
-#
+# create vcf header
+def create_header(outfile_name):
+   # create vcf header
+    lines=[]
+    lines.append('##fileformat=VCFv4.0')
+    lines.append('##fileDate='+ time.strftime("%y%m%d"))
+    lines.append('##reference=grch37 v.74')
+    lines.append('#CHROM\t' + 'POS\t' + 'ID\t' + 'REF\t' + 'ALT\t' + 'QUAL\t'+ 'FILTER\t' + 'INFO\t' + 'FORMAT\t' + 'SAMPLE\t' + '\n')
+    header = '\n'.join(lines)
+    out = open(outfile_name, 'wb')
+    out.write(header)
+    out.close()
+
+### download variants by row and chromosome
+def create_vcf(db_name, table_name, chrom_name):
+     vcf_out = 'chr' + chrom_name + '_' + out_name + '.vcf'
+     create_header(vcf_out)
+     # connect to vars_to_snpeff table
+     get_vars = "SELECT chrom, pos, id, ref, alt, qual, filter, info, form, sample from {}.{} WHERE chrom = '{}' order by pos limit 5".format(input_db, input_table, chrom_name)
+     cur.execute(get_vars)
+     for row in cur:
+         with open(vcf_out, 'a') as csvfile:
+             writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n')
+             writer.writerow(row)
+
 # #chroms = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'M', 'MT']
 chroms = ['1','2','3']
-#
-# for chrom in chroms:
-#     print "Creating VCF files for chromosome {}... \n".format(chrom)
-#     create_vcf(input_db, input_table, chrom)
-#
-# ############################################################
-# # annotate variants with coding consequences using snpeff ##
-# ############################################################
-# for chrom in chroms:
-#     print "Annotating coding consequences for chromosome {} with snpeff... \n".format(chrom)
-#     vcf_in = 'chr' + chrom + '_' + out_name + '.vcf'
-#     vcf_out = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
-#     f = open(vcf_out, "w")
-#     try:
-#         subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.74", vcf_in], stdout=f)
-#     except subprocess.CalledProcessError as e:
-#         print e.output
-#
-# ##########################################################
-# ## Output SnpEff effects as tsv file, one effect per line ##
-# ############################################################
-# for chrom in chroms:
-#     print "Parsing snpeff output for chromosome {}... \n".format(chrom)
-#     vcf_in = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
-#     tsv_out = 'chr' + chrom + '_' + out_name + '.tsv'
-#     # call processes and pipe
-#     snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
-#     - CHROM POS REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
-#     "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" \
-#     "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(vcf_in, snpeff_oneperline_perl, \
-#     java_path, snpsift_jar,tsv_out)
-#     ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-#     ps.communicate()[0]
-#
-# ####################
-# ## Remove Header  ##
-# ####################
-# for chrom in chroms:
-#     print "Removing header for upload to impala... \n"
-#     tsv_in = 'chr' + chrom + '_' + out_name + '.tsv'
-#     tsv_out = 'chr' + chrom + '_' + out_name + '_final.tsv'
-#     tsv_cmd = "sed '1d' {} | tr '/\t' ',' > {}".format(tsv_in,tsv_out)
-#     csv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-#     csv_proc.communicate()[0]
+
+for chrom in chroms:
+    print "Creating VCF files for chromosome {}... \n".format(chrom)
+    create_vcf(input_db, input_table, chrom)
+
+############################################################
+# annotate variants with coding consequences using snpeff ##
+############################################################
+for chrom in chroms:
+    print "Annotating coding consequences for chromosome {} with snpeff... \n".format(chrom)
+    vcf_in = 'chr' + chrom + '_' + out_name + '.vcf'
+    vcf_out = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
+    f = open(vcf_out, "w")
+    try:
+        subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.74", vcf_in], stdout=f)
+    except subprocess.CalledProcessError as e:
+        print e.output
+
+##########################################################
+## Output SnpEff effects as tsv file, one effect per line ##
+############################################################
+for chrom in chroms:
+    print "Parsing snpeff output for chromosome {}... \n".format(chrom)
+    vcf_in = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
+    tsv_out = 'chr' + chrom + '_' + out_name + '.tsv'
+    # call processes and pipe
+    snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
+    - CHROM POS REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
+    "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" \
+    "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(vcf_in, snpeff_oneperline_perl, \
+    java_path, snpsift_jar,tsv_out)
+    ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    ps.communicate()[0]
+
+####################
+## Remove Header  ##
+####################
+for chrom in chroms:
+    print "Removing header for upload to impala... \n"
+    tsv_in = 'chr' + chrom + '_' + out_name + '.tsv'
+    tsv_out = 'chr' + chrom + '_' + out_name + '_final.tsv'
+    tsv_cmd = "sed '1d' {} | tr '/\t' ',' > {}".format(tsv_in,tsv_out)
+    csv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    csv_proc.communicate()[0]
 
 # ###############################
 # ## Upload results to impala ##
@@ -190,7 +190,7 @@ for chrom in chroms:
 load_query = '''
 load data inpath {} into table p7_product.coding_consequences
 partition (chrom string)
-'''.format(out_path, )
+'''.format(out_path)
 cur.execute(load_query)
 
 #######################
