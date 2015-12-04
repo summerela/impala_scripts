@@ -19,12 +19,12 @@ hdfs_path = '/user/selasady/'
 
 # work mac
 java_path = 'java'
-gatk_jar =  '/Users/selasady/tools/GenomeAnalysisTK.jar'
-ref_fasta = '/Users/selasady/tools/human_g1k_v37.fasta'
-snpeff_jar = '/Users/selasady/tools/snpEff/snpEff.jar'
-snpeff_oneperline_perl = '/Users/selasady/tools/snpEff/scripts/vcfEffOnePerLine.pl'
-snpsift_jar = '/Users/selasady/tools/snpEff//SnpSift.jar'
-chrom_splitter = '/Users/selasady/tools/snpEff/scripts/splitChr.pl'
+gatk_jar =  '/users/selasady/my_titan_itmi/tools/GenomeAnalysisTK.jar'
+ref_fasta = '/users/selasady/my_titan_itmi/tools/human_g1k_v37.fasta'
+snpeff_jar = '/users/selasady/my_titan_itmi/tools/snpEff/snpEff.jar'
+snpeff_oneperline_perl = '/users/selasady/my_titan_itmi/tools/snpEff/scripts/vcfEffOnePerLine.pl'
+snpsift_jar = '/users/selasady/my_titan_itmi/tools/snpEff//SnpSift.jar'
+chrom_splitter = '/users/selasady/my_titan_itmi/tools/snpEff/scripts/splitChr.pl'
 
 # home pc
 # java_path = 'java'
