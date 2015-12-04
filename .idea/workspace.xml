@@ -46,8 +46,8 @@
       <file leaf-file-name="testing.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/testing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.39921722">
-              <caret line="135" column="82" selection-start-line="135" selection-start-column="82" selection-end-line="135" selection-end-column="82" />
+            <state vertical-scroll-proportion="0.46771038">
+              <caret line="152" column="0" selection-start-line="152" selection-start-column="0" selection-end-line="152" selection-end-column="0" />
               <folding>
                 <element signature="e#1622#1633#0" expanded="true" />
               </folding>
@@ -134,8 +134,8 @@
     <detection-done>true</detection-done>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="275" />
-    <option name="y" value="9" />
+    <option name="x" value="320" />
+    <option name="y" value="4" />
     <option name="width" value="1522" />
     <option name="height" value="987" />
   </component>
@@ -438,12 +438,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00003" summary="fixed MAF calculation">
-      <created>1434151837402</created>
-      <option name="number" value="00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1434151837402</updated>
-    </task>
     <task id="LOCAL-00004" summary="finished script, make faster and output ipython notebook">
       <created>1434496334369</created>
       <option name="number" value="00004" />
@@ -732,7 +726,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449271801246</updated>
     </task>
-    <option name="localTasksCounter" value="52" />
+    <task id="LOCAL-00052" summary="updating directory paths">
+      <created>1449271949701</created>
+      <option name="number" value="00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1449271949701</updated>
+    </task>
+    <option name="localTasksCounter" value="53" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -745,7 +745,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="275" y="9" width="1522" height="987" extended-state="0" />
+    <frame x="320" y="4" width="1522" height="987" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20212767" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -1053,8 +1053,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.39921722">
-          <caret line="135" column="82" selection-start-line="135" selection-start-column="82" selection-end-line="135" selection-end-column="82" />
+        <state vertical-scroll-proportion="0.46771038">
+          <caret line="152" column="0" selection-start-line="152" selection-start-column="0" selection-end-line="152" selection-end-column="0" />
           <folding>
             <element signature="e#1622#1633#0" expanded="true" />
           </folding>

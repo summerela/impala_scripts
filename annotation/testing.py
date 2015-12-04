@@ -150,7 +150,6 @@ now = datetime.datetime.now()
 out_path = "{}/snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 
 # make directory to store output
-mkdir_cmd = "hdfs dfs -mkdir {}/snpeff_{}".format(hdfs_path, out_path)
 mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 mkdir_proc.communicate()[0]
 
