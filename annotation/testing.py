@@ -165,24 +165,24 @@ for chrom in chroms:
 ####################################
 ## Create table to store results  ##
 ####################################
-# create_coding= '''
-# create table p7_product.coding_consequences
-#      (pos int,
-#       ref string,
-#       alt string,
-#       gene string,
-#       gene_id string,
-#       effect string,
-#       impact string,
-#       feature string,
-#       feature_id string,
-#       biotype string,
-#       rank int,
-#       hgvs_c string,
-#       hgvs_p string)
-# partitioned by (chrom string)
-# '''
-# cur.execute(create_coding)
+create_coding= '''
+create table p7_product.coding_consequences
+     (chrom string,
+      pos int,
+      ref string,
+      alt string,
+      gene string,
+      gene_id string,
+      effect string,
+      impact string,
+      feature string,
+      feature_id string,
+      biotype string,
+      rank int,
+      hgvs_c string,
+      hgvs_p string)
+'''
+cur.execute(create_coding)
 
 ###############################
 ## Insert results into table ##
