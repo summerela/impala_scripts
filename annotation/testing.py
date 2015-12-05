@@ -94,11 +94,11 @@ def create_vcf(db_name, table_name, chrom_name):
 
 #
 # # #chroms = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'M', 'MT']
-# chroms = ['1','2','3']
+chroms = ['1','2','3']
 #
-# for chrom in chroms:
-#     print "Creating VCF files for chromosome {}... \n".format(chrom)
-#     create_vcf(input_db, input_table, chrom)
+for chrom in chroms:
+    print "Creating VCF files for chromosome {}... \n".format(chrom)
+    create_vcf(input_db, input_table, chrom)
 #
 # ############################################################
 # # annotate variants with coding consequences using snpeff ##
