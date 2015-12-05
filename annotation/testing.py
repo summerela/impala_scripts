@@ -3,7 +3,7 @@
 ##############################################################
 # setup impala and hdfs connections
 impala_host = 'glados18'
-impala_port_number = 21050
+impala_port_number = '21050'
 # hdfs_host = 'glados20'
 # hdfs_port_number = '50070'
 
@@ -53,7 +53,7 @@ import subprocess
 pd.options.mode.chained_assignment = None
 
 # connect to impala with impyla
-conn=connect(host=impala_host, port=impala_host, timeout=10000)
+conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
 cur = conn.cursor()
 
 # connect to impala with ibis
