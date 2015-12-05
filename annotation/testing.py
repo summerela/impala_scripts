@@ -27,8 +27,6 @@ chrom_splitter = '/users/selasady/my_titan_itmi/tools/snpEff/scripts/splitChr.pl
 #################################
 ## import modules ##
 #################################
-import ibis
-import os
 import pandas as pd
 from impala.dbapi import connect
 import time
@@ -37,14 +35,6 @@ import subprocess
 
 # disable extraneous pandas warning
 pd.options.mode.chained_assignment = None
-
-# connect to impala with ibis
-# hdfs_port = os.environ.get(hdfs_host, hdfs_port_number)
-# hdfs = ibis.hdfs_connect(host=hdfs_host, port=hdfs_port, user='hdfs')
-# con = ibis.impala.connect(host=impala_host, port=impala_port_number, timeout=10000)
-#
-# # enable interactive mode
-# ibis.options.interactive = True
 
 #################################################
 ## create vcf files by row for each chromosome ##
@@ -82,22 +72,22 @@ def create_vcf(db_name, table_name, chrom_name):
 chroms = ['1','2','3']
 
 # download each chromosome in input_table and turn into vcf file
-# for chrom in chroms:
-#     print "Creating VCF files for chromosome {}... \n".format(chrom)
-#     create_vcf(input_db, input_table, chrom)
+for chrom in chroms:
+    print "Creating VCF files for chromosome {}... \n".format(chrom)
+    create_vcf(input_db, input_table, chrom)
 
 ############################################################
 # annotate variants with coding consequences using snpeff ##
 ############################################################
-# for chrom in chroms:
-#     print "Annotating coding consequences for chromosome {} with snpeff... \n".format(chrom)
-#     vcf_in = 'chr' + chrom + '_' + out_name + '.vcf'
-#     vcf_out = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
-#     with open(vcf_out, "w") as f:
-#         try:
-#             subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.74", vcf_in], stdout=f)
-#         except subprocess.CalledProcessError as e:
-#              print e.output
+for chrom in chroms:
+    print "Annotating coding consequences for chromosome {} with snpeff... \n".format(chrom)
+    vcf_in = 'chr' + chrom + '_' + out_name + '.vcf'
+    vcf_out = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
+    with open(vcf_out, "w") as f:
+        try:
+            subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.74", vcf_in], stdout=f)
+        except subprocess.CalledProcessError as e:
+             print e.output
 
 ##########################################################
 ## Output SnpEff effects as tsv file, one effect per line ##
@@ -129,57 +119,57 @@ for chrom in chroms:
 ###############################
 # ## Upload results to impala ##
 # ###############################
-# import datetime
-# now = datetime.datetime.now()
-#
-# # define output path on hdfs
-# out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
-#
-#
-# ####################################
-# ## Create table to store results  ##
-# ####################################
-# # drop the table if it already exists
-# conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
-# cur = conn.cursor()
-# drop_coding = "drop table if exists p7_product.coding_consequences"
-# cur.execute(drop_coding)
-# cur.close()
-#
-# # create empty table to store results
-# conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
-# cur = conn.cursor()
-# create_coding= '''
-# create table p7_product.coding_consequences
-#      (chrom string,
-#       pos int,
-#       ref string,
-#       alt string,
-#       gene string,
-#       gene_id string,
-#       effect string,
-#       impact string,
-#       feature string,
-#       feature_id string,
-#       biotype string,
-#       rank int,
-#       hgvs_c string,
-#       hgvs_p string)
-# '''
-# cur.execute(create_coding)
-# cur.close()
-#
-# ##############################
-# # Insert results into table ##
-# ##############################
-# # load hdfs files into table
-# conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
-# cur = conn.cursor()
-# load_query = '''
-# load data inpath '{}' into table p7_product.coding_consequences
-# '''.format(out_path)
-# cur.execute(load_query)
-# cur.close()
-#
-#
+import datetime
+now = datetime.datetime.now()
+
+# define output path on hdfs
+out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
+
+
+####################################
+## Create table to store results  ##
+####################################
+# drop the table if it already exists
+conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
+cur = conn.cursor()
+drop_coding = "drop table if exists p7_product.coding_consequences"
+cur.execute(drop_coding)
+cur.close()
+
+# create empty table to store results
+conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
+cur = conn.cursor()
+create_coding= '''
+create table p7_product.coding_consequences
+     (chrom string,
+      pos int,
+      ref string,
+      alt string,
+      gene string,
+      gene_id string,
+      effect string,
+      impact string,
+      feature string,
+      feature_id string,
+      biotype string,
+      rank int,
+      hgvs_c string,
+      hgvs_p string)
+'''
+cur.execute(create_coding)
+cur.close()
+
+##############################
+# Insert results into table ##
+##############################
+# load hdfs files into table
+conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
+cur = conn.cursor()
+load_query = '''
+load data inpath '{}' into table p7_product.coding_consequences
+'''.format(out_path)
+cur.execute(load_query)
+cur.close()
+
+
 
