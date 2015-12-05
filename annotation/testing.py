@@ -161,7 +161,6 @@ mod_cmd = "hdfs dfs -chmod 777 {}".format(out_path)
 mod_proc = subprocess.Popen(mod_cmd, shell=True, stderr=subprocess.STDOUT)
 print mod_proc.communicate()[0]
 
-
 # put each file in the snpeff directory
 for chrom in chroms:
     print "Uploading chromosome {} to HDFS... \n".format(chrom)
@@ -170,40 +169,40 @@ for chrom in chroms:
     hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
     print hdfs_proc.communicate()[0]
 
-# ####################################
-# ## Create table to store results  ##
-# ####################################
-# create_coding= '''
-# create table p7_product.coding_consequences
-#      (chrom string,
-#       pos int,
-#       ref string,
-#       alt string,
-#       gene string,
-#       gene_id string,
-#       effect string,
-#       impact string,
-#       feature string,
-#       feature_id string,
-#       biotype string,
-#       rank int,
-#       hgvs_c string,
-#       hgvs_p string)
-# '''
-# cur.execute(create_coding)
+####################################
+## Create table to store results  ##
+####################################
+create_coding= '''
+create table p7_product.coding_consequences
+     (chrom string,
+      pos int,
+      ref string,
+      alt string,
+      gene string,
+      gene_id string,
+      effect string,
+      impact string,
+      feature string,
+      feature_id string,
+      biotype string,
+      rank int,
+      hgvs_c string,
+      hgvs_p string)
+'''
+cur.execute(create_coding)
 
-###############################
-## Insert results into table ##
-###############################
-# load_query = '''
-# load data inpath '{}' into table p7_product.coding_consequences
-# '''.format(out_path)
-# cur.execute(load_query)
+##############################
+# Insert results into table ##
+##############################
+load_query = '''
+load data inpath '{}' into table p7_product.coding_consequences
+'''.format(out_path)
+cur.execute(load_query)
 
-#######################
-## Close Connections ##
-#######################
-# conn.close()
-# cur.close()
+######################
+# Close Connections ##
+######################
+conn.close()
+cur.close()
 
 
