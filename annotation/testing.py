@@ -91,6 +91,7 @@ def create_vcf(db_name, table_name, chrom_name):
          for row in cur:
              writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n')
              writer.writerow(row)
+             cur.close()
 
 #
 # # #chroms = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'M', 'MT']
@@ -147,27 +148,27 @@ import datetime
 now = datetime.datetime.now()
 #
 # # define output path on hdfs
-out_path = "{}/snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
+out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 
 # make directory to store output
 print "Creating HDFS directory to store output... \n"
 mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
-mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-mkdir_proc.communicate()[0]
+mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
+print mkdir_proc.communicate()[0]
 
 # give directory read/write permission
 mod_cmd = "hdfs dfs -chmod 777 {}".format(out_path)
-mod_proc = subprocess.Popen(mod_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-mod_proc.communicate()[0]
+mod_proc = subprocess.Popen(mod_cmd, shell=True, stderr=subprocess.STDOUT)
+print mod_proc.communicate()[0]
 
 
 # put each file in the snpeff directory
 for chrom in chroms:
     print "Uploading chromosome {} to HDFS... \n".format(chrom)
-    tsv_out = 'chr' + chrom + '_' + out_name + '_final.tsv'
+    tsv_out = './chr' + chrom + '_' + out_name + '_final.tsv'
     hdfs_cmd = 'hdfs dfs -put {} {}'.format(tsv_out, out_path)
-    hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    hdfs_proc.communicate()[0]
+    hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
+    print hdfs_proc.communicate()[0]
 
 # ####################################
 # ## Create table to store results  ##
@@ -194,15 +195,15 @@ for chrom in chroms:
 ###############################
 ## Insert results into table ##
 ###############################
-load_query = '''
-load data inpath '{}' into table p7_product.coding_consequences
-'''.format(out_path)
-cur.execute(load_query)
+# load_query = '''
+# load data inpath '{}' into table p7_product.coding_consequences
+# '''.format(out_path)
+# cur.execute(load_query)
 
 #######################
 ## Close Connections ##
 #######################
-conn.close()
-cur.close()
+# conn.close()
+# cur.close()
 
 
