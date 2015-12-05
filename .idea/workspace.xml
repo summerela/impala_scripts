@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/annotation/testing.py" afterPath="$PROJECT_DIR$/annotation/testing.py" />
     </list>
     <ignored path="impala_scripts.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -47,7 +46,7 @@
         <entry file="file://$PROJECT_DIR$/annotation/testing.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.28884462">
-              <caret line="186" column="31" selection-start-line="186" selection-start-column="31" selection-end-line="186" selection-end-column="31" />
+              <caret line="72" column="12" selection-start-line="72" selection-start-column="12" selection-end-line="72" selection-end-column="12" />
               <folding>
                 <element signature="e#1622#1633#0" expanded="true" />
               </folding>
@@ -438,12 +437,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00008" summary="adding function to determine how to join db">
-      <created>1437778535723</created>
-      <option name="number" value="00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1437778535723</updated>
-    </task>
     <task id="LOCAL-00009" summary="added function to join query, need to save results and create __main__ module">
       <created>1438029566158</created>
       <option name="number" value="00009" />
@@ -732,7 +725,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449282973910</updated>
     </task>
-    <option name="localTasksCounter" value="57" />
+    <task id="LOCAL-00057" summary="testing entire pipeline">
+      <created>1449283482326</created>
+      <option name="number" value="00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1449283482326</updated>
+    </task>
+    <option name="localTasksCounter" value="58" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -807,7 +806,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="Added DANN&#10;finished basic script&#10;adding summary section" />
     <MESSAGE value="added summary section" />
     <MESSAGE value="adding SnpEff files" />
     <MESSAGE value="saving  changes" />
@@ -832,7 +830,8 @@
     <MESSAGE value="updating directory paths" />
     <MESSAGE value="re-writing file handler in iterator" />
     <MESSAGE value="udpating file handles and testing" />
-    <option name="LAST_COMMIT_MESSAGE" value="udpating file handles and testing" />
+    <MESSAGE value="testing entire pipeline" />
+    <option name="LAST_COMMIT_MESSAGE" value="testing entire pipeline" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1054,7 +1053,7 @@
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.28884462">
-          <caret line="186" column="31" selection-start-line="186" selection-start-column="31" selection-end-line="186" selection-end-column="31" />
+          <caret line="72" column="12" selection-start-line="72" selection-start-column="12" selection-end-line="72" selection-end-column="12" />
           <folding>
             <element signature="e#1622#1633#0" expanded="true" />
           </folding>
