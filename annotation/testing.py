@@ -81,18 +81,17 @@ def create_vcf(db_name, table_name, chrom_name):
     # connect to impala with impyla
     conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
     cur = conn.cursor()
-     vcf_out = 'chr' + chrom_name + '_' + out_name + '.vcf'
-     create_header(vcf_out)
-     # connect to vars_to_snpeff table
-     get_vars = "SELECT chrom, pos, id, ref, alt, qual, filter, info, form, sample from {}.{} WHERE chrom = '{}' order by pos limit 5".format(input_db, input_table, chrom_name)
-     cur.execute(get_vars)
-     with open(vcf_out, 'a') as csvfile:
-         for row in cur:
-             writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n')
-             writer.writerow(row)
-             cur.close()
+    vcf_out = 'chr' + chrom_name + '_' + out_name + '.vcf'
+    create_header(vcf_out)
+    # connect to vars_to_snpeff table
+    get_vars = "SELECT chrom, pos, id, ref, alt, qual, filter, info, form, sample from {}.{} WHERE chrom = '{}' order by pos limit 5".format(input_db, input_table, chrom_name)
+    cur.execute(get_vars)
+    with open(vcf_out, 'a') as csvfile:
+        for row in cur:
+            writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n')
+            writer.writerow(row)
+            cur.close()
 
-#
 # # #chroms = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'M', 'MT']
 chroms = ['1','2','3']
 #
