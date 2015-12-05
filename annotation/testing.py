@@ -148,11 +148,11 @@ now = datetime.datetime.now()
 #
 # # define output path on hdfs
 out_path = "{}/snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
-#
-# # make directory to store output
-# mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
-# mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-# mkdir_proc.communicate()[0]
+
+# make directory to store output
+mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
+mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+mkdir_proc.communicate()[0]
 
 # put each file in the snpeff directory
 for chrom in chroms:
