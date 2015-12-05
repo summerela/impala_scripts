@@ -2,10 +2,10 @@
 ## update the following variables before running the script ##
 ##############################################################
 # setup impala and hdfs connections
-impala_host = 'glados14'
+impala_host = 'glados18'
 impala_port_number = '21050'
-hdfs_host = 'glados20'
-hdfs_port_number = '50070'
+# hdfs_host = 'glados20'
+# hdfs_port_number = '50070'
 
 # specify input variants db and table to annotate with snpeff
 input_db = 'p7_product'
@@ -53,16 +53,16 @@ import subprocess
 pd.options.mode.chained_assignment = None
 
 # connect to impala with impyla
-conn=connect(host='glados18', port=21050, timeout=10000)
+conn=connect(host=impala_host, port=impala_host, timeout=10000)
 cur = conn.cursor()
 
 # connect to impala with ibis
-hdfs_port = os.environ.get(hdfs_host, hdfs_port_number)
-hdfs = ibis.hdfs_connect(host=hdfs_host, port=hdfs_port, user='hdfs')
-con = ibis.impala.connect(host=impala_host, port=impala_port_number, timeout=10000)
-
-# enable interactive mode
-ibis.options.interactive = True
+# hdfs_port = os.environ.get(hdfs_host, hdfs_port_number)
+# hdfs = ibis.hdfs_connect(host=hdfs_host, port=hdfs_port, user='hdfs')
+# con = ibis.impala.connect(host=impala_host, port=impala_port_number, timeout=10000)
+#
+# # enable interactive mode
+# ibis.options.interactive = True
 
 #################################################
 ## create vcf files by row for each chromosome ##
@@ -173,11 +173,13 @@ out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 ## Create table to store results  ##
 ####################################
 # drop the table if it already exists
+conn=connect(host=impala_host, port=impala_host, timeout=10000)
 cur = conn.cursor()
 drop_coding = "drop table if exists p7_product.coding_consequences"
 cur.execute(drop_coding)
 cur.close()
 
+conn=connect(host=impala_host, port=impala_host, timeout=10000)
 cur = conn.cursor()
 create_coding= '''
 create table p7_product.coding_consequences
@@ -202,15 +204,13 @@ cur.close()
 ##############################
 # Insert results into table ##
 ##############################
+conn=connect(host=impala_host, port=impala_host, timeout=10000)
+cur = conn.cursor()
 load_query = '''
 load data inpath '{}' into table p7_product.coding_consequences
 '''.format(out_path)
 cur.execute(load_query)
-
-######################
-# Close Connections ##
-######################
-conn.close()
 cur.close()
+
 
 
