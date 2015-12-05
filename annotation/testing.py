@@ -154,6 +154,12 @@ mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
 mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 mkdir_proc.communicate()[0]
 
+# give directory read/write permission
+mod_cmd = "hdfs dfs -chmod 777 {}".format(out_path)
+mod_proc = subprocess.Popen(mod_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+mod_proc.communicate()[0]
+
+
 # put each file in the snpeff directory
 for chrom in chroms:
     print "Uploading chromosome {} to HDFS... \n".format(chrom)

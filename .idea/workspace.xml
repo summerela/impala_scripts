@@ -46,8 +46,8 @@
       <file leaf-file-name="testing.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/testing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.29">
-              <caret line="148" column="30" selection-start-line="148" selection-start-column="30" selection-end-line="148" selection-end-column="30" />
+            <state vertical-scroll-proportion="0.222">
+              <caret line="146" column="29" selection-start-line="146" selection-start-column="29" selection-end-line="146" selection-end-column="29" />
               <folding>
                 <element signature="e#1622#1633#0" expanded="true" />
               </folding>
@@ -438,12 +438,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00011" summary="Added ipython notebook for nbs genes">
-      <created>1438119903446</created>
-      <option name="number" value="00011" />
-      <option name="project" value="LOCAL" />
-      <updated>1438119903446</updated>
-    </task>
     <task id="LOCAL-00012" summary="Figured out workaround for saving results to impala (woo!)">
       <created>1438127960089</created>
       <option name="number" value="00012" />
@@ -732,7 +726,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449285685659</updated>
     </task>
-    <option name="localTasksCounter" value="60" />
+    <task id="LOCAL-00060" summary="updating hdfs dfs put command">
+      <created>1449285866423</created>
+      <option name="number" value="00060" />
+      <option name="project" value="LOCAL" />
+      <updated>1449285866423</updated>
+    </task>
+    <option name="localTasksCounter" value="61" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -1053,8 +1053,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.29">
-          <caret line="148" column="30" selection-start-line="148" selection-start-column="30" selection-end-line="148" selection-end-column="30" />
+        <state vertical-scroll-proportion="0.222">
+          <caret line="146" column="29" selection-start-line="146" selection-start-column="29" selection-end-line="146" selection-end-column="29" />
           <folding>
             <element signature="e#1622#1633#0" expanded="true" />
           </folding>
