@@ -112,6 +112,18 @@ for chrom in chroms:
     ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     print ps.communicate()[0]
 
+####################
+## Remove Header  ##
+####################
+# remove header need for running snpeff to create out own column names on impala
+for chrom in chroms:
+    print "Removing header for chromosome {} upload to impala... \n".format(chrom)
+    tsv_in = 'chr' + chrom + '_' + out_name + '.tsv'
+    tsv_out = 'chr' + chrom + '_' + out_name + '_final.tsv'
+    tsv_cmd = "sed '1d' {} > {}".format(tsv_in,tsv_out)
+    tsv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    print tsv_proc.communicate()[0]
+
 ###############################
 # ## Upload results to impala ##
 # ###############################
@@ -124,7 +136,7 @@ out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
  # put each file in the snpeff directory
 for chrom in chroms:
     print "Uploading chromosome {} to HDFS... \n".format(chrom)
-    tsv_out = './chr' + chrom + '_' + out_name + '.tsv'
+    tsv_out = './chr' + chrom + '_' + out_name + '_final.tsv'
     hdfs_cmd = 'hdfs dfs -put {} {}'.format(tsv_out, out_path)
     hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
     print hdfs_proc.communicate()[0]
@@ -153,6 +165,8 @@ create table p7_product.coding_consequences
       rank int,
       hgvs_c string,
       hgvs_p string)
+  row format delimited
+  fields terminated by '\t'
 '''
 cur.execute(create_coding)
 

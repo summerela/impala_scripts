@@ -46,8 +46,8 @@
       <file leaf-file-name="testing.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/testing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.272">
-              <caret line="116" column="33" selection-start-line="116" selection-start-column="33" selection-end-line="116" selection-end-column="33" />
+            <state vertical-scroll-proportion="1.292">
+              <caret line="161" column="12" selection-start-line="161" selection-start-column="12" selection-end-line="161" selection-end-column="12" />
               <folding>
                 <element signature="e#1063#1082#0" expanded="true" />
               </folding>
@@ -437,12 +437,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00034" summary="fixed issue with comp_het and added error checking, need to turn into package">
-      <created>1442967154887</created>
-      <option name="number" value="00034" />
-      <option name="project" value="LOCAL" />
-      <updated>1442967154887</updated>
-    </task>
     <task id="LOCAL-00035" summary="moving code to module for nbs genes. need to complete migration and deploy as package with dependencies.">
       <created>1443119086378</created>
       <option name="number" value="00035" />
@@ -731,7 +725,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449292760691</updated>
     </task>
-    <option name="localTasksCounter" value="83" />
+    <task id="LOCAL-00083" summary="fixing table formatting">
+      <created>1449293670998</created>
+      <option name="number" value="00083" />
+      <option name="project" value="LOCAL" />
+      <updated>1449293670998</updated>
+    </task>
+    <option name="localTasksCounter" value="84" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -806,7 +806,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="Adding clarity data, add logic for multiple children" />
     <MESSAGE value="Updating clarity logic for non-trios" />
     <MESSAGE value="updating logic for nbs genes" />
     <MESSAGE value="finished nbs genes and acmg genes, need to autmoate acmg" />
@@ -831,7 +830,8 @@
     <MESSAGE value="don't mind me.. testing..." />
     <MESSAGE value="switching output from csv to tsv" />
     <MESSAGE value="testing" />
-    <option name="LAST_COMMIT_MESSAGE" value="testing" />
+    <MESSAGE value="fixing table formatting" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixing table formatting" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1052,8 +1052,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.272">
-          <caret line="116" column="33" selection-start-line="116" selection-start-column="33" selection-end-line="116" selection-end-column="33" />
+        <state vertical-scroll-proportion="1.292">
+          <caret line="161" column="12" selection-start-line="161" selection-start-column="12" selection-end-line="161" selection-end-column="12" />
           <folding>
             <element signature="e#1063#1082#0" expanded="true" />
           </folding>
