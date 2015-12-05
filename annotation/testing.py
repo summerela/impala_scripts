@@ -3,7 +3,7 @@
 ##############################################################
 # setup impala and hdfs connections
 impala_host = 'glados18'
-impala_port_number = '21050'
+impala_port_number = 21050
 # hdfs_host = 'glados20'
 # hdfs_port_number = '50070'
 
