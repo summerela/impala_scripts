@@ -173,9 +173,12 @@ for chrom in chroms:
 ## Create table to store results  ##
 ####################################
 # drop the table if it already exists
+cur = conn.cursor()
 drop_coding = "drop table if exists p7_product.coding_consequences"
 cur.execute(drop_coding)
+cur.close()
 
+cur = conn.cursor()
 create_coding= '''
 create table p7_product.coding_consequences
      (chrom string,
@@ -194,6 +197,7 @@ create table p7_product.coding_consequences
       hgvs_p string)
 '''
 cur.execute(create_coding)
+cur.close()
 
 ##############################
 # Insert results into table ##
