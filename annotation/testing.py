@@ -113,89 +113,89 @@ for chrom in chroms:
         except subprocess.CalledProcessError as e:
              print e.output
 
-# ##########################################################
-# ## Output SnpEff effects as tsv file, one effect per line ##
-# ############################################################
-# for chrom in chroms:
-#     print "Parsing snpeff output for chromosome {}... \n".format(chrom)
-#     vcf_in = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
-#     tsv_out = 'chr' + chrom + '_' + out_name + '.tsv'
-#     # call processes and pipe
-#     snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
-#     - CHROM POS REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
-#     "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" \
-#     "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(vcf_in, snpeff_oneperline_perl, \
-#     java_path, snpsift_jar,tsv_out)
-#     ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-#     ps.communicate()[0]
-#
-# ####################
-# ## Remove Header  ##
-# ####################
-# for chrom in chroms:
-#     print "Removing header for chromosome {} upload to impala... \n".format(chrom)
-#     tsv_in = 'chr' + chrom + '_' + out_name + '.tsv'
-#     tsv_out = 'chr' + chrom + '_' + out_name + '_final.tsv'
-#     tsv_cmd = "sed '1d' {} | tr '/\t' ',' > {}".format(tsv_in,tsv_out)
-#     csv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-#     csv_proc.communicate()[0]
-#
-# # ###############################
-# # ## Upload results to impala ##
-# # ###############################
-# import datetime
-# now = datetime.datetime.now()
-#
-# # define output path on hdfs
-# out_path = "{}/snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
-#
-# # make directory to store output
-# mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
-# mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-# mkdir_proc.communicate()[0]
-#
-# # put each file in the snpeff directory
-# for chrom in chroms:
-#     print "Uploading chromosome {} to HDFS... \n".format(chrom)
-#     tsv_out = 'chr' + chrom + '_' + out_name + '_final.tsv'
-#     hdfs_cmd = 'hdfs dfs -put {}/{}'.format(out_path, tsv_out)
-#     hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-#     hdfs_proc.communicate()[0]
-#
-# ####################################
-# ## Create table to store results  ##
-# ####################################
-# create_coding= '''
-# create table p7_product.coding_consequences
-#      (chrom string,
-#       pos int,
-#       ref string,
-#       alt string,
-#       gene string,
-#       gene_id string,
-#       effect string,
-#       impact string,
-#       feature string,
-#       feature_id string,
-#       biotype string,
-#       rank int,
-#       hgvs_c string,
-#       hgvs_p string)
-# '''
-# cur.execute(create_coding)
-#
+##########################################################
+## Output SnpEff effects as tsv file, one effect per line ##
+############################################################
+for chrom in chroms:
+    print "Parsing snpeff output for chromosome {}... \n".format(chrom)
+    vcf_in = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
+    tsv_out = 'chr' + chrom + '_' + out_name + '.tsv'
+    # call processes and pipe
+    snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
+    - CHROM POS REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
+    "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" \
+    "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(vcf_in, snpeff_oneperline_perl, \
+    java_path, snpsift_jar,tsv_out)
+    ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    ps.communicate()[0]
+
+####################
+## Remove Header  ##
+####################
+for chrom in chroms:
+    print "Removing header for chromosome {} upload to impala... \n".format(chrom)
+    tsv_in = 'chr' + chrom + '_' + out_name + '.tsv'
+    tsv_out = 'chr' + chrom + '_' + out_name + '_final.tsv'
+    tsv_cmd = "sed '1d' {} | tr '/\t' ',' > {}".format(tsv_in,tsv_out)
+    csv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    csv_proc.communicate()[0]
+
+###############################
+# ## Upload results to impala ##
 # ###############################
-# ## Insert results into table ##
-# ###############################
-# load_query = '''
-# load data inpath '{}' into table p7_product.coding_consequences
-# '''.format(out_path)
-# cur.execute(load_query)
-#
-# #######################
-# ## Close Connections ##
-# #######################
-# conn.close()
-# cur.close()
-#
-#
+import datetime
+now = datetime.datetime.now()
+
+# define output path on hdfs
+out_path = "{}/snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
+
+# make directory to store output
+mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
+mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+mkdir_proc.communicate()[0]
+
+# put each file in the snpeff directory
+for chrom in chroms:
+    print "Uploading chromosome {} to HDFS... \n".format(chrom)
+    tsv_out = 'chr' + chrom + '_' + out_name + '_final.tsv'
+    hdfs_cmd = 'hdfs dfs -put {}/{}'.format(out_path, tsv_out)
+    hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    hdfs_proc.communicate()[0]
+
+####################################
+## Create table to store results  ##
+####################################
+create_coding= '''
+create table p7_product.coding_consequences
+     (chrom string,
+      pos int,
+      ref string,
+      alt string,
+      gene string,
+      gene_id string,
+      effect string,
+      impact string,
+      feature string,
+      feature_id string,
+      biotype string,
+      rank int,
+      hgvs_c string,
+      hgvs_p string)
+'''
+cur.execute(create_coding)
+
+###############################
+## Insert results into table ##
+###############################
+load_query = '''
+load data inpath '{}' into table p7_product.coding_consequences
+'''.format(out_path)
+cur.execute(load_query)
+
+#######################
+## Close Connections ##
+#######################
+conn.close()
+cur.close()
+
+

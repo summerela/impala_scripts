@@ -46,8 +46,8 @@
       <file leaf-file-name="testing.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/testing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.49402392">
-              <caret line="113" column="8" selection-start-line="113" selection-start-column="8" selection-end-line="113" selection-end-column="8" />
+            <state vertical-scroll-proportion="0.28884462">
+              <caret line="186" column="31" selection-start-line="186" selection-start-column="31" selection-end-line="186" selection-end-column="31" />
               <folding>
                 <element signature="e#1622#1633#0" expanded="true" />
               </folding>
@@ -438,12 +438,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00007" summary="added  clinvar ipython notebook script">
-      <created>1435101362158</created>
-      <option name="number" value="00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1435101362158</updated>
-    </task>
     <task id="LOCAL-00008" summary="adding function to determine how to join db">
       <created>1437778535723</created>
       <option name="number" value="00008" />
@@ -732,7 +726,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449282542050</updated>
     </task>
-    <option name="localTasksCounter" value="56" />
+    <task id="LOCAL-00056" summary="udpating file handles and testing">
+      <created>1449282973910</created>
+      <option name="number" value="00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1449282973910</updated>
+    </task>
+    <option name="localTasksCounter" value="57" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -807,7 +807,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="Added SnpEff annotations&#10;Save to file and then done" />
     <MESSAGE value="Added DANN&#10;finished basic script&#10;adding summary section" />
     <MESSAGE value="added summary section" />
     <MESSAGE value="adding SnpEff files" />
@@ -832,7 +831,8 @@
     <MESSAGE value="loading data non-partitioned and creating partitioned table after" />
     <MESSAGE value="updating directory paths" />
     <MESSAGE value="re-writing file handler in iterator" />
-    <option name="LAST_COMMIT_MESSAGE" value="re-writing file handler in iterator" />
+    <MESSAGE value="udpating file handles and testing" />
+    <option name="LAST_COMMIT_MESSAGE" value="udpating file handles and testing" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1053,8 +1053,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.49402392">
-          <caret line="113" column="8" selection-start-line="113" selection-start-column="8" selection-end-line="113" selection-end-column="8" />
+        <state vertical-scroll-proportion="0.28884462">
+          <caret line="186" column="31" selection-start-line="186" selection-start-column="31" selection-end-line="186" selection-end-column="31" />
           <folding>
             <element signature="e#1622#1633#0" expanded="true" />
           </folding>
