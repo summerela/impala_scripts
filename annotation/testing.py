@@ -3,7 +3,7 @@
 ##############################################################
 # impala connection strings
 impala_host = 'glados18'
-impala_port_number = '21050'
+impala_port = '21050'
 
 # specify input variants db and table
 input_db = 'p7_product'
@@ -36,6 +36,10 @@ import subprocess
 # disable extraneous pandas warning
 pd.options.mode.chained_assignment = None
 
+## create connection to impala
+conn=connect(host=impala_host, port=impala_port, timeout=10000)
+cur = conn.cursor()
+
 #################################################
 ## create vcf files by row for each chromosome ##
 #################################################
@@ -54,9 +58,6 @@ def create_header(outfile_name):
 
 ### download variants by row and chromosome
 def create_vcf(db_name, table_name, chrom_name):
-    # connect to impala with impyla
-    conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
-    cur = conn.cursor()
     vcf_out = 'chr' + chrom_name + '_' + out_name + '.vcf'
     create_header(vcf_out)
     # connect to vars_to_snpeff table
@@ -66,7 +67,6 @@ def create_vcf(db_name, table_name, chrom_name):
         for row in cur:
             writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n')
             writer.writerow(row)
-            cur.close()
 
 # # #chroms = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'M', 'MT']
 chroms = ['1','2','3']
@@ -125,20 +125,23 @@ now = datetime.datetime.now()
 # define output path on hdfs
 out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 
+ # put each file in the snpeff directory
+for chrom in chroms:
+    print "Uploading chromosome {} to HDFS... \n".format(chrom)
+    tsv_out = './chr' + chrom + '_' + out_name + '_final.tsv'
+    hdfs_cmd = 'hdfs dfs -put {} {}'.format(tsv_out, out_path)
+    hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
+    print hdfs_proc.communicate()[0]
 
 ####################################
 ## Create table to store results  ##
 ####################################
 # drop the table if it already exists
-conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
-cur = conn.cursor()
 drop_coding = "drop table if exists p7_product.coding_consequences"
 cur.execute(drop_coding)
-cur.close()
+
 
 # create empty table to store results
-conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
-cur = conn.cursor()
 create_coding= '''
 create table p7_product.coding_consequences
      (chrom string,
@@ -157,14 +160,11 @@ create table p7_product.coding_consequences
       hgvs_p string)
 '''
 cur.execute(create_coding)
-cur.close()
 
 ##############################
 # Insert results into table ##
 ##############################
 # load hdfs files into table
-conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
-cur = conn.cursor()
 load_query = '''
 load data inpath '{}' into table p7_product.coding_consequences
 '''.format(out_path)

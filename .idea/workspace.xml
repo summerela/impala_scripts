@@ -46,10 +46,10 @@
       <file leaf-file-name="testing.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/testing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="1.292">
-              <caret line="38" column="0" selection-start-line="38" selection-start-column="0" selection-end-line="38" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.558">
+              <caret line="167" column="0" selection-start-line="167" selection-start-column="0" selection-end-line="167" selection-end-column="0" />
               <folding>
-                <element signature="e#1096#1115#0" expanded="true" />
+                <element signature="e#1089#1108#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -438,12 +438,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00032" summary="updating logic for nbs genes">
-      <created>1442558207774</created>
-      <option name="number" value="00032" />
-      <option name="project" value="LOCAL" />
-      <updated>1442558207774</updated>
-    </task>
     <task id="LOCAL-00033" summary="finished nbs genes and acmg genes, need to autmoate acmg">
       <created>1442883043540</created>
       <option name="number" value="00033" />
@@ -732,7 +726,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449291503229</updated>
     </task>
-    <option name="localTasksCounter" value="81" />
+    <task id="LOCAL-00081" summary="testing">
+      <created>1449291857830</created>
+      <option name="number" value="00081" />
+      <option name="project" value="LOCAL" />
+      <updated>1449291857830</updated>
+    </task>
+    <option name="localTasksCounter" value="82" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -807,7 +807,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="Switched to UCSC, add dbnfsp when available" />
     <MESSAGE value="Adding clarity data, add logic for multiple children" />
     <MESSAGE value="Updating clarity logic for non-trios" />
     <MESSAGE value="updating logic for nbs genes" />
@@ -832,7 +831,8 @@
     <MESSAGE value="fixing hdfs to impala table" />
     <MESSAGE value="don't mind me.. testing..." />
     <MESSAGE value="switching output from csv to tsv" />
-    <option name="LAST_COMMIT_MESSAGE" value="switching output from csv to tsv" />
+    <MESSAGE value="testing" />
+    <option name="LAST_COMMIT_MESSAGE" value="testing" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -846,7 +846,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="16" column="13" selection-start-line="16" selection-start-column="13" selection-end-line="16" selection-end-column="13" />
           <folding>
-            <element signature="e#1096#1115#0" expanded="true" />
+            <element signature="e#1089#1108#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -866,7 +866,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="59" column="51" selection-start-line="59" selection-start-column="51" selection-end-line="59" selection-end-column="51" />
           <folding>
-            <element signature="e#1096#1115#0" expanded="true" />
+            <element signature="e#1089#1108#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -886,7 +886,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="85" column="0" selection-start-line="85" selection-start-column="0" selection-end-line="85" selection-end-column="0" />
           <folding>
-            <element signature="e#1096#1115#0" expanded="true" />
+            <element signature="e#1089#1108#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1053,10 +1053,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="1.292">
-          <caret line="38" column="0" selection-start-line="38" selection-start-column="0" selection-end-line="38" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.558">
+          <caret line="167" column="0" selection-start-line="167" selection-start-column="0" selection-end-line="167" selection-end-column="0" />
           <folding>
-            <element signature="e#1096#1115#0" expanded="true" />
+            <element signature="e#1089#1108#0" expanded="true" />
           </folding>
         </state>
       </provider>
