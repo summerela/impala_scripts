@@ -193,7 +193,7 @@ cur.close()
 ##############################
 # load hdfs files into table
 conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
-cur = conn.cursor())
+cur = conn.cursor()
 load_query = '''
 load data inpath '{}' into table p7_product.coding_consequences
 '''.format(out_path)

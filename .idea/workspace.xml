@@ -46,8 +46,8 @@
       <file leaf-file-name="testing.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/testing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.544">
-              <caret line="193" column="28" selection-start-line="193" selection-start-column="28" selection-end-line="193" selection-end-column="28" />
+            <state vertical-scroll-proportion="0.612">
+              <caret line="195" column="19" selection-start-line="195" selection-start-column="19" selection-end-line="195" selection-end-column="19" />
               <folding>
                 <element signature="e#1163#1174#0" expanded="true" />
               </folding>
@@ -438,12 +438,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00026" summary="finish fixing logic to search for rare OR pathogenic. add results back to impala and put more workload on impala.?">
-      <created>1440461189480</created>
-      <option name="number" value="00026" />
-      <option name="project" value="LOCAL" />
-      <updated>1440461189480</updated>
-    </task>
     <task id="LOCAL-00027" summary="added ETL for ucsc_knowngene, need to save comma-separated strings to csv">
       <created>1440634477482</created>
       <option name="number" value="00027" />
@@ -732,7 +726,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449289796099</updated>
     </task>
-    <option name="localTasksCounter" value="75" />
+    <task id="LOCAL-00075" summary="fixing hdfs to impala table">
+      <created>1449289992473</created>
+      <option name="number" value="00075" />
+      <option name="project" value="LOCAL" />
+      <updated>1449289992473</updated>
+    </task>
+    <option name="localTasksCounter" value="76" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -1053,8 +1053,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.544">
-          <caret line="193" column="28" selection-start-line="193" selection-start-column="28" selection-end-line="193" selection-end-column="28" />
+        <state vertical-scroll-proportion="0.612">
+          <caret line="195" column="19" selection-start-line="195" selection-start-column="19" selection-end-line="195" selection-end-column="19" />
           <folding>
             <element signature="e#1163#1174#0" expanded="true" />
           </folding>
