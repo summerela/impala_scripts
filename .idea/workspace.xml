@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/annotation/testing.py" afterPath="$PROJECT_DIR$/annotation/testing.py" />
     </list>
     <ignored path="impala_scripts.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -45,8 +46,8 @@
       <file leaf-file-name="testing.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/testing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.456">
-              <caret line="121" column="49" selection-start-line="121" selection-start-column="49" selection-end-line="121" selection-end-column="49" />
+            <state vertical-scroll-proportion="0.49">
+              <caret line="119" column="20" selection-start-line="119" selection-start-column="20" selection-end-line="119" selection-end-column="20" />
               <folding>
                 <element signature="e#1096#1107#0" expanded="true" />
               </folding>
@@ -437,12 +438,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00030" summary="Adding clarity data, add logic for multiple children">
-      <created>1441928625693</created>
-      <option name="number" value="00030" />
-      <option name="project" value="LOCAL" />
-      <updated>1441928625693</updated>
-    </task>
     <task id="LOCAL-00031" summary="Updating clarity logic for non-trios">
       <created>1442013845811</created>
       <option name="number" value="00031" />
@@ -731,7 +726,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449290770772</updated>
     </task>
-    <option name="localTasksCounter" value="79" />
+    <task id="LOCAL-00079" summary="switching output from csv to tsv">
+      <created>1449291467612</created>
+      <option name="number" value="00079" />
+      <option name="project" value="LOCAL" />
+      <updated>1449291467613</updated>
+    </task>
+    <option name="localTasksCounter" value="80" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -806,7 +807,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="Finished ETL for ucsc_known gene, switch Ben's pipeline to ucsc genes" />
     <MESSAGE value="Switched to UCSC, add dbnfsp when available" />
     <MESSAGE value="Adding clarity data, add logic for multiple children" />
     <MESSAGE value="Updating clarity logic for non-trios" />
@@ -831,7 +831,8 @@
     <MESSAGE value="fiexed hdfs put command, testing hdfs to impala" />
     <MESSAGE value="fixing hdfs to impala table" />
     <MESSAGE value="don't mind me.. testing..." />
-    <option name="LAST_COMMIT_MESSAGE" value="don't mind me.. testing..." />
+    <MESSAGE value="switching output from csv to tsv" />
+    <option name="LAST_COMMIT_MESSAGE" value="switching output from csv to tsv" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1052,8 +1053,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.456">
-          <caret line="121" column="49" selection-start-line="121" selection-start-column="49" selection-end-line="121" selection-end-column="49" />
+        <state vertical-scroll-proportion="0.49">
+          <caret line="119" column="20" selection-start-line="119" selection-start-column="20" selection-end-line="119" selection-end-column="20" />
           <folding>
             <element signature="e#1096#1107#0" expanded="true" />
           </folding>
