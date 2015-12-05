@@ -46,8 +46,8 @@
       <file leaf-file-name="testing.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/testing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.6294821">
-              <caret line="96" column="22" selection-start-line="96" selection-start-column="22" selection-end-line="96" selection-end-column="22" />
+            <state vertical-scroll-proportion="0.49402392">
+              <caret line="113" column="8" selection-start-line="113" selection-start-column="8" selection-end-line="113" selection-end-column="8" />
               <folding>
                 <element signature="e#1622#1633#0" expanded="true" />
               </folding>
@@ -134,8 +134,8 @@
     <detection-done>true</detection-done>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="369" />
-    <option name="y" value="29" />
+    <option name="x" value="402" />
+    <option name="y" value="19" />
     <option name="width" value="1511" />
     <option name="height" value="978" />
   </component>
@@ -438,12 +438,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00006" summary="updated clinvar args">
-      <created>1434752193249</created>
-      <option name="number" value="00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1434752193249</updated>
-    </task>
     <task id="LOCAL-00007" summary="added  clinvar ipython notebook script">
       <created>1435101362158</created>
       <option name="number" value="00007" />
@@ -732,7 +726,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449282337888</updated>
     </task>
-    <option name="localTasksCounter" value="55" />
+    <task id="LOCAL-00055" summary="re-writing file handler in iterator">
+      <created>1449282542050</created>
+      <option name="number" value="00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1449282542050</updated>
+    </task>
+    <option name="localTasksCounter" value="56" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -745,7 +745,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="369" y="29" width="1511" height="978" extended-state="0" />
+    <frame x="402" y="19" width="1511" height="978" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20361687" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -1053,8 +1053,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6294821">
-          <caret line="96" column="22" selection-start-line="96" selection-start-column="22" selection-end-line="96" selection-end-column="22" />
+        <state vertical-scroll-proportion="0.49402392">
+          <caret line="113" column="8" selection-start-line="113" selection-start-column="8" selection-end-line="113" selection-end-column="8" />
           <folding>
             <element signature="e#1622#1633#0" expanded="true" />
           </folding>
