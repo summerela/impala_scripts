@@ -46,8 +46,8 @@
       <file leaf-file-name="testing.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/testing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-1.904">
-              <caret line="105" column="24" selection-start-line="105" selection-start-column="24" selection-end-line="105" selection-end-column="24" />
+            <state vertical-scroll-proportion="0.17">
+              <caret line="175" column="52" selection-start-line="175" selection-start-column="52" selection-end-line="175" selection-end-column="52" />
               <folding>
                 <element signature="e#1622#1633#0" expanded="true" />
               </folding>
@@ -438,12 +438,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00015" summary="Creating module for querying impala&#10;Added ensembl annotaiton to nbs_genes, next annotate with nbs gene list">
-      <created>1438215120661</created>
-      <option name="number" value="00015" />
-      <option name="project" value="LOCAL" />
-      <updated>1438215120661</updated>
-    </task>
     <task id="LOCAL-00016" summary="Fine-tuning functions">
       <created>1438217263860</created>
       <option name="number" value="00016" />
@@ -732,7 +726,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449288271503</updated>
     </task>
-    <option name="localTasksCounter" value="64" />
+    <task id="LOCAL-00064" summary="fiexed hdfs put command, testing hdfs to impala">
+      <created>1449288380964</created>
+      <option name="number" value="00064" />
+      <option name="project" value="LOCAL" />
+      <updated>1449288380964</updated>
+    </task>
+    <option name="localTasksCounter" value="65" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -807,7 +807,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="added features to accept user input&#10;To do: once database name and location are synced between ITMI and ISB, remove extra user args&#10;move procedural code to background&#10;turn into module" />
     <MESSAGE value="finish fixing logic to search for rare OR pathogenic. add results back to impala and put more workload on impala.?" />
     <MESSAGE value="added ETL for ucsc_knowngene, need to save comma-separated strings to csv" />
     <MESSAGE value="Finished ETL for ucsc_known gene, switch Ben's pipeline to ucsc genes" />
@@ -832,7 +831,8 @@
     <MESSAGE value="updating hdfs dfs put command" />
     <MESSAGE value="modifying read/write permissions on newly created hdfs directory" />
     <MESSAGE value="fixing hdfs put command" />
-    <option name="LAST_COMMIT_MESSAGE" value="fixing hdfs put command" />
+    <MESSAGE value="fiexed hdfs put command, testing hdfs to impala" />
+    <option name="LAST_COMMIT_MESSAGE" value="fiexed hdfs put command, testing hdfs to impala" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1053,8 +1053,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-1.904">
-          <caret line="105" column="24" selection-start-line="105" selection-start-column="24" selection-end-line="105" selection-end-column="24" />
+        <state vertical-scroll-proportion="0.17">
+          <caret line="175" column="52" selection-start-line="175" selection-start-column="52" selection-end-line="175" selection-end-column="52" />
           <folding>
             <element signature="e#1622#1633#0" expanded="true" />
           </folding>
