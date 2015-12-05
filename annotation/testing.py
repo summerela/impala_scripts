@@ -120,9 +120,9 @@ for chrom in chroms:
 ####################
 for chrom in chroms:
     print "Removing header for chromosome {} upload to impala... \n".format(chrom)
-    tsv_in = 'chr' + chrom + '_' + out_name + '.tsv'
+    sv_in = 'chr' + chrom + '_' + out_name + '.tsv'
     tsv_out = 'chr' + chrom + '_' + out_name + '_final.tsv'
-    tsv_cmd = "sed '1d' {} | tr '/\t' ',' > {}".format(tsv_in,tsv_out)
+    tsv_cmd = "sed '1d' {} > {}".format(tsv_in,tsv_out)
     csv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     csv_proc.communicate()[0]
 
