@@ -46,8 +46,8 @@
       <file leaf-file-name="testing.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/testing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.17">
-              <caret line="175" column="52" selection-start-line="175" selection-start-column="52" selection-end-line="175" selection-end-column="52" />
+            <state vertical-scroll-proportion="0.408">
+              <caret line="185" column="21" selection-start-line="185" selection-start-column="21" selection-end-line="185" selection-end-column="21" />
               <folding>
                 <element signature="e#1622#1633#0" expanded="true" />
               </folding>
@@ -438,12 +438,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00016" summary="Fine-tuning functions">
-      <created>1438217263860</created>
-      <option name="number" value="00016" />
-      <option name="project" value="LOCAL" />
-      <updated>1438217263860</updated>
-    </task>
     <task id="LOCAL-00017" summary="Fine-tuning functions">
       <created>1438717822938</created>
       <option name="number" value="00017" />
@@ -732,7 +726,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449288380964</updated>
     </task>
-    <option name="localTasksCounter" value="65" />
+    <task id="LOCAL-00065" summary="fiexed hdfs put command, testing hdfs to impala">
+      <created>1449288507422</created>
+      <option name="number" value="00065" />
+      <option name="project" value="LOCAL" />
+      <updated>1449288507422</updated>
+    </task>
+    <option name="localTasksCounter" value="66" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -1053,8 +1053,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.17">
-          <caret line="175" column="52" selection-start-line="175" selection-start-column="52" selection-end-line="175" selection-end-column="52" />
+        <state vertical-scroll-proportion="0.408">
+          <caret line="185" column="21" selection-start-line="185" selection-start-column="21" selection-end-line="185" selection-end-column="21" />
           <folding>
             <element signature="e#1622#1633#0" expanded="true" />
           </folding>

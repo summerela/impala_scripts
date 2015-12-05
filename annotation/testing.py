@@ -172,8 +172,11 @@ for chrom in chroms:
 ####################################
 ## Create table to store results  ##
 ####################################
+# drop the table if it already exists
+drop_coding = "drop table if exists p7_product.coding_consequences"
+cur.execute(drop_coding)
+
 create_coding= '''
-drop table if exists  p7_product.coding_consequences;
 create table p7_product.coding_consequences
      (chrom string,
       pos int,
