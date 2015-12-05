@@ -26,20 +26,9 @@ snpeff_oneperline_perl = '/users/selasady/my_titan_itmi/tools/snpEff/scripts/vcf
 snpsift_jar = '/users/selasady/my_titan_itmi/tools/snpEff//SnpSift.jar'
 chrom_splitter = '/users/selasady/my_titan_itmi/tools/snpEff/scripts/splitChr.pl'
 
-# home pc
-# java_path = 'java'
-# gatk_jar =  'D:/Documents/tools/GenomeAnalysisTK.jar'
-# ref_fasta = 'D:/Documents/tools/human_g1k_v37.fasta'
-# snpeff_jar = 'D:/Documents/tools/snpEff/snpEff.jar'
-# snpeff_oneperline_perl = 'D;/Documents/tools/snpEff/scripts/vcfEffOnePerLine.pl'
-# snpsift_jar = 'D:/Documents/tools/snpEff//SnpSift.jar'
-# chrom_splitter = 'D:/Documents/tools/snpEff/scripts/splitChr.pl'
-
 #################################
-## create connection to impala ##
+## import modules ##
 #################################
-print "Creating a connection to impala.. \n"
-
 import ibis
 import os
 import pandas as pd
@@ -47,7 +36,6 @@ from impala.dbapi import connect
 import time
 import csv
 import subprocess
-
 
 # disable extraneous pandas warning
 pd.options.mode.chained_assignment = None
@@ -171,14 +159,13 @@ out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 ## Create table to store results  ##
 ####################################
 # drop the table if it already exists
-# connect to impala with impyla
 conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
 cur = conn.cursor()
 drop_coding = "drop table if exists p7_product.coding_consequences"
 cur.execute(drop_coding)
 cur.close()
 
-# connect to impala with impyla
+# create empty table to store results
 conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
 cur = conn.cursor()
 create_coding= '''
@@ -204,8 +191,9 @@ cur.close()
 ##############################
 # Insert results into table ##
 ##############################
-conn=connect(host=impala_host, port=impala_host, timeout=10000)
-cur = conn.cursor()
+# load hdfs files into table
+conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
+cur = conn.cursor())
 load_query = '''
 load data inpath '{}' into table p7_product.coding_consequences
 '''.format(out_path)

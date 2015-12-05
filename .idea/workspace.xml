@@ -46,10 +46,10 @@
       <file leaf-file-name="testing.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/testing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.592">
-              <caret line="93" column="0" selection-start-line="93" selection-start-column="0" selection-end-line="93" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.544">
+              <caret line="193" column="28" selection-start-line="193" selection-start-column="28" selection-end-line="193" selection-end-column="28" />
               <folding>
-                <element signature="e#1626#1637#0" expanded="true" />
+                <element signature="e#1163#1174#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -438,12 +438,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00025" summary="added features to accept user input&#10;To do: once database name and location are synced between ITMI and ISB, remove extra user args&#10;move procedural code to background&#10;turn into module">
-      <created>1440031747727</created>
-      <option name="number" value="00025" />
-      <option name="project" value="LOCAL" />
-      <updated>1440031747727</updated>
-    </task>
     <task id="LOCAL-00026" summary="finish fixing logic to search for rare OR pathogenic. add results back to impala and put more workload on impala.?">
       <created>1440461189480</created>
       <option name="number" value="00026" />
@@ -732,7 +726,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449289738654</updated>
     </task>
-    <option name="localTasksCounter" value="74" />
+    <task id="LOCAL-00074" summary="fixing hdfs to impala table">
+      <created>1449289796099</created>
+      <option name="number" value="00074" />
+      <option name="project" value="LOCAL" />
+      <updated>1449289796099</updated>
+    </task>
+    <option name="localTasksCounter" value="75" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -846,7 +846,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="16" column="13" selection-start-line="16" selection-start-column="13" selection-end-line="16" selection-end-column="13" />
           <folding>
-            <element signature="e#1626#1637#0" expanded="true" />
+            <element signature="e#1163#1174#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -866,7 +866,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="59" column="51" selection-start-line="59" selection-start-column="51" selection-end-line="59" selection-end-column="51" />
           <folding>
-            <element signature="e#1626#1637#0" expanded="true" />
+            <element signature="e#1163#1174#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -886,7 +886,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="85" column="0" selection-start-line="85" selection-start-column="0" selection-end-line="85" selection-end-column="0" />
           <folding>
-            <element signature="e#1626#1637#0" expanded="true" />
+            <element signature="e#1163#1174#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1053,10 +1053,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.592">
-          <caret line="93" column="0" selection-start-line="93" selection-start-column="0" selection-end-line="93" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.544">
+          <caret line="193" column="28" selection-start-line="193" selection-start-column="28" selection-end-line="193" selection-end-column="28" />
           <folding>
-            <element signature="e#1626#1637#0" expanded="true" />
+            <element signature="e#1163#1174#0" expanded="true" />
           </folding>
         </state>
       </provider>
