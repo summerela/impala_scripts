@@ -3,7 +3,7 @@
 ##############################################################
 # setup impala and hdfs connections
 impala_host = 'glados18'
-impala_port_number = 21050
+impala_port_number = '21050'
 # hdfs_host = 'glados20'
 # hdfs_port_number = '50070'
 
@@ -52,10 +52,6 @@ import subprocess
 # disable extraneous pandas warning
 pd.options.mode.chained_assignment = None
 
-# connect to impala with impyla
-conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
-cur = conn.cursor()
-
 # connect to impala with ibis
 # hdfs_port = os.environ.get(hdfs_host, hdfs_port_number)
 # hdfs = ibis.hdfs_connect(host=hdfs_host, port=hdfs_port, user='hdfs')
@@ -82,6 +78,9 @@ def create_header(outfile_name):
 
 ### download variants by row and chromosome
 def create_vcf(db_name, table_name, chrom_name):
+    # connect to impala with impyla
+    conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
+    cur = conn.cursor()
      vcf_out = 'chr' + chrom_name + '_' + out_name + '.vcf'
      create_header(vcf_out)
      # connect to vars_to_snpeff table
@@ -173,13 +172,15 @@ out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 ## Create table to store results  ##
 ####################################
 # drop the table if it already exists
-conn=connect(host=impala_host, port=impala_host, timeout=10000)
+# connect to impala with impyla
+conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
 cur = conn.cursor()
 drop_coding = "drop table if exists p7_product.coding_consequences"
 cur.execute(drop_coding)
 cur.close()
 
-conn=connect(host=impala_host, port=impala_host, timeout=10000)
+# connect to impala with impyla
+conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
 cur = conn.cursor()
 create_coding= '''
 create table p7_product.coding_consequences
