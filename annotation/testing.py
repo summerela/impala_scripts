@@ -53,7 +53,7 @@ import subprocess
 pd.options.mode.chained_assignment = None
 
 # connect to impala with impyla
-conn=connect(host='glados19', port=21050, timeout=10000)
+conn=connect(host='glados18', port=21050, timeout=10000)
 cur = conn.cursor()
 
 # connect to impala with ibis
@@ -150,24 +150,24 @@ now = datetime.datetime.now()
 # # define output path on hdfs
 out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 
-# make directory to store output
-print "Creating HDFS directory to store output... \n"
-mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
-mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
-print mkdir_proc.communicate()[0]
-
-# give directory read/write permission
-mod_cmd = "hdfs dfs -chmod 777 {}".format(out_path)
-mod_proc = subprocess.Popen(mod_cmd, shell=True, stderr=subprocess.STDOUT)
-print mod_proc.communicate()[0]
-
-# put each file in the snpeff directory
-for chrom in chroms:
-    print "Uploading chromosome {} to HDFS... \n".format(chrom)
-    tsv_out = './chr' + chrom + '_' + out_name + '_final.tsv'
-    hdfs_cmd = 'hdfs dfs -put {} {}'.format(tsv_out, out_path)
-    hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
-    print hdfs_proc.communicate()[0]
+# # make directory to store output
+# print "Creating HDFS directory to store output... \n"
+# mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
+# mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
+# print mkdir_proc.communicate()[0]
+#
+# # give directory read/write permission
+# mod_cmd = "hdfs dfs -chmod 777 {}".format(out_path)
+# mod_proc = subprocess.Popen(mod_cmd, shell=True, stderr=subprocess.STDOUT)
+# print mod_proc.communicate()[0]
+#
+# # put each file in the snpeff directory
+# for chrom in chroms:
+#     print "Uploading chromosome {} to HDFS... \n".format(chrom)
+#     tsv_out = './chr' + chrom + '_' + out_name + '_final.tsv'
+#     hdfs_cmd = 'hdfs dfs -put {} {}'.format(tsv_out, out_path)
+#     hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
+#     print hdfs_proc.communicate()[0]
 
 ####################################
 ## Create table to store results  ##

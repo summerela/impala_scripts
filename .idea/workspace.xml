@@ -46,8 +46,8 @@
       <file leaf-file-name="testing.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/testing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.68">
-              <caret line="199" column="10" selection-start-line="199" selection-start-column="10" selection-end-line="199" selection-end-column="10" />
+            <state vertical-scroll-proportion="0.34">
+              <caret line="55" column="27" selection-start-line="55" selection-start-column="27" selection-end-line="55" selection-end-column="27" />
               <folding>
                 <element signature="e#1622#1633#0" expanded="true" />
               </folding>
@@ -438,12 +438,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00018" summary="Fine-tuning functions">
-      <created>1438753823918</created>
-      <option name="number" value="00018" />
-      <option name="project" value="LOCAL" />
-      <updated>1438753823918</updated>
-    </task>
     <task id="LOCAL-00019" summary="finalized comp-het function, verified logic&#10;need to finish VEP and save to file">
       <created>1438808178595</created>
       <option name="number" value="00019" />
@@ -732,7 +726,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449288672813</updated>
     </task>
-    <option name="localTasksCounter" value="67" />
+    <task id="LOCAL-00067" summary="fixing hdfs to impala table">
+      <created>1449288785488</created>
+      <option name="number" value="00067" />
+      <option name="project" value="LOCAL" />
+      <updated>1449288785488</updated>
+    </task>
+    <option name="localTasksCounter" value="68" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -807,7 +807,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="finish fixing logic to search for rare OR pathogenic. add results back to impala and put more workload on impala.?" />
     <MESSAGE value="added ETL for ucsc_knowngene, need to save comma-separated strings to csv" />
     <MESSAGE value="Finished ETL for ucsc_known gene, switch Ben's pipeline to ucsc genes" />
     <MESSAGE value="Switched to UCSC, add dbnfsp when available" />
@@ -832,7 +831,8 @@
     <MESSAGE value="modifying read/write permissions on newly created hdfs directory" />
     <MESSAGE value="fixing hdfs put command" />
     <MESSAGE value="fiexed hdfs put command, testing hdfs to impala" />
-    <option name="LAST_COMMIT_MESSAGE" value="fiexed hdfs put command, testing hdfs to impala" />
+    <MESSAGE value="fixing hdfs to impala table" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixing hdfs to impala table" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1053,8 +1053,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.68">
-          <caret line="199" column="10" selection-start-line="199" selection-start-column="10" selection-end-line="199" selection-end-column="10" />
+        <state vertical-scroll-proportion="0.34">
+          <caret line="55" column="27" selection-start-line="55" selection-start-column="27" selection-end-line="55" selection-end-column="27" />
           <folding>
             <element signature="e#1622#1633#0" expanded="true" />
           </folding>
