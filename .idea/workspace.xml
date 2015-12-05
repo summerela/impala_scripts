@@ -46,10 +46,10 @@
       <file leaf-file-name="testing.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/testing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.558">
-              <caret line="167" column="0" selection-start-line="167" selection-start-column="0" selection-end-line="167" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.272">
+              <caret line="116" column="33" selection-start-line="116" selection-start-column="33" selection-end-line="116" selection-end-column="33" />
               <folding>
-                <element signature="e#1089#1108#0" expanded="true" />
+                <element signature="e#1063#1082#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -134,8 +134,7 @@
     <detection-done>true</detection-done>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="479" />
-    <option name="y" value="2" />
+    <option name="x" value="409" />
     <option name="width" value="1430" />
     <option name="height" value="976" />
   </component>
@@ -438,12 +437,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00033" summary="finished nbs genes and acmg genes, need to autmoate acmg">
-      <created>1442883043540</created>
-      <option name="number" value="00033" />
-      <option name="project" value="LOCAL" />
-      <updated>1442883043540</updated>
-    </task>
     <task id="LOCAL-00034" summary="fixed issue with comp_het and added error checking, need to turn into package">
       <created>1442967154887</created>
       <option name="number" value="00034" />
@@ -732,7 +725,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449291857830</updated>
     </task>
-    <option name="localTasksCounter" value="82" />
+    <task id="LOCAL-00082" summary="testing">
+      <created>1449292760691</created>
+      <option name="number" value="00082" />
+      <option name="project" value="LOCAL" />
+      <updated>1449292760691</updated>
+    </task>
+    <option name="localTasksCounter" value="83" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -745,7 +744,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="479" y="2" width="1430" height="976" extended-state="0" />
+    <frame x="409" y="0" width="1430" height="976" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21529745" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -846,7 +845,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="16" column="13" selection-start-line="16" selection-start-column="13" selection-end-line="16" selection-end-column="13" />
           <folding>
-            <element signature="e#1089#1108#0" expanded="true" />
+            <element signature="e#1063#1082#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -866,7 +865,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="59" column="51" selection-start-line="59" selection-start-column="51" selection-end-line="59" selection-end-column="51" />
           <folding>
-            <element signature="e#1089#1108#0" expanded="true" />
+            <element signature="e#1063#1082#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -886,7 +885,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="85" column="0" selection-start-line="85" selection-start-column="0" selection-end-line="85" selection-end-column="0" />
           <folding>
-            <element signature="e#1089#1108#0" expanded="true" />
+            <element signature="e#1063#1082#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1053,10 +1052,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.558">
-          <caret line="167" column="0" selection-start-line="167" selection-start-column="0" selection-end-line="167" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.272">
+          <caret line="116" column="33" selection-start-line="116" selection-start-column="33" selection-end-line="116" selection-end-column="33" />
           <folding>
-            <element signature="e#1089#1108#0" expanded="true" />
+            <element signature="e#1063#1082#0" expanded="true" />
           </folding>
         </state>
       </provider>
