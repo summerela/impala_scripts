@@ -1,23 +1,21 @@
 ##############################################################
 ## update the following variables before running the script ##
 ##############################################################
-# setup impala and hdfs connections
+# impala connection strings
 impala_host = 'glados18'
 impala_port_number = '21050'
-# hdfs_host = 'glados20'
-# hdfs_port_number = '50070'
 
-# specify input variants db and table to annotate with snpeff
+# specify input variants db and table
 input_db = 'p7_product'
 input_table = 'vars_to_snpeff'
 
 # prefix for output files
 out_name = 'test_vars'
 
-# path to place file on hdfs
+# home path to user's hdfs directory
 hdfs_path = '/user/selasady/'
 
-# unix
+# unix file paths
 java_path = '/tools/java/jdk1.7/bin/java'
 gatk_jar =  '/users/selasady/my_titan_itmi/tools/GenomeAnalysisTK.jar'
 ref_fasta = '/users/selasady/my_titan_itmi/tools/human_g1k_v37.fasta'
@@ -82,14 +80,15 @@ def create_vcf(db_name, table_name, chrom_name):
 
 # # #chroms = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'M', 'MT']
 chroms = ['1','2','3']
-#
+
+# download each chromosome in input_table and turn into vcf file
 # for chrom in chroms:
 #     print "Creating VCF files for chromosome {}... \n".format(chrom)
 #     create_vcf(input_db, input_table, chrom)
-#
-# ############################################################
-# # annotate variants with coding consequences using snpeff ##
-# ############################################################
+
+############################################################
+# annotate variants with coding consequences using snpeff ##
+############################################################
 # for chrom in chroms:
 #     print "Annotating coding consequences for chromosome {} with snpeff... \n".format(chrom)
 #     vcf_in = 'chr' + chrom + '_' + out_name + '.vcf'
@@ -99,106 +98,88 @@ chroms = ['1','2','3']
 #             subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.74", vcf_in], stdout=f)
 #         except subprocess.CalledProcessError as e:
 #              print e.output
-#
-# ##########################################################
-# ## Output SnpEff effects as tsv file, one effect per line ##
-# ############################################################
-# for chrom in chroms:
-#     print "Parsing snpeff output for chromosome {}... \n".format(chrom)
-#     vcf_in = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
-#     tsv_out = 'chr' + chrom + '_' + out_name + '.tsv'
-#     # call processes and pipe
-#     snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
-#     - CHROM POS REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
-#     "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" \
-#     "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(vcf_in, snpeff_oneperline_perl, \
-#     java_path, snpsift_jar,tsv_out)
-#     ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-#     ps.communicate()[0]
-#
-# ####################
-# ## Remove Header  ##
-# ####################
-# for chrom in chroms:
-#     print "Removing header for chromosome {} upload to impala... \n".format(chrom)
-#     tsv_in = 'chr' + chrom + '_' + out_name + '.tsv'
-#     tsv_out = 'chr' + chrom + '_' + out_name + '_final.tsv'
-#     tsv_cmd = "sed '1d' {} | tr '/\t' ',' > {}".format(tsv_in,tsv_out)
-#     csv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-#     csv_proc.communicate()[0]
-#
+
+##########################################################
+## Output SnpEff effects as tsv file, one effect per line ##
+############################################################
+for chrom in chroms:
+    print "Parsing snpeff output for chromosome {}... \n".format(chrom)
+    vcf_in = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
+    tsv_out = 'chr' + chrom + '_' + out_name + '.tsv'
+    # call processes and pipe
+    snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
+    - CHROM POS REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
+    "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" \
+    "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(vcf_in, snpeff_oneperline_perl, \
+    java_path, snpsift_jar,tsv_out)
+    ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    ps.communicate()[0]
+
+####################
+## Remove Header  ##
+####################
+for chrom in chroms:
+    print "Removing header for chromosome {} upload to impala... \n".format(chrom)
+    tsv_in = 'chr' + chrom + '_' + out_name + '.tsv'
+    tsv_out = 'chr' + chrom + '_' + out_name + '_final.tsv'
+    tsv_cmd = "sed '1d' {} | tr '/\t' ',' > {}".format(tsv_in,tsv_out)
+    csv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    csv_proc.communicate()[0]
+
+###############################
+# ## Upload results to impala ##
 # ###############################
-# # ## Upload results to impala ##
-# # ###############################
-import datetime
-now = datetime.datetime.now()
+# import datetime
+# now = datetime.datetime.now()
 #
 # # define output path on hdfs
-out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
-
-# # make directory to store output
-# print "Creating HDFS directory to store output... \n"
-# mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
-# mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
-# print mkdir_proc.communicate()[0]
+# out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 #
-# # give directory read/write permission
-# mod_cmd = "hdfs dfs -chmod 777 {}".format(out_path)
-# mod_proc = subprocess.Popen(mod_cmd, shell=True, stderr=subprocess.STDOUT)
-# print mod_proc.communicate()[0]
 #
-# # put each file in the snpeff directory
-# for chrom in chroms:
-#     print "Uploading chromosome {} to HDFS... \n".format(chrom)
-#     tsv_out = './chr' + chrom + '_' + out_name + '_final.tsv'
-#     hdfs_cmd = 'hdfs dfs -put {} {}'.format(tsv_out, out_path)
-#     hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
-#     print hdfs_proc.communicate()[0]
-
-####################################
-## Create table to store results  ##
-####################################
-# drop the table if it already exists
-conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
-cur = conn.cursor()
-drop_coding = "drop table if exists p7_product.coding_consequences"
-cur.execute(drop_coding)
-cur.close()
-
-# create empty table to store results
-conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
-cur = conn.cursor()
-create_coding= '''
-create table p7_product.coding_consequences
-     (chrom string,
-      pos int,
-      ref string,
-      alt string,
-      gene string,
-      gene_id string,
-      effect string,
-      impact string,
-      feature string,
-      feature_id string,
-      biotype string,
-      rank int,
-      hgvs_c string,
-      hgvs_p string)
-'''
-cur.execute(create_coding)
-cur.close()
-
-##############################
-# Insert results into table ##
-##############################
-# load hdfs files into table
-conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
-cur = conn.cursor()
-load_query = '''
-load data inpath '{}' into table p7_product.coding_consequences
-'''.format(out_path)
-cur.execute(load_query)
-cur.close()
-
-
+# ####################################
+# ## Create table to store results  ##
+# ####################################
+# # drop the table if it already exists
+# conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
+# cur = conn.cursor()
+# drop_coding = "drop table if exists p7_product.coding_consequences"
+# cur.execute(drop_coding)
+# cur.close()
+#
+# # create empty table to store results
+# conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
+# cur = conn.cursor()
+# create_coding= '''
+# create table p7_product.coding_consequences
+#      (chrom string,
+#       pos int,
+#       ref string,
+#       alt string,
+#       gene string,
+#       gene_id string,
+#       effect string,
+#       impact string,
+#       feature string,
+#       feature_id string,
+#       biotype string,
+#       rank int,
+#       hgvs_c string,
+#       hgvs_p string)
+# '''
+# cur.execute(create_coding)
+# cur.close()
+#
+# ##############################
+# # Insert results into table ##
+# ##############################
+# # load hdfs files into table
+# conn=connect(host=impala_host, port=impala_port_number, timeout=10000)
+# cur = conn.cursor()
+# load_query = '''
+# load data inpath '{}' into table p7_product.coding_consequences
+# '''.format(out_path)
+# cur.execute(load_query)
+# cur.close()
+#
+#
 
