@@ -88,7 +88,7 @@ for chrom in chroms:
 for chrom in chroms:
     print "Verifying VCF format for chromosome {}... \n".format(chrom)
     vcf_checked_in =  'chr' + chrom_name + '_' + out_name + '.vcf'
-     vcf_checked_out = 'chr' + chrom_name + '_verified.vcf'
+    vcf_checked_out = 'chr' + chrom_name + '_verified.vcf'
     # create the file and run snpeff
     with open(vcf_checked_out, "w") as out_file:
         try:
