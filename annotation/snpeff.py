@@ -23,6 +23,7 @@ snpeff_jar = '/users/selasady/my_titan_itmi/tools/snpEff/snpEff.jar'
 snpeff_oneperline_perl = '/users/selasady/my_titan_itmi/tools/snpEff/scripts/vcfEffOnePerLine.pl'
 snpsift_jar = '/users/selasady/my_titan_itmi/tools/snpEff//SnpSift.jar'
 chrom_splitter = '/users/selasady/my_titan_itmi/tools/snpEff/scripts/splitChr.pl'
+vcf_basic = '/users/selasady/my_titan_itmi/impala_scripts/annotation/parse_vcf.pl'
 
 ####################
 ## import modules ##
@@ -81,13 +82,27 @@ for chrom in chroms:
     print "Creating VCF files for chromosome {}... \n".format(chrom)
     create_vcf(input_db, input_table, chrom)
 
+##################################################################
+# check vcf formatting with vcfBareBones.pl from snpeff scripts ##
+##################################################################
+for chrom in chroms:
+    print "Verifying VCF format for chromosome {}... \n".format(chrom)
+    vcf_checked_in =  'chr' + chrom_name + '_' + out_name + '.vcf'
+     vcf_checked_out = 'chr' + chrom_name + '_verified.vcf'
+    # create the file and run snpeff
+    with open(vcf_checked_out, "w") as out_file:
+        try:
+            subprocess.call(['perl', vcf_basic, vcf_checked_in], stdout=out_file)
+        except subprocess.CalledProcessError as e:
+             print e.output
+
 # ############################################################
 # # annotate variants with coding consequences using snpeff ##
 # ############################################################
 # for chrom in chroms:
 #     print "Annotating coding consequences for chromosome {} with snpeff... \n".format(chrom)
 #     # create names for input and output files
-#     vcf_in = 'chr' + chrom + '_' + out_name + '.vcf'
+#     vcf_in = 'chr' + chrom_name + '_verified.vcf'
 #     vcf_out = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
 #     # create the file and run snpeff
 #     with open(vcf_out, "w") as f:
