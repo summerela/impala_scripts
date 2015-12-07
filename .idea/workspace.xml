@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/annotation/snpeff.py" afterPath="$PROJECT_DIR$/annotation/snpeff.py" />
     </list>
     <ignored path="impala_scripts.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -436,12 +435,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00044" summary="updating test file for processing impala table in chunks">
-      <created>1449270843133</created>
-      <option name="number" value="00044" />
-      <option name="project" value="LOCAL" />
-      <updated>1449270843133</updated>
-    </task>
     <task id="LOCAL-00045" summary="fixing syntax on load data statement">
       <created>1449271090625</created>
       <option name="number" value="00045" />
@@ -730,7 +723,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449519035531</updated>
     </task>
-    <option name="localTasksCounter" value="93" />
+    <task id="LOCAL-00093" summary="testing parse vcf">
+      <created>1449519068279</created>
+      <option name="number" value="00093" />
+      <option name="project" value="LOCAL" />
+      <updated>1449519068279</updated>
+    </task>
+    <option name="localTasksCounter" value="94" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
