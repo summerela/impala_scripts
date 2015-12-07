@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="snpeff pipeline tested and working">
+    <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/annotation/snpeff.py" afterPath="$PROJECT_DIR$/annotation/snpeff.py" />
     </list>
@@ -46,8 +46,8 @@
       <file leaf-file-name="snpeff.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.21601942">
-              <caret line="97" column="0" selection-start-line="97" selection-start-column="0" selection-end-line="97" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.7111651">
+              <caret line="109" column="37" selection-start-line="109" selection-start-column="37" selection-end-line="109" selection-end-column="37" />
               <folding />
             </state>
           </provider>
@@ -436,12 +436,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00042" summary="updating test file for processing impala table in chunks">
-      <created>1449264698779</created>
-      <option name="number" value="00042" />
-      <option name="project" value="LOCAL" />
-      <updated>1449264698779</updated>
-    </task>
     <task id="LOCAL-00043" summary="updating test file for processing impala table in chunks">
       <created>1449270404011</created>
       <option name="number" value="00043" />
@@ -730,7 +724,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449518924402</updated>
     </task>
-    <option name="localTasksCounter" value="91" />
+    <task id="LOCAL-00091" summary="testing parse vcf">
+      <created>1449518987609</created>
+      <option name="number" value="00091" />
+      <option name="project" value="LOCAL" />
+      <updated>1449518987609</updated>
+    </task>
+    <option name="localTasksCounter" value="92" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -805,7 +805,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="re-worked snpeff matching by adding variant position to info dataframe. need to check results. complete adding all functions to module." />
     <MESSAGE value="converted vcf writer script to function" />
     <MESSAGE value="fixed connection with ibis, working on spliltting input by chromosome and processing in parallel" />
     <MESSAGE value="updating test file for processing impala table in chunks" />
@@ -830,7 +829,8 @@
     <MESSAGE value="adding script for checking vcf format" />
     <MESSAGE value="testing vcf parsing script" />
     <MESSAGE value="testing vcf parse" />
-    <option name="LAST_COMMIT_MESSAGE" value="testing vcf parse" />
+    <MESSAGE value="testing parse vcf" />
+    <option name="LAST_COMMIT_MESSAGE" value="testing parse vcf" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1021,8 +1021,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.21601942">
-          <caret line="97" column="0" selection-start-line="97" selection-start-column="0" selection-end-line="97" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.7111651">
+          <caret line="109" column="37" selection-start-line="109" selection-start-column="37" selection-end-line="109" selection-end-column="37" />
           <folding />
         </state>
       </provider>

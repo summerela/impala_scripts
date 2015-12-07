@@ -102,7 +102,7 @@ for chrom in chroms:
 for chrom in chroms:
     print "Annotating coding consequences for chromosome {} with snpeff... \n".format(chrom)
     # create names for input and output files
-    vcf_in = 'chr' + chrom_name + '_verified.vcf'
+    vcf_in = 'chr' + chrom + '_verified.vcf'
     vcf_out = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
     # create the file and run snpeff
     with open(vcf_out, "w") as f:
