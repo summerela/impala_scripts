@@ -46,8 +46,8 @@
       <file leaf-file-name="snpeff.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0984556">
-              <caret line="58" column="43" selection-start-line="58" selection-start-column="43" selection-end-line="58" selection-end-column="43" />
+            <state vertical-scroll-proportion="0.21601942">
+              <caret line="97" column="0" selection-start-line="97" selection-start-column="0" selection-end-line="97" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -132,9 +132,10 @@
     <detection-done>true</detection-done>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="169" />
-    <option name="width" value="1583" />
-    <option name="height" value="1004" />
+    <option name="x" value="469" />
+    <option name="y" value="79" />
+    <option name="width" value="1404" />
+    <option name="height" value="898" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -435,30 +436,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00038" summary="converted vcf writer script to function">
-      <created>1443163558214</created>
-      <option name="number" value="00038" />
-      <option name="project" value="LOCAL" />
-      <updated>1443163558214</updated>
-    </task>
-    <task id="LOCAL-00039" summary="converted vcf writer script to function">
-      <created>1443163627576</created>
-      <option name="number" value="00039" />
-      <option name="project" value="LOCAL" />
-      <updated>1443163627576</updated>
-    </task>
-    <task id="LOCAL-00040" summary="fixed connection with ibis, working on spliltting input by chromosome and processing in parallel">
-      <created>1443742022699</created>
-      <option name="number" value="00040" />
-      <option name="project" value="LOCAL" />
-      <updated>1443742022699</updated>
-    </task>
-    <task id="LOCAL-00041" summary="updating test file for processing impala table in chunks">
-      <created>1449185540793</created>
-      <option name="number" value="00041" />
-      <option name="project" value="LOCAL" />
-      <updated>1449185540793</updated>
-    </task>
     <task id="LOCAL-00042" summary="updating test file for processing impala table in chunks">
       <created>1449264698779</created>
       <option name="number" value="00042" />
@@ -729,7 +706,31 @@
       <option name="project" value="LOCAL" />
       <updated>1449294685514</updated>
     </task>
-    <option name="localTasksCounter" value="87" />
+    <task id="LOCAL-00087" summary="testing vcfBareBones.pl for vcf formatting">
+      <created>1449517110384</created>
+      <option name="number" value="00087" />
+      <option name="project" value="LOCAL" />
+      <updated>1449517110384</updated>
+    </task>
+    <task id="LOCAL-00088" summary="adding script for checking vcf format">
+      <created>1449518708899</created>
+      <option name="number" value="00088" />
+      <option name="project" value="LOCAL" />
+      <updated>1449518708899</updated>
+    </task>
+    <task id="LOCAL-00089" summary="testing vcf parsing script">
+      <created>1449518760486</created>
+      <option name="number" value="00089" />
+      <option name="project" value="LOCAL" />
+      <updated>1449518760486</updated>
+    </task>
+    <task id="LOCAL-00090" summary="testing vcf parse">
+      <created>1449518924402</created>
+      <option name="number" value="00090" />
+      <option name="project" value="LOCAL" />
+      <updated>1449518924402</updated>
+    </task>
+    <option name="localTasksCounter" value="91" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -742,16 +743,16 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="169" y="0" width="1583" height="1004" extended-state="1" />
-    <editor active="false" />
+    <frame x="469" y="79" width="1404" height="898" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1942492" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21933623" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31548312" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32846716" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3673938" sideWeight="0.513099" order="12" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.41830066" sideWeight="0.51370853" order="12" side_tool="true" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2810219" sideWeight="0.49713877" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28710464" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3673938" sideWeight="0.48690096" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.41830066" sideWeight="0.4862915" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.13005273" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2035503" sideWeight="0.4885337" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.329737" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -804,10 +805,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="finished nbs genes and acmg genes, need to autmoate acmg" />
-    <MESSAGE value="fixed issue with comp_het and added error checking, need to turn into package" />
-    <MESSAGE value="moving code to module for nbs genes. need to complete migration and deploy as package with dependencies." />
-    <MESSAGE value="added module to parse user input and create impala queries" />
     <MESSAGE value="re-worked snpeff matching by adding variant position to info dataframe. need to check results. complete adding all functions to module." />
     <MESSAGE value="converted vcf writer script to function" />
     <MESSAGE value="fixed connection with ibis, working on spliltting input by chromosome and processing in parallel" />
@@ -829,7 +826,11 @@
     <MESSAGE value="fixing table formatting" />
     <MESSAGE value="determined it is necessary to remove heard before upload to impala, adding clauses to create table statement to assist with import formatting issues" />
     <MESSAGE value="snpeff pipeline tested and working" />
-    <option name="LAST_COMMIT_MESSAGE" value="snpeff pipeline tested and working" />
+    <MESSAGE value="testing vcfBareBones.pl for vcf formatting" />
+    <MESSAGE value="adding script for checking vcf format" />
+    <MESSAGE value="testing vcf parsing script" />
+    <MESSAGE value="testing vcf parse" />
+    <option name="LAST_COMMIT_MESSAGE" value="testing vcf parse" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1020,8 +1021,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0984556">
-          <caret line="58" column="43" selection-start-line="58" selection-start-column="43" selection-end-line="58" selection-end-column="43" />
+        <state vertical-scroll-proportion="0.21601942">
+          <caret line="97" column="0" selection-start-line="97" selection-start-column="0" selection-end-line="97" selection-end-column="0" />
           <folding />
         </state>
       </provider>

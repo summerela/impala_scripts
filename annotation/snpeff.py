@@ -96,21 +96,21 @@ for chrom in chroms:
         except subprocess.CalledProcessError as e:
              print e.output
 
-# ############################################################
-# # annotate variants with coding consequences using snpeff ##
-# ############################################################
-# for chrom in chroms:
-#     print "Annotating coding consequences for chromosome {} with snpeff... \n".format(chrom)
-#     # create names for input and output files
-#     vcf_in = 'chr' + chrom_name + '_verified.vcf'
-#     vcf_out = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
-#     # create the file and run snpeff
-#     with open(vcf_out, "w") as f:
-#         try:
-#             subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.74", vcf_in], stdout=f)
-#         except subprocess.CalledProcessError as e:
-#              print e.output
-#
+############################################################
+# annotate variants with coding consequences using snpeff ##
+############################################################
+for chrom in chroms:
+    print "Annotating coding consequences for chromosome {} with snpeff... \n".format(chrom)
+    # create names for input and output files
+    vcf_in = 'chr' + chrom_name + '_verified.vcf'
+    vcf_out = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
+    # create the file and run snpeff
+    with open(vcf_out, "w") as f:
+        try:
+            subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.74", vcf_in], stdout=f)
+        except subprocess.CalledProcessError as e:
+             print e.output
+
 # ##########################################################
 # ## Output SnpEff effects as tsv file, one effect per line ##
 # ############################################################
