@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/annotation/snpeff.py" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/annotation/snpeff_script.py" afterPath="" />
+    <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="snpeff pipeline tested and working">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/annotation/testing.py" afterPath="$PROJECT_DIR$/annotation/testing.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/annotation/snpeff.py" afterPath="$PROJECT_DIR$/annotation/snpeff.py" />
     </list>
     <ignored path="impala_scripts.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -48,8 +46,8 @@
       <file leaf-file-name="snpeff.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.0984556">
+              <caret line="58" column="43" selection-start-line="58" selection-start-column="43" selection-end-line="58" selection-end-column="43" />
               <folding />
             </state>
           </provider>
@@ -74,7 +72,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/impala_scripts/queries/brady_requests/variant_analyzer.ipynb..ipynb" />
         <option value="$PROJECT_DIR$/impala_scripts/queries/brady_requests/variant_analyzer.py" />
         <option value="$PROJECT_DIR$/impala_scripts/queries/brady_requests/clinvar_query.py" />
         <option value="$PROJECT_DIR$/queries/brady_requests/clinvar_query.py" />
@@ -125,6 +122,7 @@
         <option value="$PROJECT_DIR$/annotation/Global Distinct Variants.ipynb" />
         <option value="$PROJECT_DIR$/annotation/snpeff_script.py" />
         <option value="$PROJECT_DIR$/annotation/testing.py" />
+        <option value="$PROJECT_DIR$/annotation/snpeff.py" />
       </list>
     </option>
   </component>
@@ -134,10 +132,9 @@
     <detection-done>true</detection-done>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="314" />
-    <option name="y" value="30" />
-    <option name="width" value="1430" />
-    <option name="height" value="976" />
+    <option name="x" value="169" />
+    <option name="width" value="1583" />
+    <option name="height" value="1004" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -222,7 +219,7 @@
     <property name="options.lastSelected" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="options.splitter.details.proportions" value="0.2" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/annotation/snpeff.py" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
     <property name="settings.editor.splitter.proportion" value="0.2" />
@@ -417,7 +414,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="impala_scripts" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/annotation/testing.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/annotation/snpeff.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
@@ -437,12 +434,6 @@
       <created>1433281253009</created>
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
-    </task>
-    <task id="LOCAL-00037" summary="re-worked snpeff matching by adding variant position to info dataframe. need to check results. complete adding all functions to module.">
-      <created>1443143433063</created>
-      <option name="number" value="00037" />
-      <option name="project" value="LOCAL" />
-      <updated>1443143433063</updated>
     </task>
     <task id="LOCAL-00038" summary="converted vcf writer script to function">
       <created>1443163558214</created>
@@ -732,7 +723,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449294143995</updated>
     </task>
-    <option name="localTasksCounter" value="86" />
+    <task id="LOCAL-00086" summary="snpeff pipeline tested and working">
+      <created>1449294685514</created>
+      <option name="number" value="00086" />
+      <option name="project" value="LOCAL" />
+      <updated>1449294685514</updated>
+    </task>
+    <option name="localTasksCounter" value="87" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -745,16 +742,16 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="314" y="30" width="1430" height="976" extended-state="0" />
+    <frame x="169" y="0" width="1583" height="1004" extended-state="1" />
     <editor active="false" />
     <layout>
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21529745" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1942492" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31548312" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32846716" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2055961" sideWeight="0.5114663" order="12" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3673938" sideWeight="0.513099" order="12" side_tool="true" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2810219" sideWeight="0.49713877" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28710464" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.36773428" sideWeight="0.4903846" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3673938" sideWeight="0.48690096" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.13005273" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2035503" sideWeight="0.4885337" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.329737" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -807,7 +804,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="updating logic for nbs genes" />
     <MESSAGE value="finished nbs genes and acmg genes, need to autmoate acmg" />
     <MESSAGE value="fixed issue with comp_het and added error checking, need to turn into package" />
     <MESSAGE value="moving code to module for nbs genes. need to complete migration and deploy as package with dependencies." />
@@ -832,7 +828,8 @@
     <MESSAGE value="testing" />
     <MESSAGE value="fixing table formatting" />
     <MESSAGE value="determined it is necessary to remove heard before upload to impala, adding clauses to create table statement to assist with import formatting issues" />
-    <option name="LAST_COMMIT_MESSAGE" value="determined it is necessary to remove heard before upload to impala, adding clauses to create table statement to assist with import formatting issues" />
+    <MESSAGE value="snpeff pipeline tested and working" />
+    <option name="LAST_COMMIT_MESSAGE" value="snpeff pipeline tested and working" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1014,7 +1011,7 @@
     <entry file="file://$PROJECT_DIR$/annotation/testing.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="66" column="124" selection-start-line="66" selection-start-column="124" selection-end-line="66" selection-end-column="124" />
+          <caret line="8" column="23" selection-start-line="8" selection-start-column="23" selection-end-line="8" selection-end-column="23" />
           <folding>
             <element signature="e#1063#1082#0" expanded="true" />
           </folding>
@@ -1023,8 +1020,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.0984556">
+          <caret line="58" column="43" selection-start-line="58" selection-start-column="43" selection-end-line="58" selection-end-column="43" />
           <folding />
         </state>
       </provider>
