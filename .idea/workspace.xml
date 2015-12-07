@@ -47,7 +47,7 @@
         <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.7111651">
-              <caret line="109" column="37" selection-start-line="109" selection-start-column="37" selection-end-line="109" selection-end-column="37" />
+              <caret line="109" column="105" selection-start-line="109" selection-start-column="105" selection-end-line="109" selection-end-column="105" />
               <folding />
             </state>
           </provider>
@@ -436,12 +436,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00043" summary="updating test file for processing impala table in chunks">
-      <created>1449270404011</created>
-      <option name="number" value="00043" />
-      <option name="project" value="LOCAL" />
-      <updated>1449270404011</updated>
-    </task>
     <task id="LOCAL-00044" summary="updating test file for processing impala table in chunks">
       <created>1449270843133</created>
       <option name="number" value="00044" />
@@ -730,7 +724,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449518987609</updated>
     </task>
-    <option name="localTasksCounter" value="92" />
+    <task id="LOCAL-00092" summary="testing parse vcf">
+      <created>1449519035531</created>
+      <option name="number" value="00092" />
+      <option name="project" value="LOCAL" />
+      <updated>1449519035531</updated>
+    </task>
+    <option name="localTasksCounter" value="93" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -1022,7 +1022,7 @@
     <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.7111651">
-          <caret line="109" column="37" selection-start-line="109" selection-start-column="37" selection-end-line="109" selection-end-column="37" />
+          <caret line="109" column="105" selection-start-line="109" selection-start-column="105" selection-end-line="109" selection-end-column="105" />
           <folding />
         </state>
       </provider>
