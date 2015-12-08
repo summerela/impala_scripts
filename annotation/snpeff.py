@@ -150,12 +150,10 @@ out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 
  # put each file in the snpeff directory
 for chrom in chroms:
-    tsv_out = './chr' + chrom + '_' + out_name + '_final.tsv'
-    print "Uploading {} to HDFS... \n".format(tsv_out)
-    hdfs_cmd = 'hdfs dfs -put {} {}'.format(tsv_out, out_path)
-    # hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
-    # print hdfs_proc.communicate()[0]
-    print hdfs_cmd
+    print "Uploading files to HDFS... \n".format(tsv_out)
+    hdfs_cmd = 'hdfs dfs -put chr*_final.tsv {}'.format(out_path)
+    hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
+    print hdfs_proc.communicate()[0]
 
 # ####################################
 # ## Create table to store results  ##
