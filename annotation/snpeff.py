@@ -142,60 +142,60 @@ chroms = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '
 ###############################
 # ## Upload results to impala ##
 # ###############################
-import datetime
-now = datetime.datetime.now()
-
-# define output path on hdfs
+# import datetime
+# now = datetime.datetime.now()
+#
+# # define output path on hdfs
 out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
-mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
-mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
-print mkdir_proc.communicate()[0]
-
-
- # put each file in the snpeff directory
-print "Uploading files to HDFS... \n"
-hdfs_cmd = 'hdfs dfs -put chr*_final.tsv {}'.format(out_path)
-hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
-print hdfs_proc.communicate()[0]
+# mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
+# mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
+# print mkdir_proc.communicate()[0]
+#
+#
+#  # put each file in the snpeff directory
+# print "Uploading files to HDFS... \n"
+# hdfs_cmd = 'hdfs dfs -put chr*_final.tsv {}'.format(out_path)
+# hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
+# print hdfs_proc.communicate()[0]
 
 # ####################################
 # ## Create table to store results  ##
 # ####################################
-# # drop the table if it already exists
-# drop_coding = "drop table if exists p7_product.coding_consequences"
-# cur.execute(drop_coding)
-#
-# # create empty table to store results
-# create_coding= '''
-# create table p7_product.coding_consequences
-#      (chrom string,
-#       pos int,
-#       ref string,
-#       alt string,
-#       gene string,
-#       gene_id string,
-#       effect string,
-#       impact string,
-#       feature string,
-#       feature_id string,
-#       biotype string,
-#       rank int,
-#       hgvs_c string,
-#       hgvs_p string)
-#   row format delimited
-#   fields terminated by '\t'
-# '''
-# cur.execute(create_coding)
-#
-# ##############################
-# # Insert results into table ##
-# ##############################
-# # load hdfs files into table
-# load_query = '''
-# load data inpath '{}' into table p7_product.coding_consequences
-# '''.format(out_path)
-# cur.execute(load_query)
-#
+# drop the table if it already exists
+drop_coding = "drop table if exists p7_product.coding_consequences"
+cur.execute(drop_coding)
+
+# create empty table to store results
+create_coding= '''
+create table p7_product.coding_consequences
+     (chrom string,
+      pos int,
+      ref string,
+      alt string,
+      gene string,
+      gene_id string,
+      effect string,
+      impact string,
+      feature string,
+      feature_id string,
+      biotype string,
+      rank int,
+      hgvs_c string,
+      hgvs_p string)
+  row format delimited
+  fields terminated by '\t'
+'''
+cur.execute(create_coding)
+
+##############################
+# Insert results into table ##
+##############################
+# load hdfs files into table
+load_query = '''
+load data inpath '{}' into table p7_product.coding_consequences
+'''.format(out_path)
+cur.execute(load_query)
+
 # ############################
 # # compute stats on table ##
 # ############################
