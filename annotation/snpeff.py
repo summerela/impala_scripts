@@ -160,7 +160,7 @@ out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 # set read/write permissions on directory
 chown_dir_cmd = "hdfs dfs -chown -R impala:supergroup {}".format(hdfs_path)
 chown_proc = subprocess.Popen(chown_dir_cmd, shell=True, stderr=subprocess.STDOUT)
-print chown_dir_cmd.communicate()[0]
+print chown_proc.communicate()[0]
 
 # ####################################
 # ## Create table to store results  ##

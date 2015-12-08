@@ -46,8 +46,8 @@
       <file leaf-file-name="snpeff.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-2.0533981">
-              <caret line="143" column="28" selection-start-line="143" selection-start-column="28" selection-end-line="143" selection-end-column="28" />
+            <state vertical-scroll-proportion="0.21601942">
+              <caret line="162" column="16" selection-start-line="162" selection-start-column="16" selection-end-line="162" selection-end-column="16" />
               <folding />
             </state>
           </provider>
@@ -436,12 +436,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00060" summary="updating hdfs dfs put command">
-      <created>1449285866423</created>
-      <option name="number" value="00060" />
-      <option name="project" value="LOCAL" />
-      <updated>1449285866423</updated>
-    </task>
     <task id="LOCAL-00061" summary="modifying read/write permissions on newly created hdfs directory">
       <created>1449286126427</created>
       <option name="number" value="00061" />
@@ -730,7 +724,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449605290966</updated>
     </task>
-    <option name="localTasksCounter" value="109" />
+    <task id="LOCAL-00109" summary="updating directory permissions to fix insert into table permissions error">
+      <created>1449605593834</created>
+      <option name="number" value="00109" />
+      <option name="project" value="LOCAL" />
+      <updated>1449605593834</updated>
+    </task>
+    <option name="localTasksCounter" value="110" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -805,7 +805,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="updating directory paths" />
     <MESSAGE value="re-writing file handler in iterator" />
     <MESSAGE value="udpating file handles and testing" />
     <MESSAGE value="testing entire pipeline" />
@@ -830,7 +829,8 @@
     <MESSAGE value="uploading all files to hdfs in one command instead of looping" />
     <MESSAGE value="files uploaded, inserting into table" />
     <MESSAGE value="updating connection string with user info" />
-    <option name="LAST_COMMIT_MESSAGE" value="updating connection string with user info" />
+    <MESSAGE value="updating directory permissions to fix insert into table permissions error" />
+    <option name="LAST_COMMIT_MESSAGE" value="updating directory permissions to fix insert into table permissions error" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1029,8 +1029,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-2.0533981">
-          <caret line="143" column="28" selection-start-line="143" selection-start-column="28" selection-end-line="143" selection-end-column="28" />
+        <state vertical-scroll-proportion="0.21601942">
+          <caret line="162" column="16" selection-start-line="162" selection-start-column="16" selection-end-line="162" selection-end-column="16" />
           <folding />
         </state>
       </provider>
