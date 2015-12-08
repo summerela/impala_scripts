@@ -46,8 +46,8 @@
       <file leaf-file-name="snpeff.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.37378642">
-              <caret line="40" column="78" selection-start-line="40" selection-start-column="78" selection-end-line="40" selection-end-column="78" />
+            <state vertical-scroll-proportion="-2.0533981">
+              <caret line="143" column="28" selection-start-line="143" selection-start-column="28" selection-end-line="143" selection-end-column="28" />
               <folding />
             </state>
           </provider>
@@ -436,12 +436,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00059" summary="updating hdfs dfs put command">
-      <created>1449285685659</created>
-      <option name="number" value="00059" />
-      <option name="project" value="LOCAL" />
-      <updated>1449285685659</updated>
-    </task>
     <task id="LOCAL-00060" summary="updating hdfs dfs put command">
       <created>1449285866423</created>
       <option name="number" value="00060" />
@@ -730,7 +724,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449605232835</updated>
     </task>
-    <option name="localTasksCounter" value="108" />
+    <task id="LOCAL-00108" summary="updating connection string with user info">
+      <created>1449605290966</created>
+      <option name="number" value="00108" />
+      <option name="project" value="LOCAL" />
+      <updated>1449605290966</updated>
+    </task>
+    <option name="localTasksCounter" value="109" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -805,7 +805,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="loading data non-partitioned and creating partitioned table after" />
     <MESSAGE value="updating directory paths" />
     <MESSAGE value="re-writing file handler in iterator" />
     <MESSAGE value="udpating file handles and testing" />
@@ -830,7 +829,8 @@
     <MESSAGE value="testing hdfs directory permissions" />
     <MESSAGE value="uploading all files to hdfs in one command instead of looping" />
     <MESSAGE value="files uploaded, inserting into table" />
-    <option name="LAST_COMMIT_MESSAGE" value="files uploaded, inserting into table" />
+    <MESSAGE value="updating connection string with user info" />
+    <option name="LAST_COMMIT_MESSAGE" value="updating connection string with user info" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1029,8 +1029,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.37378642">
-          <caret line="40" column="78" selection-start-line="40" selection-start-column="78" selection-end-line="40" selection-end-column="78" />
+        <state vertical-scroll-proportion="-2.0533981">
+          <caret line="143" column="28" selection-start-line="143" selection-start-column="28" selection-end-line="143" selection-end-column="28" />
           <folding />
         </state>
       </provider>

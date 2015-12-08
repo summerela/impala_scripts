@@ -140,8 +140,8 @@ chroms = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '
 #     print tsv_proc.communicate()[0]
 
 ###############################
-# ## Upload results to impala ##
-# ###############################
+# ## Upload results to hdfs  ##
+# #############################
 import datetime
 now = datetime.datetime.now()
 
@@ -150,13 +150,17 @@ out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 # mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
 # mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
 # print mkdir_proc.communicate()[0]
-#
-#
+
 #  # put each file in the snpeff directory
 # print "Uploading files to HDFS... \n"
 # hdfs_cmd = 'hdfs dfs -put chr*_final.tsv {}'.format(out_path)
 # hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
 # print hdfs_proc.communicate()[0]
+
+# set read/write permissions on directory
+chown_dir_cmd = "hdfs dfs -chown -R impala:supergroup {}".format(hdfs_path)
+chown_proc = subprocess.Popen(chown_dir_cmd, shell=True, stderr=subprocess.STDOUT)
+print chown_dir_cmd.communicate()[0]
 
 # ####################################
 # ## Create table to store results  ##
