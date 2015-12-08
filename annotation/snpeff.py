@@ -38,7 +38,7 @@ import subprocess
 pd.options.mode.chained_assignment = None
 
 ## create connection to impala
-conn=connect(host=impala_host, port=impala_port, timeout=10000)
+conn=connect(host=impala_host, port=impala_port, timeout=10000, user='selasady')
 cur = conn.cursor()
 
 #################################################
