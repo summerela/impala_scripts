@@ -46,8 +46,8 @@
       <file leaf-file-name="snpeff.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.49514562">
-              <caret line="132" column="80" selection-start-line="132" selection-start-column="80" selection-end-line="132" selection-end-column="80" />
+            <state vertical-scroll-proportion="0.4223301">
+              <caret line="197" column="27" selection-start-line="197" selection-start-column="27" selection-end-line="197" selection-end-column="27" />
               <folding />
             </state>
           </provider>
@@ -132,8 +132,8 @@
     <detection-done>true</detection-done>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="469" />
-    <option name="y" value="79" />
+    <option name="x" value="448" />
+    <option name="y" value="96" />
     <option name="width" value="1404" />
     <option name="height" value="898" />
   </component>
@@ -436,12 +436,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00046" summary="fixing syntax on load data statement">
-      <created>1449271128685</created>
-      <option name="number" value="00046" />
-      <option name="project" value="LOCAL" />
-      <updated>1449271128685</updated>
-    </task>
     <task id="LOCAL-00047" summary="fixing syntax on load data statement">
       <created>1449271169791</created>
       <option name="number" value="00047" />
@@ -730,7 +724,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449519071916</updated>
     </task>
-    <option name="localTasksCounter" value="95" />
+    <task id="LOCAL-00095" summary="committing final pipeline and running">
+      <created>1449519593857</created>
+      <option name="number" value="00095" />
+      <option name="project" value="LOCAL" />
+      <updated>1449519593857</updated>
+    </task>
+    <option name="localTasksCounter" value="96" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -743,7 +743,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="469" y="79" width="1404" height="898" extended-state="0" />
+    <frame x="448" y="96" width="1404" height="898" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21933623" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -805,7 +805,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="converted vcf writer script to function" />
     <MESSAGE value="fixed connection with ibis, working on spliltting input by chromosome and processing in parallel" />
     <MESSAGE value="updating test file for processing impala table in chunks" />
     <MESSAGE value="fixing syntax on load data statement" />
@@ -830,7 +829,8 @@
     <MESSAGE value="testing vcf parsing script" />
     <MESSAGE value="testing vcf parse" />
     <MESSAGE value="testing parse vcf" />
-    <option name="LAST_COMMIT_MESSAGE" value="testing parse vcf" />
+    <MESSAGE value="committing final pipeline and running" />
+    <option name="LAST_COMMIT_MESSAGE" value="committing final pipeline and running" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1019,10 +1019,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://C:/Anaconda/Lib/subprocess.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.70388347">
+          <caret line="709" column="0" selection-start-line="709" selection-start-column="0" selection-end-line="709" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.49514562">
-          <caret line="132" column="80" selection-start-line="132" selection-start-column="80" selection-end-line="132" selection-end-column="80" />
+        <state vertical-scroll-proportion="0.4223301">
+          <caret line="197" column="27" selection-start-line="197" selection-start-column="27" selection-end-line="197" selection-end-column="27" />
           <folding />
         </state>
       </provider>
