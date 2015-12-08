@@ -192,7 +192,7 @@ cur.execute(create_coding)
 ##############################
 # load hdfs files into table
 load_query = '''
-load data inpath '{}' into table{}.coding_consequences
+load data inpath '{}' into table {}.coding_consequences
 '''.format(out_path, input_db)
 cur.execute(load_query)
 
