@@ -167,7 +167,7 @@ cur.execute(drop_coding)
 
 # create empty table to store results
 create_coding= '''
-create table{}.coding_consequences
+create table {}.coding_consequences
      (chrom string,
       pos int,
       ref string,

@@ -46,8 +46,8 @@
       <file leaf-file-name="snpeff.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.4975728">
-              <caret line="202" column="27" selection-start-line="202" selection-start-column="27" selection-end-line="202" selection-end-column="27" />
+            <state vertical-scroll-proportion="0.1262136">
+              <caret line="169" column="13" selection-start-line="169" selection-start-column="13" selection-end-line="169" selection-end-column="13" />
               <folding />
             </state>
           </provider>
@@ -436,12 +436,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00056" summary="udpating file handles and testing">
-      <created>1449282973910</created>
-      <option name="number" value="00056" />
-      <option name="project" value="LOCAL" />
-      <updated>1449282973910</updated>
-    </task>
     <task id="LOCAL-00057" summary="testing entire pipeline">
       <created>1449283482326</created>
       <option name="number" value="00057" />
@@ -730,7 +724,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449605019568</updated>
     </task>
-    <option name="localTasksCounter" value="105" />
+    <task id="LOCAL-00105" summary="files uploaded, inserting into table">
+      <created>1449605184000</created>
+      <option name="number" value="00105" />
+      <option name="project" value="LOCAL" />
+      <updated>1449605184000</updated>
+    </task>
+    <option name="localTasksCounter" value="106" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -1029,8 +1029,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/snpeff.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.4975728">
-          <caret line="202" column="27" selection-start-line="202" selection-start-column="27" selection-end-line="202" selection-end-column="27" />
+        <state vertical-scroll-proportion="0.1262136">
+          <caret line="169" column="13" selection-start-line="169" selection-start-column="13" selection-end-line="169" selection-end-column="13" />
           <folding />
         </state>
       </provider>
