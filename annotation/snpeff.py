@@ -142,10 +142,10 @@ chroms = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '
 ###############################
 # ## Upload results to impala ##
 # ###############################
-# import datetime
-# now = datetime.datetime.now()
-#
-# # define output path on hdfs
+import datetime
+now = datetime.datetime.now()
+
+# define output path on hdfs
 out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 # mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
 # mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
@@ -162,12 +162,12 @@ out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 # ## Create table to store results  ##
 # ####################################
 # drop the table if it already exists
-drop_coding = "drop table if exists p7_product.coding_consequences"
+drop_coding = "drop table if exists {}.coding_consequences".format(input_db)
 cur.execute(drop_coding)
 
 # create empty table to store results
 create_coding= '''
-create table p7_product.coding_consequences
+create table{}.coding_consequences
      (chrom string,
       pos int,
       ref string,
@@ -184,7 +184,7 @@ create table p7_product.coding_consequences
       hgvs_p string)
   row format delimited
   fields terminated by '\t'
-'''
+'''.format(input_db)
 cur.execute(create_coding)
 
 ##############################
@@ -192,16 +192,17 @@ cur.execute(create_coding)
 ##############################
 # load hdfs files into table
 load_query = '''
-load data inpath '{}' into table p7_product.coding_consequences
-'''.format(out_path)
+load data inpath '{}' into table{}.coding_consequences
+'''.format(out_path, input_db)
 cur.execute(load_query)
 
-# ############################
-# # compute stats on table ##
-# ############################
-# cur.execute("compute stats  p7_product.coding_consequences")
-#
-# # TODO add script to make table partitioned
+############################
+# compute stats on table ##
+############################
+final_compstats = "compute stats {}.coding_consequences".format(input_db)
+cur.execute(final_compstats)
+
+# TODO add script to make table partitioned
 
 #####################
 # close connection ##
