@@ -149,7 +149,7 @@ now = datetime.datetime.now()
 out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 
  # put each file in the snpeff directory
-print "Uploading files to HDFS... \n".format(tsv_out)
+print "Uploading files to HDFS... \n"
 hdfs_cmd = 'hdfs dfs -put chr*_final.tsv {}'.format(out_path)
 hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
 print hdfs_proc.communicate()[0]
