@@ -150,56 +150,57 @@ out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 
  # put each file in the snpeff directory
 for chrom in chroms:
-    print "Uploading chromosome {} to HDFS... \n".format(chrom)
     tsv_out = './chr' + chrom + '_' + out_name + '_final.tsv'
+    print "Uploading {} to HDFS... \n".format(tsv_out)
     hdfs_cmd = 'hdfs dfs -put {} {}'.format(tsv_out, out_path)
-    hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
-    print hdfs_proc.communicate()[0]
+    # hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
+    # print hdfs_proc.communicate()[0]
+    print hdfs_cmd
 
-####################################
-## Create table to store results  ##
-####################################
-# drop the table if it already exists
-drop_coding = "drop table if exists p7_product.coding_consequences"
-cur.execute(drop_coding)
-
-# create empty table to store results
-create_coding= '''
-create table p7_product.coding_consequences
-     (chrom string,
-      pos int,
-      ref string,
-      alt string,
-      gene string,
-      gene_id string,
-      effect string,
-      impact string,
-      feature string,
-      feature_id string,
-      biotype string,
-      rank int,
-      hgvs_c string,
-      hgvs_p string)
-  row format delimited
-  fields terminated by '\t'
-'''
-cur.execute(create_coding)
-
-##############################
-# Insert results into table ##
-##############################
-# load hdfs files into table
-load_query = '''
-load data inpath '{}' into table p7_product.coding_consequences
-'''.format(out_path)
-cur.execute(load_query)
-
-############################
-# compute stats on table ##
-############################
-cur.execute("compute stats  p7_product.coding_consequences")
-
-# TODO add script to make table partitioned
+# ####################################
+# ## Create table to store results  ##
+# ####################################
+# # drop the table if it already exists
+# drop_coding = "drop table if exists p7_product.coding_consequences"
+# cur.execute(drop_coding)
+#
+# # create empty table to store results
+# create_coding= '''
+# create table p7_product.coding_consequences
+#      (chrom string,
+#       pos int,
+#       ref string,
+#       alt string,
+#       gene string,
+#       gene_id string,
+#       effect string,
+#       impact string,
+#       feature string,
+#       feature_id string,
+#       biotype string,
+#       rank int,
+#       hgvs_c string,
+#       hgvs_p string)
+#   row format delimited
+#   fields terminated by '\t'
+# '''
+# cur.execute(create_coding)
+#
+# ##############################
+# # Insert results into table ##
+# ##############################
+# # load hdfs files into table
+# load_query = '''
+# load data inpath '{}' into table p7_product.coding_consequences
+# '''.format(out_path)
+# cur.execute(load_query)
+#
+# ############################
+# # compute stats on table ##
+# ############################
+# cur.execute("compute stats  p7_product.coding_consequences")
+#
+# # TODO add script to make table partitioned
 
 #####################
 # close connection ##
