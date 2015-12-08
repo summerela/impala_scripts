@@ -147,6 +147,9 @@ now = datetime.datetime.now()
 
 # define output path on hdfs
 out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
+mkdir_cmd = "hdfs dfs -mkdir {}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
+mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
+print hdfs_proc.communicate()[0]
 
  # put each file in the snpeff directory
 print "Uploading files to HDFS... \n"
