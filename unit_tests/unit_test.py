@@ -2,8 +2,12 @@
 impala_host = 'glados18'
 impala_port = '21050'
 
+# Database to test
 input_db = "p7_product"
 input_table = "all_coding"
+
+# Database to test against
+test_db = 'clinvar'
 
 ####################
 ## import modules ##
@@ -93,10 +97,14 @@ grab_row = "select * from {}.{} order by rand () limit 1".format(input_db, input
 cur.execute(grab_row)
 tester_row = as_pandas(cur)
 
-results = mv.query('rs672601312', scopes='clinvar.rsid', fields = 'clinvar._id', as_dataframe=1, returnall=True)
+online_source_query = "'{}.rsid:{}', scopes={}.rsid, fields='{}', as_dataframe=True".format(test_db, tester_row['id'], test_db, test_db)
+comparison = mv.query(online_source_query)
 
-print 'chr' + str(tester_row['chrom']) + ":g." + str(tester_row['pos']) + str(tester_row['ref']) + ">" + str(tester_row['alt'])
+print comparison
 
-#print results['_id']
+# print "Do the chromosomes match {} online? \n".format(test_db)
+# print str(tester_row['chrom']) == str(comparison['clinvar.chrom'])
+
+
 
 cur.close()

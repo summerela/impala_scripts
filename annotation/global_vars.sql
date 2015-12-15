@@ -247,7 +247,7 @@ drop table vars_partitioned;
 --- hdfs dfs -put ./dataset.tsv /user/selasady/global_vars/
 
 --- sql used to create table
-CREATE TABLE p7_product.allvars_snpeff
+CREATE TABLE p7_product.global_vars
 (
   CHROM string ,
   POS int ,
@@ -263,7 +263,7 @@ CREATE TABLE p7_product.allvars_snpeff
   RANK int ,
   HGVS_C string ,
   HGVS_P string ) 
-COMMENT "snpeff output for all_vars table"
+COMMENT "snpeff output for global_vars table"
 ROW FORMAT DELIMITED
     FIELDS TERMINATED BY '\t'
 
