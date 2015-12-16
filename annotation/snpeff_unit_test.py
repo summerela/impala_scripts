@@ -27,7 +27,7 @@ cur = conn.cursor()
 #################
 
 # define list of possible expected chromsomes, mitochondria are not always present
-chroms = map( str, range(1,23) ) + ['X','Y','MT', 'M']
+chroms = map( str, range(1,23) ) + ['X','Y','M', 'MT']
 
 def get_stats(in_db, in_table):
     # create object to get table column stats for use with downstream functions

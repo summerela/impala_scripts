@@ -87,8 +87,8 @@
             <state vertical-scroll-proportion="0.36923078">
               <caret line="29" column="52" selection-start-line="29" selection-start-column="52" selection-end-line="29" selection-end-column="52" />
               <folding>
-                <marker date="1450230341000" expanded="true" signature="2601:2631" placeholder="select disti... missing_value" />
-                <marker date="1450230341000" expanded="true" signature="3193:3237" placeholder="select * fro... missing_value" />
+                <marker date="1450230365000" expanded="true" signature="2601:2631" placeholder="select disti... missing_value" />
+                <marker date="1450230365000" expanded="true" signature="3193:3237" placeholder="select * fro... missing_value" />
               </folding>
             </state>
           </provider>
@@ -580,12 +580,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00063" summary="fixing hdfs put command">
-      <created>1449288271503</created>
-      <option name="number" value="00063" />
-      <option name="project" value="LOCAL" />
-      <updated>1449288271503</updated>
-    </task>
     <task id="LOCAL-00064" summary="fiexed hdfs put command, testing hdfs to impala">
       <created>1449288380964</created>
       <option name="number" value="00064" />
@@ -874,7 +868,13 @@
       <option name="project" value="LOCAL" />
       <updated>1450228986573</updated>
     </task>
-    <option name="localTasksCounter" value="112" />
+    <task id="LOCAL-00112" summary="finished unit test script for snpeff, table passed">
+      <created>1450230346526</created>
+      <option name="number" value="00112" />
+      <option name="project" value="LOCAL" />
+      <updated>1450230346526</updated>
+    </task>
+    <option name="localTasksCounter" value="113" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -1264,8 +1264,8 @@
         <state vertical-scroll-proportion="0.36923078">
           <caret line="29" column="52" selection-start-line="29" selection-start-column="52" selection-end-line="29" selection-end-column="52" />
           <folding>
-            <marker date="1450230341000" expanded="true" signature="2601:2631" placeholder="select disti... missing_value" />
-            <marker date="1450230341000" expanded="true" signature="3193:3237" placeholder="select * fro... missing_value" />
+            <marker date="1450230365000" expanded="true" signature="2601:2631" placeholder="select disti... missing_value" />
+            <marker date="1450230365000" expanded="true" signature="3193:3237" placeholder="select * fro... missing_value" />
           </folding>
         </state>
       </provider>
