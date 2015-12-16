@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="creating final partitioned table, adding rsid back into dataframe">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/annotation/snpeff_unit_test.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/impala_scripts.iml" afterPath="$PROJECT_DIR$/.idea/impala_scripts.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
+    <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/annotation/snpeff.py" afterPath="$PROJECT_DIR$/annotation/snpeff.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/unit_tests/unit_test.py" afterPath="$PROJECT_DIR$/unit_tests/unit_test.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/annotation/snpeff_unit_test.py" afterPath="$PROJECT_DIR$/annotation/snpeff_unit_test.py" />
     </list>
     <ignored path="impala_scripts.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -88,11 +84,11 @@
       <file leaf-file-name="snpeff_unit_test.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/annotation/snpeff_unit_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-0.031185031">
-              <caret line="8" column="20" selection-start-line="8" selection-start-column="20" selection-end-line="8" selection-end-column="20" />
+            <state vertical-scroll-proportion="0.36923078">
+              <caret line="29" column="52" selection-start-line="29" selection-start-column="52" selection-end-line="29" selection-end-column="52" />
               <folding>
-                <marker date="1450227563000" expanded="true" signature="2716:2746" placeholder="select disti... missing_value" />
-                <marker date="1450227563000" expanded="true" signature="3308:3352" placeholder="select * fro... missing_value" />
+                <marker date="1450230341000" expanded="true" signature="2601:2631" placeholder="select disti... missing_value" />
+                <marker date="1450230341000" expanded="true" signature="3193:3237" placeholder="select * fro... missing_value" />
               </folding>
             </state>
           </provider>
@@ -117,7 +113,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/impala_scripts/queries/brady_requests/clinvar_query.py" />
         <option value="$PROJECT_DIR$/queries/brady_requests/clinvar_query.py" />
         <option value="$PROJECT_DIR$/rare_variants/variant_analyze.R" />
         <option value="$PROJECT_DIR$/clinvar_pathogenic_vars/clinvar_query/clinvar_query.py" />
@@ -168,6 +163,7 @@
         <option value="$PROJECT_DIR$/annotation/testing.py" />
         <option value="$PROJECT_DIR$/unit_tests/unit_test.py" />
         <option value="$PROJECT_DIR$/annotation/snpeff.py" />
+        <option value="$PROJECT_DIR$/annotation/snpeff_unit_test.py" />
       </list>
     </option>
   </component>
@@ -177,7 +173,7 @@
     <detection-done>true</detection-done>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="355" />
+    <option name="x" value="267" />
     <option name="y" value="23" />
     <option name="width" value="1402" />
     <option name="height" value="969" />
@@ -584,12 +580,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00062" summary="modifying read/write permissions on newly created hdfs directory">
-      <created>1449286289012</created>
-      <option name="number" value="00062" />
-      <option name="project" value="LOCAL" />
-      <updated>1449286289012</updated>
-    </task>
     <task id="LOCAL-00063" summary="fixing hdfs put command">
       <created>1449288271503</created>
       <option name="number" value="00063" />
@@ -878,7 +868,13 @@
       <option name="project" value="LOCAL" />
       <updated>1449605623308</updated>
     </task>
-    <option name="localTasksCounter" value="111" />
+    <task id="LOCAL-00111" summary="finished unit test script for snpeff, table passed">
+      <created>1450228986572</created>
+      <option name="number" value="00111" />
+      <option name="project" value="LOCAL" />
+      <updated>1450228986573</updated>
+    </task>
+    <option name="localTasksCounter" value="112" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -891,22 +887,22 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="355" y="23" width="1402" height="969" extended-state="0" />
+    <frame x="267" y="23" width="1402" height="969" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18609703" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31548312" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32846716" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.41715628" sideWeight="0.519189" order="12" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.329737" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2810219" sideWeight="0.49713877" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28084606" sideWeight="0.49713877" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28710464" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.40188015" sideWeight="0.480811" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.40188015" sideWeight="0.480811" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.13005273" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2035503" sideWeight="0.4885337" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20329025" sideWeight="0.4885337" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.329737" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39813736" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32846716" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -953,7 +949,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="re-writing file handler in iterator" />
     <MESSAGE value="udpating file handles and testing" />
     <MESSAGE value="testing entire pipeline" />
     <MESSAGE value="updating hdfs dfs put command" />
@@ -978,7 +973,8 @@
     <MESSAGE value="files uploaded, inserting into table" />
     <MESSAGE value="updating connection string with user info" />
     <MESSAGE value="updating directory permissions to fix insert into table permissions error" />
-    <option name="LAST_COMMIT_MESSAGE" value="updating directory permissions to fix insert into table permissions error" />
+    <MESSAGE value="finished unit test script for snpeff, table passed" />
+    <option name="LAST_COMMIT_MESSAGE" value="finished unit test script for snpeff, table passed" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1265,11 +1261,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/annotation/snpeff_unit_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.031185031">
-          <caret line="8" column="20" selection-start-line="8" selection-start-column="20" selection-end-line="8" selection-end-column="20" />
+        <state vertical-scroll-proportion="0.36923078">
+          <caret line="29" column="52" selection-start-line="29" selection-start-column="52" selection-end-line="29" selection-end-column="52" />
           <folding>
-            <marker date="1450227563000" expanded="true" signature="2716:2746" placeholder="select disti... missing_value" />
-            <marker date="1450227563000" expanded="true" signature="3308:3352" placeholder="select * fro... missing_value" />
+            <marker date="1450230341000" expanded="true" signature="2601:2631" placeholder="select disti... missing_value" />
+            <marker date="1450230341000" expanded="true" signature="3193:3237" placeholder="select * fro... missing_value" />
           </folding>
         </state>
       </provider>
