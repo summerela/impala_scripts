@@ -147,27 +147,30 @@ FULL OUTER JOIN t1
 # " ; done
 
 --- compute stats on new table
-compute stats p7_product.all_vars; 
+compute stats p7_product.all_vars;
+
+--- compared number of rows in each chromosome with number of rows in kav_distinct to ensure rows were retained
 
 
 -- ANNOTATE ALL_VARIANTS TABLE TO CREATE GLOBAL VARIANTS TABLE
 
 -- create distinct subset of ensembl table
-create table p7_product.ens_distinct as
-select distinct chrom, start, stop, strand, gene_name, gene_id, transcript_name, transcript_id
-from p7_ref_grch37.ensembl_genes;
+create table p7_product.ens_distinct
+(
+  start      INT,
+  stop     INT,
+  strand STRING,
+  gene_name STRING,
+  gene_id STRING
+)
+  PARTITIONED BY (chrom string);
+
+INSERT INTO p7_product.ens_distinct partition (chrom)
+    select distinct start, stop, strand, gene_name, gene_id, chrom
+    from p7_ref_grch37.ensembl_genes;
 
 --- compute stats on new table
 compute stats p7_product.ens_distinct;
-
--- create distinct subset of dbsnfp table
-create table p7_product.dbnsfp_distinct as (
-  select distinct chrom, pos, ref, alt, cadd_raw, dann_score, interpro_domain
-  from p7_ref_grch37.dbnsfp_variant
-  );
-
---- compute stats on new table
-compute stats p7_product.dbnsfp_distinct;
 
 -- add ensembl annotations to vars_partitioned to create ens_partitioned table
 create table p7_product.ens_partitioned
@@ -178,8 +181,6 @@ create table p7_product.ens_partitioned
     strand string,
     gene_name string,
     gene_id string,
-    transcript_name string,
-    transcript_id string,
     clin_sig string,
     clin_dbn string,
     kav_freq float,
@@ -190,458 +191,47 @@ create table p7_product.ens_partitioned
     partitioned by (chrom string)
 
 -- inserted each chromosome into partitioned table as follows
+#for x in $(seq 1 22) M MT X Y; do echo "$x"; nohup impala-shell -q "\
 insert into table p7_product.ens_partitioned partition (chrom)
 with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '1'
-  )
+    SELECT * FROM p7_product.all_vars
+    WHERE chrom = '$x'),
+t1 as (
+  SELECT * FROM p7_product.ens_distinct
+  WHERE chrom = '$x')
 
 SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
+   t1.gene_name, t1.gene_id, t0.clin_sig, t0.clin_dbn, t0.kav_freq,
+  t0.kav_source, t0.dbsnp_build, t0.var_type, t0.chrom
 FROM t0
-LEFT JOIN p7_product.ens_distinct t1
+LEFT JOIN t1
     ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '1';
+    AND (t0.pos BETWEEN t1.start and t1.stop);
+# " ; done
 
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '2'
-  )
+compute stats ens_partitioned;
 
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '2';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '3'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '3';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '4'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '4';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '5'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '5';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '6'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '6';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '7'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '7';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '8'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '8';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '9'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '9';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '10'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '10';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '11'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '11';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '12'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '12';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '13'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '13';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '14'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '14';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '15'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '15';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '16'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '16';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '17'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '17';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '18'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '18';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '19'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '19';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '20'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '20';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '21'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '21';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = '22'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = '22';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = 'X'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = 'X';
-
-insert into table p7_product.ens_partitioned partition (chrom)
-with t0 as (
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id,  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-    FROM p7_product.all_vars t0
-    WHERE t0.chrom = 'Y'
-  )
-
-SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id,
-   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
-    t0.var_type, t0.chrom
-FROM t0
-LEFT JOIN p7_product.ens_distinct t1
-    ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop)
-WHERE t1.chrom = 'Y';
-
---- partition dbsnfp_distinct table
-create table dbsnfp_partitioned
-  (pos int,
+-- create distinct subset of dbsnfp table
+create table p7_product.dbnsfp_distinct
+(
+  pos int,
   ref string,
   alt string,
   cadd_raw float,
-  dann_score float,
+  dann_score FLOAT,
   interpro_domain string
-  )
-  PARTITIONED BY (chrom string);
+)
+PARTITIONED BY (chrom string);
 
---- add dbsnfp_distinct into dbnsfp_partitioned
-INSERT INTO p7_product.dbnsfp_partitioned partition (chrom)
-SELECT DISTINCT pos, ref, alt, cadd_raw, dann_score, interpro_domain, chrom
-FROM p7_product.dbnsfp_distinct;
+INSERT INTO p7_product.dbnsfp_distinct PARTITION (chrom)
+    select distinct pos, ref, alt, cadd_raw, dann_score, interpro_domain, chrom
+    from p7_ref_grch37.dbnsfp_variant;
 
-compute stats dbnsfp_partitioned;
+--- compute stats on new table
+compute stats p7_product.dbnsfp_distinct;
 
--- add dbsnfp annotations to create final global_vars table
-create table p7_product.global_variants
+-- add dbsnfp annotations to create global_variants table
+create table p7_product.dbsnfp_vars
     (pos int,
     ref string,
     alt string,
@@ -649,8 +239,6 @@ create table p7_product.global_variants
     strand string,
     gene_name string,
     gene_id string,
-    transcript_name string,
-    transcript_id string,
     clin_sig string,
     clin_dbn string,
     kav_freq float,
@@ -663,549 +251,84 @@ create table p7_product.global_variants
     )
     partitioned by (chrom string);
 
-
-insert into table p7_product.global_variants partition (chrom)
+#for x in $(seq 1 22) M MT X Y; do echo "$x"; nohup impala-shell -q "\
+insert into table p7_product.dbsnfp_vars partition (chrom)
 WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '1'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
+    SELECT *
+    from p7_product.ens_partitioned
+    where chrom = '1'),
+d as (
+    SELECT *
+    from p7_product.dbsnfp_distinct
+    where chrom = '1')
+
+SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
+  ens.gene_id, ens.clin_sig, ens.clin_dbn, ens.kav_freq, ens.kav_source,
+  ens.dbsnp_build, ens.var_type, d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
 from ens
-left join p7_product.dbnsfp_partitioned d
+left join d
     on ens.chrom = d.chrom
     and ens.pos = d.pos
     and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '1';
+    and ens.alt  = d.alt;
+# " ; done
 
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '2'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '2';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '3'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '3';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '4'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '4';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '5'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '5';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '6'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '6';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '7'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '7';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '8'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '8';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '9'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '9';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '10'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '10';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '11'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '11';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '12'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '12';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '13'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '13';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '14'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '14';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '15'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '15';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '16'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '16';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '17'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '17';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '18'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '18';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '19'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '19';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '20'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '20';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '21'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '21';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = '22'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = '22';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = 'X'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = 'X';
-
-insert into table p7_product.global_variants partition (chrom)
-WITH ens as (
-    SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    ens.chrom
-    from p7_product.ens_partitioned ens
-    where ens.chrom = 'Y'
-  )
-SELECT distinct ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-    ens.gene_id, ens.transcript_name, ens.transcript_id, ens.clin_sig,
-    ens.clin_dbn, ens.kav_freq, ens.kav_source, ens.dbsnp_build, ens.var_type,
-    d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
-from ens
-left join p7_product.dbnsfp_partitioned d
-    on ens.chrom = d.chrom
-    and ens.pos = d.pos
-    and ens.ref = d.ref
-    and ens.alt  = d.alt
-where d.chrom = 'Y';
-
-compute stats p7_product.global_variants;
-
---- unit test
-
-
--- clean up temp tables
-drop table dbnsfp_distinct;
-drop table ens_distinct;
-drop table ens_partitioned;
-drop table vars_partitioned;
+compute stats p7_product.dbsnfp_vars;
 
 --- ANNOTATE VARIANTS WITH CODING CONSEQUENCES
 
---- sql used to create table
+--- create the final table in the pipeline, global_vars containing all basic annotations
 CREATE TABLE p7_product.global_vars
-(
-  CHROM string ,
-  POS int ,
-  REF string ,
-  ALT string ,
-  GENE string ,
-  GENEID string ,
-  EFFECT string ,
-  IMPACT string ,
-  FEATURE string ,
-  FEATUREID string ,
-  BIOTYPE string ,
-  RANK int ,
-  HGVS_C string ,
-  HGVS_P string ) 
-COMMENT "snpeff output for global_vars table"
-ROW FORMAT DELIMITED
-    FIELDS TERMINATED BY '\t'
+   (pos int,
+    ref string,
+    alt string,
+    rs_id string,
+    strand string,
+    gene_name string,
+    gene_id string,
+    clin_sig string,
+    clin_dbn string,
+    kav_freq float,
+    kav_source string,
+    dbsnp_build string,
+    var_type string,
+    cadd_raw float,
+    dann_score float,
+    interpro_domain string,
+    EFFECT string,
+    IMPACT string,
+    FEATURE string,
+    FEATUREID string,
+    BIOTYPE string,
+    RANK int,
+    HGVS_C string ,
+    HGVS_P string )
+partitioned by (chrom string)
+COMMENT "Annotated table of all variants found on impala."
 
---- join snpeff coding consequences with global_variants table to create global_vars
+#for x in $(seq 1 22) M MT X Y; do echo "$x"; nohup impala-shell -q "\
+insert into table p7_product.global_vars partition (chrom)
+  WITH t1 as (
+      SELECT *
+      from p7_product.dbsnfp_vars
+      where chrom = '1'),
+  t2 as (
+      SELECT *
+      from p7_product.all_coding
+      where chrom = '1')
+
+SELECT t1.pos, t1.ref, t1.alt, t1.rs_id, t1.strand, t1.gene_name, t1.gene_id, t1.clin_sig, t1.clin_dbn,
+  t1.kav_freq, t1.kav_source, t1.dbsnp_build, t1.var_type, t1.cadd_raw, t1.dann_score, t1.intpro_domain,
+  t2.effect, t2.impact, t2.feature, t2.feature_id, t2.biotype, t2.rank, t2.hgvs_c, t2.hgvs_p, t1.chrom
+FROM t1
+LEFT JOIN t2
+  ON t1.chrom = t2.chrom
+  AND t1.pos = t2.pos
+  AND t1.ref = t2.ref
+  AND t1.alt = t2.alt
 
 --- compute stats on new table
-compute stats dataset_snpeff;
+compute stats global_vars;
 
 -- clean up temp tables
 drop table kav_distinct;
@@ -1213,8 +336,6 @@ drop table clin_distinct;
 drop table dbsnp_distinct;
 drop table clin_kav_distinct;
 
-
--- drop table all_vars; 
 
 
 
