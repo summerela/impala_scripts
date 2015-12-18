@@ -256,11 +256,11 @@ insert into table p7_product.dbsnfp_vars partition (chrom)
 WITH ens as (
     SELECT *
     from p7_product.ens_partitioned
-    where chrom = '1'),
+    where chrom = '$x'),
 d as (
     SELECT *
     from p7_product.dbsnfp_distinct
-    where chrom = '1')
+    where chrom = '$x')
 
 SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
   ens.gene_id, ens.clin_sig, ens.clin_dbn, ens.kav_freq, ens.kav_source,
@@ -286,9 +286,7 @@ CREATE TABLE p7_product.global_vars
     strand string,
     gene_name string,
     gene_id string,
-    clin_sig string,
     clin_dbn string,
-    kav_freq float,
     kav_source string,
     dbsnp_build string,
     var_type string,
@@ -296,18 +294,17 @@ CREATE TABLE p7_product.global_vars
     dann_score float,
     interpro_domain string,
     EFFECT string,
-    IMPACT string,
     FEATURE string,
     FEATUREID string,
     BIOTYPE string,
     RANK int,
     HGVS_C string ,
     HGVS_P string )
-partitioned by (chrom string)
+partitioned by (chrom string, clin_sig string, kav_freq float, impact string)
 COMMENT "Annotated table of all variants found on impala."
 
 #for x in $(seq 1 22) M MT X Y; do echo "$x"; nohup impala-shell -q "\
-insert into table p7_product.global_vars partition (chrom)
+insert into table p7_product.global_vars partition (chrom, clin_sig, kav_freq, impact)
   WITH t1 as (
       SELECT *
       from p7_product.dbsnfp_vars
@@ -317,9 +314,9 @@ insert into table p7_product.global_vars partition (chrom)
       from p7_product.all_coding
       where chrom = '1')
 
-SELECT t1.pos, t1.ref, t1.alt, t1.rs_id, t1.strand, t1.gene_name, t1.gene_id, t1.clin_sig, t1.clin_dbn,
-  t1.kav_freq, t1.kav_source, t1.dbsnp_build, t1.var_type, t1.cadd_raw, t1.dann_score, t1.intpro_domain,
-  t2.effect, t2.impact, t2.feature, t2.feature_id, t2.biotype, t2.rank, t2.hgvs_c, t2.hgvs_p, t1.chrom
+SELECT t1.pos, t1.ref, t1.alt, t1.rs_id, t1.strand, t1.gene_name, t1.gene_id, t1.clin_dbn, t1.kav_source,
+  t1.dbsnp_build, t1.var_type, t1.cadd_raw, t1.dann_score, t1.intpro_domain, t2.effect, t2.feature, t2.feature_id,
+  t2.biotype, t2.rank, t2.hgvs_c, t2.hgvs_p, t1.chrom, t1.clin_sig, t1.kav_freq, t2.impact
 FROM t1
 LEFT JOIN t2
   ON t1.chrom = t2.chrom
