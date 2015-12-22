@@ -151,6 +151,28 @@ compute stats p7_product.all_vars;
 
 --- compared number of rows in each chromosome with number of rows in kav_distinct to ensure rows were retained
 
+--- add additional positional partition to all_vars table to avoid exceeding memory on impala
+create table p7_product.all_variants
+( pos int,
+ ref string,
+ alt string,
+ rs_id string,
+ clin_sig string,
+ clin_dbn string,
+ kav_freq float,
+ kav_source string,
+ dbsnp_buildid int,
+ var_type string
+ )
+ partitioned by (chrom string, pos_block int);
+
+insert into p7_product.all_variants partition (chrom, pos_block)
+select pos, ref, alt, rs_id, clin_sig, clin_dbn, kav_freq,
+    kav_source, cast(dbsnp_build as int), var_type, chrom,
+    cast(pos/1000000 as int) as pos_block
+from p7_product.all_vars;
+
+compute stats all_variants;
 
 -- ANNOTATE ALL_VARIANTS TABLE TO CREATE GLOBAL VARIANTS TABLE
 
@@ -163,10 +185,11 @@ create table p7_product.ens_distinct
   gene_name STRING,
   gene_id STRING
 )
-  PARTITIONED BY (chrom string);
+  PARTITIONED BY (chrom string, pos_block int);
 
 INSERT INTO p7_product.ens_distinct partition (chrom)
-    select distinct start, stop, strand, gene_name, gene_id, chrom
+    select distinct start, stop, strand, gene_name, gene_id,
+      chrom,  cast(start/1000000 as int) as pos_block
     from p7_ref_grch37.ensembl_genes;
 
 --- compute stats on new table
@@ -185,29 +208,31 @@ create table p7_product.ens_partitioned
     clin_dbn string,
     kav_freq float,
     kav_source string,
-    dbsnp_build string,
+    dbsnp_build int,
     var_type string
     )
-    partitioned by (chrom string)
+    partitioned by (chrom string, pos_block int);
 
 -- inserted each chromosome into partitioned table as follows
-#for x in $(seq 1 22) M MT X Y; do echo "$x"; nohup impala-shell -q "\
-insert into table p7_product.ens_partitioned partition (chrom)
+#for x in $(seq 1 22) M MT X Y; for y in $(seq 0 249); do nohup impala-shell -q "\
+insert into table p7_product.ens_partitioned partition (chrom, pos_block)
 with t0 as (
-    SELECT * FROM p7_product.all_vars
-    WHERE chrom = '$x'),
+    SELECT * FROM p7_product.all_variants
+    WHERE chrom = '$x'
+    AND pos_block = $y),
 t1 as (
   SELECT * FROM p7_product.ens_distinct
-  WHERE chrom = '$x')
+  WHERE chrom = '$x'
+  AND pos_block = $y)
 
 SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
    t1.gene_name, t1.gene_id, t0.clin_sig, t0.clin_dbn, t0.kav_freq,
-  t0.kav_source, t0.dbsnp_build, t0.var_type, t0.chrom
+  t0.kav_source, t0.dbsnp_buildid as buildid, t0.var_type, t0.chrom, cast(pos/1000000 as int) as pos_block
 FROM t0
 LEFT JOIN t1
     ON t0.chrom = t1.chrom
     AND (t0.pos BETWEEN t1.start and t1.stop);
-# " ; done
+# " ; done ; done
 
 compute stats ens_partitioned;
 
