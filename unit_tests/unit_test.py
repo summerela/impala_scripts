@@ -15,7 +15,6 @@ test_rsid = 'rs334'
 ####################
 import pandas as pd
 from impala.dbapi import connect
-import os
 import unittest
 import urllib, json
 

@@ -3,8 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="11926030-5bab-493b-90f7-9718f3843c4e" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/annotation/admix.ipynb" afterPath="$PROJECT_DIR$/annotation/admix.ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/annotation/global_vars.sql" afterPath="$PROJECT_DIR$/annotation/global_vars.sql" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/unit_tests/unit_test.py" afterPath="$PROJECT_DIR$/unit_tests/unit_test.py" />
     </list>
     <ignored path="impala_scripts.iws" />
@@ -61,16 +59,15 @@
       <file leaf-file-name="unit_test.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/unit_tests/unit_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="1.2178218">
-              <caret line="41" column="15" selection-start-line="41" selection-start-column="15" selection-end-line="41" selection-end-column="15" />
+            <state vertical-scroll-proportion="0.47713718">
+              <caret line="16" column="32" selection-start-line="16" selection-start-column="32" selection-end-line="16" selection-end-column="32" />
               <folding>
-                <element signature="e#289#308#0" expanded="true" />
-                <marker date="1450833258000" expanded="true" signature="1284:1339" placeholder="SELECT chrom... " />
-                <marker date="1450833258000" expanded="true" signature="2053:2112" placeholder="SELECT COUNT... " />
-                <marker date="1450833258000" expanded="true" signature="2683:2733" placeholder="SELECT chrom... " />
-                <marker date="1450833258000" expanded="true" signature="3693:3735" placeholder="SELECT chrom... missing_value" />
-                <marker date="1450833258000" expanded="true" signature="3693:3737" placeholder="SELECT chrom... missing_value" />
-                <marker date="1450833258000" expanded="true" signature="3693:3740" placeholder="SELECT chrom... missing_value" />
+                <marker date="1450833587000" expanded="true" signature="1274:1329" placeholder="SELECT chrom... " />
+                <marker date="1450833587000" expanded="true" signature="2043:2102" placeholder="SELECT COUNT... " />
+                <marker date="1450833587000" expanded="true" signature="2673:2723" placeholder="SELECT chrom... " />
+                <marker date="1450833587000" expanded="true" signature="3683:3725" placeholder="SELECT chrom... missing_value" />
+                <marker date="1450833587000" expanded="true" signature="3683:3727" placeholder="SELECT chrom... missing_value" />
+                <marker date="1450833587000" expanded="true" signature="3683:3730" placeholder="SELECT chrom... missing_value" />
               </folding>
             </state>
           </provider>
@@ -576,12 +573,6 @@
       <option name="number" value="Default" />
       <updated>1433281253009</updated>
     </task>
-    <task id="LOCAL-00067" summary="fixing hdfs to impala table">
-      <created>1449288785488</created>
-      <option name="number" value="00067" />
-      <option name="project" value="LOCAL" />
-      <updated>1449288785488</updated>
-    </task>
     <task id="LOCAL-00068" summary="fixing hdfs to impala table">
       <created>1449289308440</created>
       <option name="number" value="00068" />
@@ -870,7 +861,13 @@
       <option name="project" value="LOCAL" />
       <updated>1450746508534</updated>
     </task>
-    <option name="localTasksCounter" value="116" />
+    <task id="LOCAL-00116" summary="updated unit testing to accept user variables and dynamically grab position information for testing rsID for hg19">
+      <created>1450833300714</created>
+      <option name="number" value="00116" />
+      <option name="project" value="LOCAL" />
+      <updated>1450833300714</updated>
+    </task>
+    <option name="localTasksCounter" value="117" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -888,17 +885,17 @@
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1545925" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31548312" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32846716" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.41715628" sideWeight="0.519189" order="12" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.329737" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28084606" sideWeight="0.49713877" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28710464" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.37951106" sideWeight="0.480811" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.38039672" sideWeight="0.480811" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.13005273" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22391559" sideWeight="0.4885337" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.329737" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4167637" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32846716" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -922,7 +919,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
-    <MESSAGE value="updating hdfs dfs put command" />
     <MESSAGE value="modifying read/write permissions on newly created hdfs directory" />
     <MESSAGE value="fixing hdfs put command" />
     <MESSAGE value="fiexed hdfs put command, testing hdfs to impala" />
@@ -947,7 +943,8 @@
     <MESSAGE value="finished unit test script for snpeff, table passed" />
     <MESSAGE value="streamlining and testing global variants script" />
     <MESSAGE value="updated script to partition all tables, removed transcript from ensembl table and adding as feature with snpeff annotations" />
-    <option name="LAST_COMMIT_MESSAGE" value="updated script to partition all tables, removed transcript from ensembl table and adding as feature with snpeff annotations" />
+    <MESSAGE value="updated unit testing to accept user variables and dynamically grab position information for testing rsID for hg19" />
+    <option name="LAST_COMMIT_MESSAGE" value="updated unit testing to accept user variables and dynamically grab position information for testing rsID for hg19" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1324,16 +1321,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/unit_tests/unit_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="1.2178218">
-          <caret line="41" column="15" selection-start-line="41" selection-start-column="15" selection-end-line="41" selection-end-column="15" />
+        <state vertical-scroll-proportion="0.47713718">
+          <caret line="16" column="32" selection-start-line="16" selection-start-column="32" selection-end-line="16" selection-end-column="32" />
           <folding>
-            <element signature="e#289#308#0" expanded="true" />
-            <marker date="1450833258000" expanded="true" signature="1284:1339" placeholder="SELECT chrom... " />
-            <marker date="1450833258000" expanded="true" signature="2053:2112" placeholder="SELECT COUNT... " />
-            <marker date="1450833258000" expanded="true" signature="2683:2733" placeholder="SELECT chrom... " />
-            <marker date="1450833258000" expanded="true" signature="3693:3735" placeholder="SELECT chrom... missing_value" />
-            <marker date="1450833258000" expanded="true" signature="3693:3737" placeholder="SELECT chrom... missing_value" />
-            <marker date="1450833258000" expanded="true" signature="3693:3740" placeholder="SELECT chrom... missing_value" />
+            <marker date="1450833587000" expanded="true" signature="1274:1329" placeholder="SELECT chrom... " />
+            <marker date="1450833587000" expanded="true" signature="2043:2102" placeholder="SELECT COUNT... " />
+            <marker date="1450833587000" expanded="true" signature="2673:2723" placeholder="SELECT chrom... " />
+            <marker date="1450833587000" expanded="true" signature="3683:3725" placeholder="SELECT chrom... missing_value" />
+            <marker date="1450833587000" expanded="true" signature="3683:3727" placeholder="SELECT chrom... missing_value" />
+            <marker date="1450833587000" expanded="true" signature="3683:3730" placeholder="SELECT chrom... missing_value" />
           </folding>
         </state>
       </provider>
