@@ -214,7 +214,7 @@ create table p7_product.ens_partitioned
     partitioned by (chrom string, pos_block int);
 
 -- inserted each chromosome into partitioned table as follows
-#for x in $(seq 1 22) M MT X Y; for y in $(seq 0 249); do nohup impala-shell -q "\
+#for x in $(seq 1 22) M MT X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
 insert into table p7_product.ens_partitioned partition (chrom, pos_block)
 with t0 as (
     SELECT * FROM p7_product.all_variants
@@ -236,6 +236,40 @@ LEFT JOIN t1
 
 compute stats ens_partitioned;
 
+--- check that row counts are as expected by comparing results with all_vars table
+# for x in $(seq 1 22) M MT X Y; do impala-shell -q  \
+# "select count(*) from p7_product.ens_partitioned where chrom = '$x';"; done
+
+##for x in $(seq 1 22) M MT X Y; do impala-shell -q \
+##"select count(*) from p7_product.all_vars where chrom = '$x';"; done
+
+--- due to server issues, had to redo chromosomes 18 through MT, taking distcint of table
+create table p7_product.ens_vars
+    (pos int,
+    ref string,
+    alt string,
+    rs_id string,
+    strand string,
+    gene_name string,
+    gene_id string,
+    clin_sig string,
+    clin_dbn string,
+    kav_freq float,
+    kav_source string,
+    dbsnp_build int,
+    var_type string
+    )
+    partitioned by (chrom string, pos_block int);
+
+#for x in $(seq 1 22) M MT X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+insert into table p7_product.ens_vars partition (chrom, pos_block)
+select distinct *
+from p7_product.ens_partitioned
+where chrom = '$x'
+and pos_block = $y;
+#" ; done; done
+
+
 -- create distinct subset of dbsnfp table
 create table p7_product.dbnsfp_distinct
 (
@@ -246,10 +280,11 @@ create table p7_product.dbnsfp_distinct
   dann_score FLOAT,
   interpro_domain string
 )
-PARTITIONED BY (chrom string);
+PARTITIONED BY (chrom string, pos_block int);
 
-INSERT INTO p7_product.dbnsfp_distinct PARTITION (chrom)
-    select distinct pos, ref, alt, cadd_raw, dann_score, interpro_domain, chrom
+INSERT INTO p7_product.dbnsfp_distinct PARTITION (chrom, pos_block)
+    select distinct pos, ref, alt, cadd_raw, dann_score,
+      interpro_domain, chrom, cast(pos/1000000 as int) as pos_block
     from p7_ref_grch37.dbnsfp_variant;
 
 --- compute stats on new table
@@ -274,22 +309,25 @@ create table p7_product.dbsnfp_vars
     dann_score float,
     interpro_domain string
     )
-    partitioned by (chrom string);
+    partitioned by (chrom string, pos_block int);
 
-#for x in $(seq 1 22) M MT X Y; do echo "$x"; nohup impala-shell -q "\
-insert into table p7_product.dbsnfp_vars partition (chrom)
+#for x in $(seq 1 22) M MT X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+insert into table p7_product.dbsnfp_vars partition (chrom, pos_block)
 WITH ens as (
     SELECT *
-    from p7_product.ens_partitioned
-    where chrom = '$x'),
+    from p7_product.ens_vars
+    where chrom = '$x'
+    and pos_block = $y),
 d as (
     SELECT *
     from p7_product.dbsnfp_distinct
-    where chrom = '$x')
+    where chrom = '$x'
+    and pos_block = $y)
 
 SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
   ens.gene_id, ens.clin_sig, ens.clin_dbn, ens.kav_freq, ens.kav_source,
-  ens.dbsnp_build, ens.var_type, d.cadd_raw, d.dann_score, d.interpro_domain, ens.chrom
+  ens.dbsnp_build, ens.var_type, d.cadd_raw, d.dann_score, d.interpro_domain,
+  ens.chrom, ens.pos_block
 from ens
 left join d
     on ens.chrom = d.chrom
@@ -302,6 +340,32 @@ compute stats p7_product.dbsnfp_vars;
 
 --- ANNOTATE VARIANTS WITH CODING CONSEQUENCES
 
+--- create coding consequence table partitioned by chrom and position
+create table p7_product.coding_partitioned
+(
+  pos int,
+  id string,
+  ref string,
+  alt string,
+  gene_name string,
+  gene_id string,
+  effect string,
+  impact string,
+  feature string,
+  feature_id string,
+  biotype string,
+  rank int,
+  hgvs_c string,
+  hgvs_p string
+)
+partitioned by (chrom string, pos_block int);
+
+insert into table p7_product.coding_partitioned partition (chrom, pos_block)
+  select distinct pos, id, ref, alt, gene as gene_name, gene_id, effect,
+    impact, feature, feature_id, biotype, rank, hgvs_c, hgvs_p,
+    chrom, cast(pos/1000000 as int) as pos_block
+  from p7_product.all_coding;
+
 --- create the final table in the pipeline, global_vars containing all basic annotations
 CREATE TABLE p7_product.global_vars
    (pos int,
@@ -312,6 +376,7 @@ CREATE TABLE p7_product.global_vars
     gene_name string,
     gene_id string,
     clin_dbn string,
+    kav_freq float,
     kav_source string,
     dbsnp_build string,
     var_type string,
@@ -325,29 +390,36 @@ CREATE TABLE p7_product.global_vars
     RANK int,
     HGVS_C string ,
     HGVS_P string )
-partitioned by (chrom string, clin_sig string, kav_freq float, impact string)
+partitioned by (chrom string, pos_block int, clin_sig string, kav_rank string, impact string)
 COMMENT "Annotated table of all variants found on impala."
 
-#for x in $(seq 1 22) M MT X Y; do echo "$x"; nohup impala-shell -q "\
-insert into table p7_product.global_vars partition (chrom, clin_sig, kav_freq, impact)
+#for x in $(seq 1 22) M MT X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+insert into table p7_product.global_vars partition (chrom, pos_block, clin_sig, kav_rank, impact)
   WITH t1 as (
       SELECT *
       from p7_product.dbsnfp_vars
-      where chrom = '1'),
+      where chrom = '$x'
+      and pos_block = $y),
   t2 as (
       SELECT *
-      from p7_product.all_coding
-      where chrom = '1')
+      from p7_product.coding_partitioned
+      where chrom = '$x'
+      and pos_block = $y)
 
-SELECT t1.pos, t1.ref, t1.alt, t1.rs_id, t1.strand, t1.gene_name, t1.gene_id, t1.clin_dbn, t1.kav_source,
+SELECT t1.pos, t1.ref, t1.alt, t1.rs_id, t1.strand, t1.gene_name, t1.gene_id, t1.clin_dbn, t1.kav_freq, t1.kav_source,
   t1.dbsnp_build, t1.var_type, t1.cadd_raw, t1.dann_score, t1.intpro_domain, t2.effect, t2.feature, t2.feature_id,
-  t2.biotype, t2.rank, t2.hgvs_c, t2.hgvs_p, t1.chrom, t1.clin_sig, t1.kav_freq, t2.impact
+  t2.biotype, t2.rank, t2.hgvs_c, t2.hgvs_p, t1.chrom, t1.pos_block, t1.clin_sig,
+  CASE when t1.kav_freq < .03 then 'under3'
+       when t1.kav_freq BETWEEEN .03 and .05 then '3to5'
+       else 'over5'
+       END AS kav_rank, t2.impact
 FROM t1
 LEFT JOIN t2
   ON t1.chrom = t2.chrom
   AND t1.pos = t2.pos
   AND t1.ref = t2.ref
-  AND t1.alt = t2.alt
+  AND t1.alt = t2.alt;
+# " ; done
 
 --- compute stats on new table
 compute stats global_vars;

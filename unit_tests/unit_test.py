@@ -1,131 +1,109 @@
 # impala connection strings
 impala_host = 'glados18'
 impala_port = '21050'
+impala_user = 'selasady'
 
 # Database to test
 input_db = "p7_product"
-input_table = "all_coding"
+input_table = "ens_partitioned"
+
+# enter rsID to use as test
+test_rsid = 'rs334'
 
 ####################
 ## import modules ##
 ####################
 import pandas as pd
 from impala.dbapi import connect
-from impala.util import as_pandas
-import numpy as np
+import os
+import unittest
 import urllib, json
 
 # disable extraneous pandas warning
 pd.options.mode.chained_assignment = None
 
-## create connection to impala
-conn=connect(host=impala_host, port=impala_port, timeout=10000, user='selasady')
-cur = conn.cursor()
-
 #################
 # Unit Testing ##
 #################
 
-# define list of possible expected chromsomes, mitochondria are not always present
-chroms = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', \
-              '21', '22', 'X', 'Y', 'M', 'MT']
+class table_test(unittest.TestCase):
 
-def get_stats(in_db, in_table):
-    # create object to get table column stats for use with downstream functions
-    get_col_stats = "show column stats {}.{}".format(in_db, in_table)
-    cur.execute(get_col_stats)
-    col_stats_df = as_pandas(cur)
-    col_stats_df = col_stats_df.replace('-1', 'NA')
-    col_stats_df.columns = ['column', 'data_type', 'distinct_values', 'num_nulls', 'max_size', 'avg_size']
-    return col_stats_df
+        # establish connection to database
+        def setUp(self):
+            db =  None
+            self.db = connect(host=impala_host, port=impala_port, timeout=10000, user=impala_user)
 
-# create variables to test
-stats_df = get_stats(input_db, input_table)
-num_chroms = stats_df['distinct_values'][stats_df['column'] == 'chrom'].iloc[0]
-chrom_dtype = stats_df['data_type'][stats_df['column'] == 'chrom'].iloc[0]
-pos_dtype = stats_df['data_type'][stats_df['column'] == 'pos'].iloc[0]
+        # close database connection when done
+        def tearDown(self):
+            if self.db: self.db.close()
 
-# check if any columns contain only a single value or all-nulls
-non_distincts =  stats_df.loc[stats_df['distinct_values'] < 2]
-if len(non_distincts) > 0:
-    print "FAIL: The following columns do not have more than one distcint value: \n"
-    print non_distincts
-else:
-    print "PASS: All columns have more than one distinct value. \n"
 
-# check that chromosome column contains 24 chromosomes
-if num_chroms != 24:
-    print "FAIL: " + str(num_chroms) + " chromosomes found. \n"
-    print sorted(stats_df['chrom'])
-else:
-    print "PASS: Table contains 24 chromosomes. \n"
+        def test_chromosomes(self):
+            '''
+            Test that all the chromosomes are loaded and that we
+            have a reasonable number of rows for each
+            '''
+            print "Testing that all chromosomes were uploaded... \n"
+            expect = map( str, range(1,23) ) + ['X','Y','MT', 'M']
+            found  = []
+            with self.db.cursor() as c:
+                chrom_cmd = 'SELECT chrom, COUNT(1) AS cnt FROM {}.{} GROUP BY chrom'.format(input_db, input_table)
+                c.execute(chrom_cmd)
+                for r in c:
+                    found.append( r[0] )
+                    if r[0] == 'MT':
+                        self.assertGreater( r[1], 1000, 'Chromosome has at least # variants' )
+                    else:
+                        self.assertGreater( r[1], 100000, 'Chromosome has at least # variants' )
+            self.assertItemsEqual( found, expect, 'Chromosomes all loaded'  )
 
-# check that chromosome column is a string
-if chrom_dtype != 'STRING':
-    print "FAIL: Chromosome column is listed as {} not a string. \n".format(chrom_dtype)
-else:
-    print "PASS: Chromosome data type is a string, as expected. \n"
 
-# check that pos column is an integer
-if pos_dtype != 'INT':
-    print "FAIL: Pos column is listed as {} not an integer. \n".format(pos_dtype)
-else:
-    print "PASS: Position column was an integer, as expected. \n"
+        def test_ref_alt(self):
 
-# test that all chromosomes are represented
-def test_chroms_present(in_db, in_table):
-    chrom_query = "select distinct chrom from {}.{}".format(in_db, in_table)
-    cur.execute(chrom_query)
-    chrom_list = sorted(cur.fetchall())
-    chrom_diffs = np.setdiff1d(np.array(chroms),np.array(chrom_list))
-    if len(chrom_diffs) > 0:
-        print "FAIL: The following chromosomes were not found: {}. \n".format(chrom_diffs)
-    else:
-        print "PASS: All chromosomes were successfully uploaded. \n"
+            '''
+            Test that the ref and alt columns all have values
+            '''
+            print "Testing that there are no null values in ref and alt columns... \n"
+            colvals_cmd = 'SELECT COUNT(1) FROM {}.{} WHERE ref IS NULL OR alt IS NULL'.format(input_db, input_table)
+            with self.db.cursor() as c:
+                c.execute( colvals_cmd )
+                self.assertEqual( c.fetchone()[0], 0,
+                                  'One or more null values found in ref/alt columns' )
 
-test_chroms_present(input_db, input_table )
 
-# test that coordinates are 1-based and match online source
-def test_against_online(in_db, in_table):
-    # get random row from table
-    grab_row = "select * from {}.{} order by rand () limit 1".format(in_db, in_table)
-    cur.execute(grab_row)
-    tester_row = as_pandas(cur)
-    # use rsid to get information from web api
-    test_url = 'http://myvariant.info/v1/query?q={}'.format(tester_row['id'])
-    response = urllib.urlopen(test_url)
-    data = json.loads(response.read())
-    # test that chromosome match
-    ref_chrom = data["hits"][0]["dbsnp"]["chrom"]
-    if str(tester_row['chrom'].iloc[0]) == str(ref_chrom):
-        print "PASS: chromosome matches online reference for {}. \n".format(tester_row['id'].iloc[0])
-    else:
-        print "FAIL: chromosome does not match online reference for {}. \n".format(tester_row['id'].iloc[0])
-    #test that position matches online reference
-    ref_position =  data["hits"][0]["vcf"]["position"]
-    if str(tester_row['pos'].iloc[0]) == str(ref_position):
-        print "PASS: position matches online reference for {}. \n".format(tester_row['id'].iloc[0])
-    else:
-        print "FAIL: position does not match 1-based online reference for {}. \n".format(tester_row['id'].iloc[0])
-    #test that ref allele matches online reference allele
-    ref_ref =  data["hits"][0]["vcf"]["ref"]
-    if str(tester_row['ref'].iloc[0]) == str(ref_ref):
-        print "PASS: reference allele matches online reference for  {}. \n".format(tester_row['id'].iloc[0])
-    else:
-        print "FAIL: reference allele does not match online reference for  {}. \n".format(tester_row['id'].iloc[0])
-    # test that alt allele matches alternate allele of online reference
-    ref_alt = position =  data["hits"][0]["vcf"]["alt"]
-    if str(tester_row['alt'].iloc[0]) == str(ref_alt):
-        print "PASS: alt allele matches online reference for  {}. \n".format(tester_row['id'].iloc[0])
-    else:
-        print "FAIL: alt allele does not match online reference for  {}. \n".format(tester_row['id'].iloc[0])
-    #make sure that gene name matches snpeff gene name for this rsid
-    ref_gene_name = data["hits"][0]["snpeff"]["ann"][0]["gene_id"]
-    if tester_row['gene'].iloc[0] == ref_gene_name:
-         print "PASS: snpeff gene name {} matches online reference for {}. \n".format(ref_gene_name, tester_row['id'].iloc[0])
-    else:
-       print "FAIL snpeff gene_name {} does not match online reference for {}. \n".format(ref_gene_name, tester_row['id'].iloc[0])
+        # def test_one_based(self):
+        #     '''
+        #     Ensure that the data was loaded as 1-based not 0-based by checking the
+        #     position of a common SNP, rs334 (Sickle Cell Anemia).
+        #     '''
+        #     print "Testing that coordinates are 1-based... \n"
+        #     pos_cmd = 'SELECT chrom, pos FROM {}.{} WHERE rs_id = "rs334"'.format(input_db, input_table)
+        #     with self.db.cursor() as c:
+        #         c.execute( pos_cmd )
+        #         # Position will be dependent on reference build
+        #         # for build GRCh37.p13
+        #         self.assertEqual( c.fetchone()[1], 5248232, "1-based coordinates" )
+        #         self.assertEqual( c.fetchone()[0], "11", "1-based chromosome" )
 
-test_against_online(input_db, input_table)
+        def test_one_based(self):
+            '''
+            Ensure that the data was loaded as 1-based not 0-based by checking the
+            position of a common SNP
+            '''
+            print "Testing that coordinates are 1-based... \n"
+            test_url = 'http://myvariant.info/v1/query?q={}'.format(test_rsid)
+            response = urllib.urlopen(test_url)
+            data = json.loads(response.read())
+            test_pos = data["hits"][0]["dbnsfp"]["hg19"]["start"]
+            test_chrom = data["hits"][0]["dbsnp"]["chrom"]
+            pos_cmd = 'SELECT chrom, pos FROM {}.{} WHERE rs_id = "{}"'.format(input_db, input_table, test_rsid)
+            with self.db.cursor() as c:
+                c.execute( pos_cmd )
+                # Position will be dependent on reference build
+                # for build GRCh37.p13
+                self.assertEqual( c.fetchone()[1], int(test_pos), "1-based coordinates" )
+                self.assertEqual( c.fetchone()[0], test_chrom, "1-based chromosome" )
 
-cur.close()
+
+if __name__ == '__main__':
+    unittest.main()
