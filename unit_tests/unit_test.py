@@ -69,21 +69,6 @@ class table_test(unittest.TestCase):
                 self.assertEqual( c.fetchone()[0], 0,
                                   'One or more null values found in ref/alt columns' )
 
-
-        # def test_one_based(self):
-        #     '''
-        #     Ensure that the data was loaded as 1-based not 0-based by checking the
-        #     position of a common SNP, rs334 (Sickle Cell Anemia).
-        #     '''
-        #     print "Testing that coordinates are 1-based... \n"
-        #     pos_cmd = 'SELECT chrom, pos FROM {}.{} WHERE rs_id = "rs334"'.format(input_db, input_table)
-        #     with self.db.cursor() as c:
-        #         c.execute( pos_cmd )
-        #         # Position will be dependent on reference build
-        #         # for build GRCh37.p13
-        #         self.assertEqual( c.fetchone()[1], 5248232, "1-based coordinates" )
-        #         self.assertEqual( c.fetchone()[0], "11", "1-based chromosome" )
-
         def test_one_based(self):
             '''
             Ensure that the data was loaded as 1-based not 0-based by checking the
