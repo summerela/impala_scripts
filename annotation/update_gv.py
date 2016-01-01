@@ -47,8 +47,6 @@ new_vars = as_pandas(cur)
 #################################################
 ## create vcf files by row for each chromosome ##
 #################################################
-chroms = map( str, range(1,23) ) + ['X','Y','MT', 'M']
-
 # create vcf header
 def create_header(outfile_name):
    # create vcf header
@@ -62,52 +60,33 @@ def create_header(outfile_name):
     out.write(header)
     out.close()
 
-### download variants by row and chromosome
-def create_vcf(db_name, table_name, chrom_name):
-    # create named file for each chromosome
-    vcf_out = 'chr' + chrom_name + '_' + out_name + '.vcf'
-    # create header for each chromosome file
-    create_header(vcf_out)
-    # connect to vars_to_snpeff table
-    # write variants to file row by row to save memory
-    with open(vcf_out, 'a') as csvfile:
-        for row in new_vars:
-            writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n')
-            writer.writerow(row)
-
 # function to create vcf file
-def create_vcf(db_name, table_name, chrom_name, out_name):
+def create_vcf(out_name):
     # create named file for each chromosome
-    vcf_out = 'chr' + chrom_name + '_' + out_name + '.vcf'
-    # create header for each chromosome file
-    # TODO: make this one function instead of calling header function
+    vcf_out = out_name + '.vcf'
+    # create header for file
     create_header(vcf_out)
-    # connect to vars_to_snpeff table
     # write variants to file row by row to save memory
-    with open(vcf_out, 'a') as csvfile:
-        for row in new_vars:
-            writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n')
-            writer.writerow(row)
+    new_vars.to_csv(vcf_out, sep='\t', encoding='utf-8', mode='a')
 
-# function to verify vcf format using GATK's barebones.pl script
-def check_vcf(chrom_name, out_name):
-    vcf_in =  'chr' + chrom_name + '_' + out_name + '.vcf'
-    vcf_out = 'chr' + chrom_name + '_verified.vcf'
-    # create the file and run snpeff
-    with open(vcf_out, "w") as out_file:
-        try:
-            subprocess.call(['perl', vcf_basic, vcf_in], stdout=out_file)
-        except subprocess.CalledProcessError as e:
-             print e.output
+# # function to verify vcf format using GATK's barebones.pl script
+# def check_vcf(chrom_name, out_name):
+#     vcf_in =  'chr' + chrom_name + '_' + out_name + '.vcf'
+#     vcf_out = 'chr' + chrom_name + '_verified.vcf'
+#     # create the file and run snpeff
+#     with open(vcf_out, "w") as out_file:
+#         try:
+#             subprocess.call(['perl', vcf_basic, vcf_in], stdout=out_file)
+#         except subprocess.CalledProcessError as e:
+#              print e.output
 
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
     print str(len(new_vars)) + " new variant(s) were found. \n"
-    for chrom in chroms:
-        print "Creating VCF files for chromosome {}. \n".format(chrom)
-        create_vcf(input_db, input_table, chrom, "new_vars")
-        print "Verifying VCF format for chromosome {}. \n".format(chrom)
-        check_vcf(chrom, "new_vars")
+    print "Creating VCF files for chromosome {}. \n".format(chrom)
+    create_vcf(input_db, input_table, chrom, "new_vars")
+    print "Verifying VCF format for chromosome {}. \n".format(chrom)
+    check_vcf(chrom, "new_vars")
 else:
     print "No new variants found."
 
