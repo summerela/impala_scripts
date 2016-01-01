@@ -69,24 +69,24 @@ def create_vcf(out_name):
     # write variants to file row by row to save memory
     new_vars.to_csv(vcf_out, sep='\t', encoding='utf-8', mode='a')
 
-# # function to verify vcf format using GATK's barebones.pl script
-# def check_vcf(chrom_name, out_name):
-#     vcf_in =  'chr' + chrom_name + '_' + out_name + '.vcf'
-#     vcf_out = 'chr' + chrom_name + '_verified.vcf'
-#     # create the file and run snpeff
-#     with open(vcf_out, "w") as out_file:
-#         try:
-#             subprocess.call(['perl', vcf_basic, vcf_in], stdout=out_file)
-#         except subprocess.CalledProcessError as e:
-#              print e.output
+# function to verify vcf format using GATK's barebones.pl script
+def check_vcf(out_name):
+    vcf_in =  out_name + '.vcf'
+    vcf_out = out_name + '_verified.vcf'
+    # create the file and run snpeff
+    with open(vcf_out, "w") as out_file:
+        try:
+            subprocess.call(['perl', vcf_basic, vcf_in], stdout=out_file)
+        except subprocess.CalledProcessError as e:
+             print e.output
 
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
     print str(len(new_vars)) + " new variant(s) were found. \n"
     print "Creating VCF files. \n"
     create_vcf("new_vars")
-    # print "Verifying VCF format. \n"
-    # check_vcf("new_vars")
+    print "Verifying VCF format. \n"
+    check_vcf("new_vars")
 else:
     print "No new variants found."
 
