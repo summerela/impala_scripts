@@ -84,9 +84,9 @@ def create_vcf(out_name):
 if len(new_vars) > 0:
     print str(len(new_vars)) + " new variant(s) were found. \n"
     print "Creating VCF files. \n"
-    create_vcf(input_db, input_table, "new_vars")
-    print "Verifying VCF format. \n"
-    check_vcf("new_vars")
+    create_vcf("new_vars")
+    # print "Verifying VCF format. \n"
+    # check_vcf("new_vars")
 else:
     print "No new variants found."
 
