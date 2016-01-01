@@ -62,13 +62,13 @@ def create_header(outfile_name):
     out.close()
 
 # function to create vcf file
-# def create_vcf(out_name):
-#     # create named vcf file
-#     vcf_out = out_name + '.vcf'
-#     # create header for file
-#     create_header(vcf_out)
-#     # write variants to file row by row to save memory
-#     new_vars.to_csv(vcf_out, sep='\t', encoding='utf-8', mode='a')
+def create_vcf(out_name):
+    # create named vcf file
+    vcf_out = out_name + '.vcf'
+    # create header for file
+    create_header(vcf_out)
+    # write variants to file row by row to save memory
+    new_vars.to_csv(vcf_out, sep='\t', encoding='utf-8', mode='a')
 
 # function to verify vcf format using GATK's barebones.pl script
 def check_vcf(out_name):
@@ -83,9 +83,9 @@ def check_vcf(out_name):
 
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
-    # print str(len(new_vars)) + " new variant(s) were found. \n"
-    # print "Creating VCF files. \n"
-    # create_vcf("new_vars")
+    print str(len(new_vars)) + " new variant(s) were found. \n"
+    print "Creating VCF files. \n"
+    create_vcf("new_vars")
     print "Verifying VCF format. \n"
     check_vcf("new_vars")
     sys.exit("New variants added to global variants table.")
