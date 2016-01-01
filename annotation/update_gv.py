@@ -62,7 +62,7 @@ def create_header(outfile_name):
 
 # function to create vcf file
 def create_vcf(out_name):
-    # create named file for each chromosome
+    # create named vcf file
     vcf_out = out_name + '.vcf'
     # create header for file
     create_header(vcf_out)
@@ -83,10 +83,10 @@ def create_vcf(out_name):
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
     print str(len(new_vars)) + " new variant(s) were found. \n"
-    print "Creating VCF files for chromosome {}. \n".format(chrom)
-    create_vcf(input_db, input_table, chrom, "new_vars")
-    print "Verifying VCF format. \n".format(chrom)
-    check_vcf(chrom, "new_vars")
+    print "Creating VCF files. \n"
+    create_vcf(input_db, input_table, "new_vars")
+    print "Verifying VCF format. \n"
+    check_vcf("new_vars")
 else:
     print "No new variants found."
 
