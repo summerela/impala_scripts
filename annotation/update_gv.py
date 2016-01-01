@@ -85,7 +85,7 @@ if len(new_vars) > 0:
     print str(len(new_vars)) + " new variant(s) were found. \n"
     print "Creating VCF files for chromosome {}. \n".format(chrom)
     create_vcf(input_db, input_table, chrom, "new_vars")
-    print "Verifying VCF format for chromosome {}. \n".format(chrom)
+    print "Verifying VCF format. \n".format(chrom)
     check_vcf(chrom, "new_vars")
 else:
     print "No new variants found."
