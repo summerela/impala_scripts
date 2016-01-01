@@ -402,7 +402,7 @@ CREATE TABLE p7_product.global_vars
 partitioned by (chrom string, pos_block int, clin_sig string, kav_rank string, impact string)
 COMMENT "Annotated table of all variants from Kaviar_ISB, ClinVar and dbSNP."
 
-#for x in $(seq 1 22) M MT X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+#for x in $(seq 9 22) M MT X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
 insert into table p7_product.global_vars partition (chrom, pos_block, clin_sig, kav_rank, impact)
   WITH t1 as (
       SELECT *
