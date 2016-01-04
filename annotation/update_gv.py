@@ -20,6 +20,8 @@ import csv
 import subprocess
 import numpy as np
 import sys
+import datetime
+now = datetime.datetime.now()
 
 # TODO: update from test_vars to global_vars once table is complete
 # create query to download variants from input table that are not in global_vars
@@ -109,17 +111,27 @@ def parse_snpeff(out_name):
     ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     print ps.communicate()[0]
 
+# remove header so strange characters don't break impala
+def remove_header(out_name):
+    tsv_in = out_name + '.tsv'
+    tsv_out = out_name + '_final.tsv'
+    tsv_cmd = "sed '1d' {} > {}".format(tsv_in,tsv_out)
+    tsv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    print tsv_proc.communicate()[0]
+
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
-    print str(len(new_vars)) + " new variant(s) were found. \n"
-    print "Creating VCF files. \n"
-    create_vcf("new_vars")
-    print "Verifying VCF format. \n"
-    check_vcf("new_vars")
-    print "Annotating variants with coding consequences using snpeff. \n"
-    run_snpeff("new_vars")
-    print "Parsing snpeff output. \n"
-    parse_snpeff("new_vars")
+    # print str(len(new_vars)) + " new variant(s) were found. \n"
+    # print "Creating VCF files. \n"
+    # create_vcf("new_vars")
+    # print "Verifying VCF format. \n"
+    # check_vcf("new_vars")
+    # print "Annotating variants with coding consequences using snpeff. \n"
+    # run_snpeff("new_vars")
+    # print "Parsing snpeff output. \n"
+    # parse_snpeff("new_vars")
+    print "Removing header for upload to impala. \n"
+    remove_header("new_vars")
     sys.exit("New variants added to global variants table.")
 
 
