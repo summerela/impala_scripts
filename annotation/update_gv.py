@@ -95,6 +95,20 @@ def run_snpeff(out_name):
         except subprocess.CalledProcessError as e:
              print e.output
 
+# output snpeff effects as tsv file with one effect per line
+def parse_snpeff(out_name):
+    vcf_in = out_name + '_snpeff.vcf'
+    tsv_out = out_name + '.tsv'
+    # create command to parse snpeff
+    snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
+    - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
+    "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" \
+    "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(vcf_in, snpeff_oneperline_perl, \
+    java_path, snpsift_jar, tsv_out)
+    # call subprocess and communicate to pipe output between commands
+    ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    print ps.communicate()[0]
+
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
     print str(len(new_vars)) + " new variant(s) were found. \n"
@@ -104,6 +118,8 @@ if len(new_vars) > 0:
     check_vcf("new_vars")
     print "Annotating variants with coding consequences using snpeff. \n"
     run_snpeff("new_vars")
+    print "Parsing snpeff output. \n"
+    parse_snpeff("new_vars")
     sys.exit("New variants added to global variants table.")
 
 
