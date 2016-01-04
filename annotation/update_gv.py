@@ -86,7 +86,7 @@ def check_vcf(out_name):
 
 # function to run verified vcf files through snpeff
 def run_snpeff(out_name):
-    vcf_in = 'chr' + chrom + '_verified.vcf'
+    vcf_in = out_name + '_verified.vcf'
     vcf_out = out_name + '_snpeff.vcf'
     with open(vcf_out, "w") as f:
         try:
