@@ -21,14 +21,14 @@ import subprocess
 import numpy as np
 import sys
 
-# TODO: update from global_vars to global_variants once table is complete
+# TODO: update from test_vars to global_vars once table is complete
 # create query to download variants from input table that are not in global_vars
 comparison_query = '''
 select chrom, rs_id, pos, ref, alt
 from {}.{} t
 where not exists (
   select chrom, pos, rs_id, ref, alt
-  from p7_product.global_vars g
+  from p7_product.test_vars g
   where t.chrom = g.chrom
   and t.pos = g.pos
   and t.ref = g.ref
