@@ -84,6 +84,16 @@ def check_vcf(out_name):
         except subprocess.CalledProcessError as e:
              print e.output
 
+# function to run verified vcf files through snpeff
+def run_snpeff(out_name):
+    vcf_in = 'chr' + chrom + '_verified.vcf'
+    vcf_out = out_name + '_snpeff.vcf'
+    with open(vcf_out, "w") as f:
+        try:
+            subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.75", vcf_in], stdout=f)
+        except subprocess.CalledProcessError as e:
+             print e.output
+
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
     print str(len(new_vars)) + " new variant(s) were found. \n"
@@ -91,7 +101,11 @@ if len(new_vars) > 0:
     create_vcf("new_vars")
     print "Verifying VCF format. \n"
     check_vcf("new_vars")
+    print "Annotating variants with coding consequences using snpeff. \n"
+    run_snpeff("new_vars")
     sys.exit("New variants added to global variants table.")
+
+
 else:
     sys.exit("No new variants found.")
 
