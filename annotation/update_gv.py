@@ -2,6 +2,7 @@
 input_db = "p7_product"
 input_table =  "test"
 hdfs_path = "/user/selasady/"
+result_name = "new_vars"
 
 # system paths to required executables
 java_path = '/tools/java/jdk1.7/bin/java'
@@ -54,6 +55,7 @@ new_vars = as_pandas(cur)
 #################################################
 # create vcf header
 def create_header(outfile_name):
+    print "Creating VCF header. \n"
    # create vcf header
     lines=[]
     lines.append('##fileformat=VCFv4.0')
@@ -67,6 +69,7 @@ def create_header(outfile_name):
 
 # function to create vcf file
 def create_vcf(out_name):
+    print "Creating VCF files. \n"
     # create named vcf file
     vcf_out = out_name + '.vcf'
     # create header for file
@@ -79,6 +82,7 @@ def create_vcf(out_name):
 
 # function to verify vcf format using GATK's barebones.pl script
 def check_vcf(out_name):
+    print "Verifying VCF format. \n"
     vcf_in =  out_name + '.vcf'
     vcf_out = out_name + '_verified.vcf'
     # create the file and run snpeff
@@ -90,6 +94,7 @@ def check_vcf(out_name):
 
 # function to run verified vcf files through snpeff
 def run_snpeff(out_name):
+    print "Annotating variants with coding consequences using snpeff. \n"
     vcf_in = out_name + '_verified.vcf'
     vcf_out = out_name + '_snpeff.vcf'
     with open(vcf_out, "w") as f:
@@ -100,6 +105,7 @@ def run_snpeff(out_name):
 
 # output snpeff effects as tsv file with one effect per line
 def parse_snpeff(out_name):
+    print "Parsing snpeff output. \n"
     vcf_in = out_name + '_snpeff.vcf'
     tsv_out = out_name + '.tsv'
     # create command to parse snpeff
@@ -114,6 +120,7 @@ def parse_snpeff(out_name):
 
 # remove header so strange characters don't break impala
 def remove_header(out_name):
+    print "Removing header for upload to impala. \n"
     tsv_in = out_name + '.tsv'
     tsv_out = out_name + '_final.tsv'
     tsv_cmd = "sed '1d' {} > {}".format(tsv_in,tsv_out)
@@ -139,6 +146,7 @@ def upload_hdfs(out_name):
     print chown_proc.communicate()[0]
 
 def create_table(out_name):
+    print "Creating table to store results. \n"
     table_name = out_name + '_' + str(now.strftime("%Y%m%d"))
     # create empty table to insert annotated new variants
     create_coding_table = '''
@@ -173,23 +181,25 @@ def results_to_table(out_name):
     '''.format(out_path, input_db, table_name)
     cur.execute(load_query)
 
+# compute stats on newly created table
+def stats_coding(out_name):
+    table_name = out_name + '_' + str(now.strftime("%Y%m%d"))
+    print "Running compute stats on {}".format(table_name)
+    coding_compstats = "compute stats {}.{}".format(input_db, table_name)
+    cur.execute(coding_compstats)
+
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
-    # print str(len(new_vars)) + " new variant(s) were found. \n"
-    # print "Creating VCF files. \n"
-    # create_vcf("new_vars")
-    # print "Verifying VCF format. \n"
-    # check_vcf("new_vars")
-    # print "Annotating variants with coding consequences using snpeff. \n"
-    # run_snpeff("new_vars")
-    # print "Parsing snpeff output. \n"
-    # parse_snpeff("new_vars")
-    # print "Removing header for upload to impala. \n"
-    # remove_header("new_vars")
-    #upload_hdfs("new_vars")
-    # print "Creating table to store results. \n"
-    # create_table("new_vars")
-    results_to_table("new_vars")
+    # print str(len(result_name)) + " new variant(s) were found. \n"
+    # create_vcf(result_name)
+    # check_vcf(result_name)
+    # run_snpeff(result_name)
+    # parse_snpeff(result_name)
+    # remove_header(result_name)
+    # upload_hdfs(result_name)
+    # create_table(result_name)
+    # results_to_table(result_name)
+    stats_coding(result_name)
     sys.exit("New variants added to global variants table.")
     cur.close()
 
