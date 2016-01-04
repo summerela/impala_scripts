@@ -177,7 +177,7 @@ if len(new_vars) > 0:
     # print "Removing header for upload to impala. \n"
     # remove_header("new_vars")
     #upload_hdfs("new_vars")
-    print "Creating table named {}.{} to store results. \n".format(input_db, out_name + '_' + str(now.strftime("%Y%m%d")))
+    print "Creating table to store results. \n"
     create_table("new_vars")
     sys.exit("New variants added to global variants table.")
 
