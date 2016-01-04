@@ -24,10 +24,10 @@ import sys
 # TODO: update from global_vars to global_variants once table is complete
 # create query to download variants from input table that are not in global_vars
 comparison_query = '''
-select chrom, pos, ref, alt
+select chrom, rs_id, pos, ref, alt
 from {}.{} t
 where not exists (
-  select chrom, pos, ref, alt
+  select chrom, pos, rs_id, ref, alt
   from p7_product.global_vars g
   where t.chrom = g.chrom
   and t.pos = g.pos
@@ -68,7 +68,10 @@ def create_vcf(out_name):
     # create header for file
     create_header(vcf_out)
     # write variants to file row by row to save memory
-    new_vars.to_csv(vcf_out, sep='\t', encoding='utf-8', mode='a')
+    try:
+        new_vars.to_csv(vcf_out, sep='\t', encoding='utf-8', mode='a')
+    except Exception as csv_error:
+        print csv_error
 
 # function to verify vcf format using GATK's barebones.pl script
 def check_vcf(out_name):
@@ -85,15 +88,9 @@ def check_vcf(out_name):
 if len(new_vars) > 0:
     print str(len(new_vars)) + " new variant(s) were found. \n"
     print "Creating VCF files. \n"
-    try:
-        create_vcf("new_vars")
-    except Exception as create_error:
-        print create_error
+    create_vcf("new_vars")
     print "Verifying VCF format. \n"
-    try:
-        check_vcf("new_vars")
-    except Exception as check_error:
-        print check_error
+    check_vcf("new_vars")
     sys.exit("New variants added to global variants table.")
 else:
     sys.exit("No new variants found.")
