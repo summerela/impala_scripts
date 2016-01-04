@@ -163,6 +163,16 @@ def create_table(out_name):
     '''.format(input_db, table_name)
     cur.execute(create_coding_table)
 
+# load hdfs files into table
+def results_to_table(out_name):
+    print "Loading results to impala table. \n"
+    out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
+    table_name = out_name + '_' + str(now.strftime("%Y%m%d"))
+    load_query = '''
+        load data inpath '{}' into table {}.{}
+    '''.format(out_path, input_db, table_name)
+    cur.execute(load_query)
+
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
     # print str(len(new_vars)) + " new variant(s) were found. \n"
@@ -177,13 +187,15 @@ if len(new_vars) > 0:
     # print "Removing header for upload to impala. \n"
     # remove_header("new_vars")
     #upload_hdfs("new_vars")
-    print "Creating table to store results. \n"
-    create_table("new_vars")
+    # print "Creating table to store results. \n"
+    # create_table("new_vars")
+    results_to_table("new_vars")
     sys.exit("New variants added to global variants table.")
-
+    cur.close()
 
 else:
     sys.exit("No new variants found.")
+    cur.close()
 
 # annoate with clinvar
 
