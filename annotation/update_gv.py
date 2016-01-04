@@ -161,7 +161,7 @@ def create_table(out_name):
   row format delimited
   fields terminated by '\t'
 '''.format(input_db, table_name)
-cur.execute(create_coding)
+cur.execute(create_coding_table)
 
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
