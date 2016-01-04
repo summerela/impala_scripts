@@ -434,6 +434,8 @@ LEFT JOIN t2
 --- compute stats on new table
 compute stats global_vars;
 
+--- run unit tests
+
 -- clean up temp tables
 drop table kav_distinct;
 drop table clin_distinct;
