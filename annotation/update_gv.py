@@ -24,7 +24,7 @@ import sys
 # TODO: update from test_vars to global_vars once table is complete
 # create query to download variants from input table that are not in global_vars
 comparison_query = '''
-select chrom, rs_id, pos, ref, alt
+select chrom, pos, rs_id, ref, alt
 from {}.{} t
 where not exists (
   select chrom, pos, rs_id, ref, alt
