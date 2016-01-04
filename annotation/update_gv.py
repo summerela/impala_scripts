@@ -85,9 +85,15 @@ def check_vcf(out_name):
 if len(new_vars) > 0:
     print str(len(new_vars)) + " new variant(s) were found. \n"
     print "Creating VCF files. \n"
-    create_vcf("new_vars")
+    try:
+        create_vcf("new_vars")
+    except Exception as create_error:
+        print create_error
     print "Verifying VCF format. \n"
-    check_vcf("new_vars")
+    try:
+        check_vcf("new_vars")
+    except Exception as check_error:
+        print check_error
     sys.exit("New variants added to global variants table.")
 else:
     sys.exit("No new variants found.")
