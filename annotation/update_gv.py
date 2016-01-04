@@ -142,26 +142,26 @@ def create_table(out_name):
     table_name = out_name + '_' + str(now.strftime("%Y%m%d"))
     # create empty table to insert annotated new variants
     create_coding_table = '''
-    create table {}.{}
-     (chrom string,
-      pos int,
-      rs_id string,
-      ref string,
-      alt string,
-      gene string,
-      gene_id string,
-      effect string,
-      impact string,
-      feature string,
-      feature_id string,
-      biotype string,
-      rank int,
-      hgvs_c string,
-      hgvs_p string)
-  row format delimited
-  fields terminated by '\t'
-'''.format(input_db, table_name)
-cur.execute(create_coding_table)
+        create table {}.{}
+         (chrom string,
+          pos int,
+          rs_id string,
+          ref string,
+          alt string,
+          gene string,
+          gene_id string,
+          effect string,
+          impact string,
+          feature string,
+          feature_id string,
+          biotype string,
+          rank int,
+          hgvs_c string,
+          hgvs_p string)
+      row format delimited
+      fields terminated by '\t'
+    '''.format(input_db, table_name)
+    cur.execute(create_coding_table)
 
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
