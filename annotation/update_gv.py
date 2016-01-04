@@ -69,7 +69,7 @@ def create_vcf(out_name):
     create_header(vcf_out)
     # write variants to file row by row to save memory
     try:
-        new_vars.to_csv(vcf_out, sep='\t', encoding='utf-8', mode='a')
+        new_vars.to_csv(vcf_out, sep='\t', encoding='utf-8', mode='a', header=False)
     except Exception as csv_error:
         print csv_error
 
