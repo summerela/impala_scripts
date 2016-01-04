@@ -138,6 +138,31 @@ def upload_hdfs(out_name):
     chown_proc = subprocess.Popen(chown_dir_cmd, shell=True, stderr=subprocess.STDOUT)
     print chown_proc.communicate()[0]
 
+def create_table(out_name):
+    table_name = out_name + '_' + str(now.strftime("%Y%m%d"))
+    # create empty table to insert annotated new variants
+    create_coding_table = '''
+    create table {}.{}
+     (chrom string,
+      pos int,
+      rs_id string,
+      ref string,
+      alt string,
+      gene string,
+      gene_id string,
+      effect string,
+      impact string,
+      feature string,
+      feature_id string,
+      biotype string,
+      rank int,
+      hgvs_c string,
+      hgvs_p string)
+  row format delimited
+  fields terminated by '\t'
+'''.format(input_db, table_name)
+cur.execute(create_coding)
+
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
     # print str(len(new_vars)) + " new variant(s) were found. \n"
@@ -151,7 +176,9 @@ if len(new_vars) > 0:
     # parse_snpeff("new_vars")
     # print "Removing header for upload to impala. \n"
     # remove_header("new_vars")
-    upload_hdfs("new_vars")
+    #upload_hdfs("new_vars")
+    print "Creating table named {}.{} to store results. \n".format(input_db, out_name + '_' + str(now.strftime("%Y%m%d")))
+    create_table("new_vars")
     sys.exit("New variants added to global variants table.")
 
 
