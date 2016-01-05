@@ -153,10 +153,23 @@ def remove_header(out_name):
     except Exception as e:
         print e
 
+##################################
+## Run variants through snpeff  ##
+##################################
+
+# process new variants by chromosome
+for chrom in chroms:
+    new_vars = get_vars(input_db, input_table, chrom)
+    if len(new_vars) > 0:
+        #create_vcf(result_name, chrom, new_vars)
+        #check_vcf(result_name)
+        #run_snpeff(result_name)
+        #parse_snpeff(result_name)
+        #remove_header(result_name)
+
 #############################
 ## Upload results to hdfs  ##
 #############################
-
 # upload results to hdfs
 def upload_hdfs(out_name):
     # define output path on hdfs
@@ -174,32 +187,7 @@ def upload_hdfs(out_name):
     chown_dir_cmd = "hdfs dfs -chown -R impala:supergroup {}".format(hdfs_path)
     chown_proc = subprocess.Popen(chown_dir_cmd, shell=True, stderr=subprocess.STDOUT)
     print chown_proc.communicate()[0]
-
-
-
-
-
-# process new variants by chromosome
-for chrom in chroms:
-    new_vars = get_vars(input_db, input_table, chrom)
-    if len(new_vars) > 0:
-        #create_vcf(result_name, chrom, new_vars)
-        #check_vcf(result_name)
-        #run_snpeff(result_name)
-        #parse_snpeff(result_name)
-        #remove_header(result_name)
         upload_hdfs(result_name)
-
-
-
-cur.close()
-
-
-
-
-
-
-
 
 def create_table(out_name):
     print "Creating table to store results. \n"
@@ -253,6 +241,11 @@ def stats_coding(out_name):
     except Exception as e:
              print e
 
+#upload_hdfs(result_name)
+create_table(result_name)
+results_to_table(result_name)
+stats_coding(result_name)
+
 # annotate variants with ensembl
 
 
@@ -266,3 +259,8 @@ def stats_coding(out_name):
 
 # run through snpeff
 # add to table
+
+
+
+
+cur.close()
