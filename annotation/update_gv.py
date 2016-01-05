@@ -70,18 +70,20 @@ def create_vcf(out_name, chrom_name):
       '''.format(input_db, input_table, chrom_name)
     # execute sql query
     cur.execute(comparison_query)
+    # store results as pandas table
     results = as_pandas(cur)
-    if len(results) > 0:
-        # create header for file
-        create_header(vcf_out)
-        # write variants to file row by row to save memory
-        with open(vcf_out, 'a') as csvfile:
-            try:
-                for row in cur:
-                    writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n')
-                    writer.writerow(row)
-            except Exception as e:
-                print e
+    # if len(results) > 0:
+    #     # create header for file
+    #     create_header(vcf_out)
+    #     # write variants to file row by row to save memory
+    #     with open(vcf_out, 'a') as csvfile:
+    #         try:
+    #             for row in cur:
+    #                 writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n')
+    #                 writer.writerow(row)
+    #         except Exception as e:
+    #             print e
+    print len(results)
 
 # download each chromosome in input_table and turn into vcf file
 for chrom in chroms:
