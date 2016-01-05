@@ -187,7 +187,6 @@ def upload_hdfs(out_name):
     chown_dir_cmd = "hdfs dfs -chown -R impala:supergroup {}".format(hdfs_path)
     chown_proc = subprocess.Popen(chown_dir_cmd, shell=True, stderr=subprocess.STDOUT)
     print chown_proc.communicate()[0]
-        upload_hdfs(result_name)
 
 def create_table(out_name):
     print "Creating table to store results. \n"
