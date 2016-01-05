@@ -76,15 +76,11 @@ def create_vcf(out_name, chrom_name):
         print "\n Creating VCF files for chromosome {}... \n".format(chrom)
         # create header for file
         create_header(vcf_out)
-        # write variants to file row by row to save memory
-        with open(vcf_out, 'a') as csvfile:
-            try:
-                for row in results:
-                    print results
-                    # writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n', mode='a')
-                    # writer.writerow(row)
-            except Exception as e:
-                print e
+        # write variants to file
+        try:
+            results.to_csv(vcf_out, mode='a', sep='\t', header=False, index=False)
+        except error as e:
+            print e
 
 
 # download each chromosome in input_table and turn into vcf file
