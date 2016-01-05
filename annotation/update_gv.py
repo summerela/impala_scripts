@@ -69,7 +69,8 @@ def create_vcf(out_name, chrom_name):
       order by pos
       '''.format(input_db, input_table, chrom_name)
     # execute sql query
-    results = cur.execute(comparison_query)
+    cur.execute(comparison_query)
+    results = as_pandas(cur)
     if len(results) > 0:
         # create header for file
         create_header(vcf_out)
