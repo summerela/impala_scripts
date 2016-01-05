@@ -25,47 +25,13 @@ import sys
 import datetime
 now = datetime.datetime.now()
 
-# TODO: update from test_vars to global_vars once table is complete
-# create query to download variants from input table that are not in global_vars
-comparison_query = '''
-with vars as (
-  select chrom, pos, id as rs_id, ref, alt
-  from p7_platform.wgs_illumina_variant
-  where chrom = '1'
-  and id is null)
-
-select chrom, pos, rs_id, ref, alt
-from vars t
-where not exists (
-  select chrom, pos, rs_id, ref, alt
-  from p7_product.all_variants g
-  where g.chrom = '1'
-  and t.pos = g.pos
-  and t.ref = g.ref
-  and t.alt = g.alt)
-limit 15
-'''
-# select chrom, pos, rs_id, ref, alt
-# from {}.{} t
-# where not exists (
-#   select chrom, pos, rs_id, ref, alt
-#   from p7_product.test_vars g
-#   where t.chrom = g.chrom
-#   and t.pos = g.pos
-#   and t.ref = g.ref
-#   and t.alt = g.alt
-#   )'''.format(input_db, input_table)
+# declare script variable
+chroms = map( str, range(1,23) ) + ['X','Y','MT', 'M']
 
 #connect to impala
-conn=connect(host='glados19', port=21050)
+conn=connect(host='glados16', port=21050)
 #create a cursor object to interact with db
 cur = conn.cursor()
-# execute sql query
-print "Searching for variants that are not in the global variants table... \n"
-cur.execute(comparison_query)
-# save results as pandas dataframe
-new_vars = as_pandas(cur)
-
 
 #################################################
 ## create vcf files by row for each chromosome ##
@@ -77,7 +43,7 @@ def create_header(outfile_name):
     lines=[]
     lines.append('##fileformat=VCFv4.0')
     lines.append('##fileDate='+ time.strftime("%y%m%d"))
-    lines.append('##reference=grch37 v.74')
+    lines.append('##reference=grch37 v.75')
     lines.append('#CHROM\t' + 'POS\t' + 'ID\t' + 'REF\t' + 'ALT\t' + 'QUAL\t'+ 'FILTER\t' + 'INFO\t' + 'FORMAT\t' + 'SAMPLE\t' + '\n')
     header = '\n'.join(lines)
     out = open(outfile_name, 'wb')
@@ -85,17 +51,43 @@ def create_header(outfile_name):
     out.close()
 
 # function to create vcf file
-def create_vcf(out_name):
+def create_vcf(out_name, chrom_name):
     print "Creating VCF files. \n"
     # create named vcf file
     vcf_out = out_name + '.vcf'
     # create header for file
     create_header(vcf_out)
     # write variants to file row by row to save memory
-    try:
-        new_vars.to_csv(vcf_out, sep='\t', encoding='utf-8', mode='a', header=False, index=False)
-    except Exception as csv_error:
-        print csv_error
+    # execute sql query
+    print "Searching for variants that are not in the global variants table... \n"
+    # create query to download variants from input table that are not in global_vars
+    comparison_query = '''
+    select chrom, pos, id, ref, alt
+    from {}.{} t
+    where chrom = '{}'
+    and not exists (
+      select chrom, pos, rs_id, ref, alt
+      from p7_product.test_vars g
+      where t.chrom = g.chrom
+      and t.pos = g.pos
+      and t.ref = g.ref
+      and t.alt = g.alt
+      )
+      order by pos
+      '''.format(input_db, input_table, chrom_name)
+    cur.execute(comparison_query)
+    with open(vcf_out, 'a') as csvfile:
+        try:
+            for row in cur:
+                writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n')
+                writer.writerow(row)
+        except Exception as e:
+            print e
+
+# download each chromosome in input_table and turn into vcf file
+for chrom in chroms:
+    print "Creating VCF files for chromosome {}... \n".format(chrom)
+    create_vcf(result_name, chrom)
 
 # function to verify vcf format using GATK's barebones.pl script
 def check_vcf(out_name):
@@ -116,7 +108,7 @@ def run_snpeff(out_name):
     vcf_out = out_name + '_snpeff.vcf'
     with open(vcf_out, "w") as f:
         try:
-            subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.83", vcf_in], stdout=f)
+            subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.75", vcf_in], stdout=f)
         except subprocess.CalledProcessError as e:
              print e.output
 
@@ -188,8 +180,8 @@ def create_table(out_name):
     '''.format(input_db, table_name)
     try:
         cur.execute(create_coding_table)
-    except subprocess.CalledProcessError as e:
-             print e.output
+    except Exception as e:
+             print e
 
 # load hdfs files into table
 def results_to_table(out_name):
@@ -201,8 +193,8 @@ def results_to_table(out_name):
     '''.format(out_path, input_db, table_name)
     try:
         cur.execute(load_query)
-    except subprocess.CalledProcessError as e:
-             print e.output
+    except Exception as e:
+             print e
 
 # compute stats on newly created table
 def stats_coding(out_name):
@@ -211,23 +203,23 @@ def stats_coding(out_name):
     coding_compstats = "compute stats {}.{}".format(input_db, table_name)
     try:
         cur.execute(coding_compstats)
-    except subprocess.CalledProcessError as e:
-             print e.output
+    except Exception as e:
+             print e
 
 # annotate variants with ensembl
 
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
-    print str(len(new_vars)) + " new variant(s) were found. \n"
-    create_vcf(result_name)
+    # print str(len(new_vars)) + " new variant(s) were found. \n"
+    # create_vcf(result_name)
     check_vcf(result_name)
     run_snpeff(result_name)
     parse_snpeff(result_name)
-    # remove_header(result_name)
-    # upload_hdfs(result_name)
-    # create_table(result_name)
-    # results_to_table(result_name)
-    # stats_coding(result_name)
+    remove_header(result_name)
+    upload_hdfs(result_name)
+    create_table(result_name)
+    results_to_table(result_name)
+    stats_coding(result_name)
 
     sys.exit("New variants added to global variants table.")
     cur.close()
@@ -236,7 +228,7 @@ else:
     sys.exit("No new variants found.")
     cur.close()
 
-# annoate with clinvar
+# annoate with kaviar
 
 
 
