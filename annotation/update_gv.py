@@ -219,12 +219,12 @@ def stats_coding(out_name):
     # results_to_table(result_name)
     # stats_coding(result_name)
 
-    sys.exit("New variants added to global variants table.")
-    cur.close()
-
-else:
-    sys.exit("No new variants found.")
-    cur.close()
+#     sys.exit("New variants added to global variants table.")
+#     cur.close()
+#
+# else:
+#     sys.exit("No new variants found.")
+#     cur.close()
 
 # annoate with kaviar
 
