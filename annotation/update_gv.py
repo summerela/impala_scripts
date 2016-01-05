@@ -87,6 +87,10 @@ def create_vcf(out_name, chrom, var_df):
     except error as e:
         print e
 
+##################################################################
+# check vcf formatting with vcfBareBones.pl from snpeff scripts ##
+##################################################################
+
 # function to verify vcf format using GATK's barebones.pl script
 def check_vcf(out_name):
     print "Verifying VCF format for chromosome {}. \n".format(chrom)
@@ -99,6 +103,10 @@ def check_vcf(out_name):
         except subprocess.CalledProcessError as e:
              print e.output
 
+############################################################
+# annotate variants with coding consequences using snpeff ##
+############################################################
+
 # function to run verified vcf files through snpeff
 def run_snpeff(out_name):
     print "Adding coding consequences for chromosome {}. \n".format(chrom)
@@ -109,6 +117,10 @@ def run_snpeff(out_name):
             subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.75", vcf_in], stdout=f)
         except subprocess.CalledProcessError as e:
              print e.output
+
+#########################
+## Parse snpEff output ##
+#########################
 
 # output snpeff effects as tsv file with one effect per line
 def parse_snpeff(out_name):
@@ -141,24 +153,9 @@ def remove_header(out_name):
     except Exception as e:
         print e
 
-# process new variants by chromosome
-for chrom in chroms:
-    new_vars = get_vars(input_db, input_table, chrom)
-    if len(new_vars) > 0:
-        create_vcf(result_name, chrom, new_vars)
-        check_vcf(result_name)
-        run_snpeff(result_name)
-        parse_snpeff(result_name)
-        remove_header(result_name)
-
-
-
-cur.close()
-
-
-
-
-
+#############################
+## Upload results to hdfs  ##
+#############################
 
 # upload results to hdfs
 def upload_hdfs(out_name):
@@ -170,13 +167,39 @@ def upload_hdfs(out_name):
     # put snpeff file in the newly created directory
     print "Uploading coding consequences to HDFS... \n"
     snpeff_file = out_name + '_final.tsv'
-    hdfs_cmd = 'hdfs dfs -put {} {}'.format(snpeff_file, out_path)
+    hdfs_cmd = 'hdfs dfs -put chr*_final.tsv {}'.format(out_path)
     hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
     print hdfs_proc.communicate()[0]
     # set read/write permissions on directory
     chown_dir_cmd = "hdfs dfs -chown -R impala:supergroup {}".format(hdfs_path)
     chown_proc = subprocess.Popen(chown_dir_cmd, shell=True, stderr=subprocess.STDOUT)
     print chown_proc.communicate()[0]
+
+
+
+
+
+# process new variants by chromosome
+for chrom in chroms:
+    new_vars = get_vars(input_db, input_table, chrom)
+    if len(new_vars) > 0:
+        #create_vcf(result_name, chrom, new_vars)
+        #check_vcf(result_name)
+        #run_snpeff(result_name)
+        #parse_snpeff(result_name)
+        #remove_header(result_name)
+        upload_hdfs(result_name)
+
+
+
+cur.close()
+
+
+
+
+
+
+
 
 def create_table(out_name):
     print "Creating table to store results. \n"
