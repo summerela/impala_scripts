@@ -32,7 +32,7 @@ with vars as (
   select chrom, pos, id as rs_id, ref, alt
   from p7_platform.wgs_illumina_variant
   where chrom = '1'
-  and id is not null)
+  and id is null)
 
 select chrom, pos, rs_id, ref, alt
 from vars t
@@ -218,7 +218,7 @@ def stats_coding(out_name):
 
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
-    print str(len(result_name)) + " new variant(s) were found. \n"
+    print str(len(new_vars)) + " new variant(s) were found. \n"
     create_vcf(result_name)
     check_vcf(result_name)
     run_snpeff(result_name)
