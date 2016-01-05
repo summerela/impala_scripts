@@ -122,8 +122,11 @@ def parse_snpeff(out_name):
     "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(vcf_in, snpeff_oneperline_perl, \
     java_path, snpsift_jar, tsv_out)
     # call subprocess and communicate to pipe output between commands
-    ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-    print ps.communicate()[0]
+    try:
+        ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+        print ps.communicate()[0]
+    except Exception as e:
+        print e
 
 # remove header so strange characters don't break impala
 def remove_header(out_name):
@@ -131,8 +134,11 @@ def remove_header(out_name):
     tsv_in = "chr" + str(chrom) + '_' + out_name + '.tsv'
     tsv_out = "chr" + str(chrom) + '_' + out_name + '_final.tsv'
     tsv_cmd = "sed '1d' {} > {}".format(tsv_in,tsv_out)
-    tsv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    print tsv_proc.communicate()[0]
+    try:
+        tsv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        print tsv_proc.communicate()[0]
+    except Exception as e:
+        print e
 
 # process new variants by chromosome
 for chrom in chroms:
