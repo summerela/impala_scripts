@@ -62,7 +62,7 @@ def create_vcf(out_name, chrom_name):
     print "Searching for variants that are not in the global variants table... \n"
     # create query to download variants from input table that are not in global_vars
     comparison_query = '''
-    select chrom, pos, id, ref, alt
+    select chrom, pos, rs_id, ref, alt
     from {}.{} t
     where chrom = '{}'
     and not exists (
