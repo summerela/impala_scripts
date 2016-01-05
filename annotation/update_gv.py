@@ -52,14 +52,10 @@ def create_header(outfile_name):
 
 # function to create vcf file
 def create_vcf(out_name, chrom_name):
-    print "Creating VCF files. \n"
     # create named vcf file
     vcf_out = out_name + '.vcf'
     # create header for file
     create_header(vcf_out)
-    # write variants to file row by row to save memory
-    # execute sql query
-    print "Searching for variants that are not in the global variants table... \n"
     # create query to download variants from input table that are not in global_vars
     comparison_query = '''
     select chrom, pos, rs_id, ref, alt
@@ -75,7 +71,9 @@ def create_vcf(out_name, chrom_name):
       )
       order by pos
       '''.format(input_db, input_table, chrom_name)
+    # execute sql query
     cur.execute(comparison_query)
+    # write variants to file row by row to save memory
     with open(vcf_out, 'a') as csvfile:
         try:
             for row in cur:
@@ -211,15 +209,15 @@ def stats_coding(out_name):
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
     # print str(len(new_vars)) + " new variant(s) were found. \n"
-    # create_vcf(result_name)
-    check_vcf(result_name)
-    run_snpeff(result_name)
-    parse_snpeff(result_name)
-    remove_header(result_name)
-    upload_hdfs(result_name)
-    create_table(result_name)
-    results_to_table(result_name)
-    stats_coding(result_name)
+    create_vcf(result_name)
+    # check_vcf(result_name)
+    # run_snpeff(result_name)
+    # parse_snpeff(result_name)
+    # remove_header(result_name)
+    # upload_hdfs(result_name)
+    # create_table(result_name)
+    # results_to_table(result_name)
+    # stats_coding(result_name)
 
     sys.exit("New variants added to global variants table.")
     cur.close()
