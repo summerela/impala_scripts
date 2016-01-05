@@ -28,16 +28,33 @@ now = datetime.datetime.now()
 # TODO: update from test_vars to global_vars once table is complete
 # create query to download variants from input table that are not in global_vars
 comparison_query = '''
+with vars as (
+  select chrom, pos, id as rs_id, ref, alt
+  from p7_platform.wgs_illumina_variant
+  where chrom = '1'
+  and id is not null)
+
 select chrom, pos, rs_id, ref, alt
-from {}.{} t
+from vars t
 where not exists (
   select chrom, pos, rs_id, ref, alt
-  from p7_product.test_vars g
-  where t.chrom = g.chrom
+  from p7_product.all_variants g
+  where g.chrom = '1'
   and t.pos = g.pos
   and t.ref = g.ref
-  and t.alt = g.alt
-  )'''.format(input_db, input_table)
+  and t.alt = g.alt)
+limit 15
+'''
+# select chrom, pos, rs_id, ref, alt
+# from {}.{} t
+# where not exists (
+#   select chrom, pos, rs_id, ref, alt
+#   from p7_product.test_vars g
+#   where t.chrom = g.chrom
+#   and t.pos = g.pos
+#   and t.ref = g.ref
+#   and t.alt = g.alt
+#   )'''.format(input_db, input_table)
 
 #connect to impala
 conn=connect(host='glados19', port=21050)
@@ -169,7 +186,10 @@ def create_table(out_name):
       row format delimited
       fields terminated by '\t'
     '''.format(input_db, table_name)
-    cur.execute(create_coding_table)
+    try:
+        cur.execute(create_coding_table)
+    except subprocess.CalledProcessError as e:
+             print e.output
 
 # load hdfs files into table
 def results_to_table(out_name):
@@ -179,27 +199,36 @@ def results_to_table(out_name):
     load_query = '''
         load data inpath '{}' into table {}.{}
     '''.format(out_path, input_db, table_name)
-    cur.execute(load_query)
+    try:
+        cur.execute(load_query)
+    except subprocess.CalledProcessError as e:
+             print e.output
 
 # compute stats on newly created table
 def stats_coding(out_name):
     table_name = out_name + '_' + str(now.strftime("%Y%m%d"))
     print "Running compute stats on {}".format(table_name)
     coding_compstats = "compute stats {}.{}".format(input_db, table_name)
-    cur.execute(coding_compstats)
+    try:
+        cur.execute(coding_compstats)
+    except subprocess.CalledProcessError as e:
+             print e.output
+
+# annotate variants with ensembl
 
 # if new variants are found, annotate with snpeff and upload to impala as a table
 if len(new_vars) > 0:
-    # print str(len(result_name)) + " new variant(s) were found. \n"
-    # create_vcf(result_name)
-    # check_vcf(result_name)
-    # run_snpeff(result_name)
-    # parse_snpeff(result_name)
+    print str(len(result_name)) + " new variant(s) were found. \n"
+    create_vcf(result_name)
+    check_vcf(result_name)
+    run_snpeff(result_name)
+    parse_snpeff(result_name)
     # remove_header(result_name)
     # upload_hdfs(result_name)
     # create_table(result_name)
     # results_to_table(result_name)
-    stats_coding(result_name)
+    # stats_coding(result_name)
+
     sys.exit("New variants added to global variants table.")
     cur.close()
 
