@@ -60,8 +60,9 @@ def get_vars(input_db, input_table, chrom_name):
 
 for chrom in chroms:
     new_vars = get_vars(input_db, input_table, chrom)
+    if len(new_vars) > 0:
+        print new_vars
 
-print new_vars
 ##########################################
 ## create vcf files for each chromosome ##
 ##########################################
