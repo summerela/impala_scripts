@@ -33,9 +33,9 @@ conn=connect(host='glados16', port=21050)
 #create a cursor object to interact with db
 cur = conn.cursor()
 
-#################################################
-## create vcf files by row for each chromosome ##
-#################################################
+##########################################
+## create vcf files for each chromosome ##
+##########################################
 # create vcf header
 def create_header(outfile_name):
    # create vcf header
@@ -82,22 +82,24 @@ def create_vcf(out_name, chrom_name):
         except error as e:
             print e
 
-
 # download each chromosome in input_table and turn into vcf file
 for chrom in chroms:
     create_vcf(result_name, chrom)
 
 # function to verify vcf format using GATK's barebones.pl script
 def check_vcf(out_name):
-    print "Verifying VCF format. \n"
-    vcf_in =  out_name + '.vcf'
-    vcf_out = out_name + '_verified.vcf'
+    print "Verifying VCF format for chromosome {}. \n".format(chrom)
+    vcf_in =  "chr" + str(chrom) + '_' + out_name + '.vcf'
+    vcf_out = "chr" + str(chrom) + '_' + out_name + '_verified.vcf'
     # create the file and run snpeff
     with open(vcf_out, "w") as out_file:
         try:
             subprocess.call(['perl', vcf_basic, vcf_in], stdout=out_file)
         except subprocess.CalledProcessError as e:
              print e.output
+
+for chrom in chroms:
+    check_vcf(result_name)
 
 # function to run verified vcf files through snpeff
 def run_snpeff(out_name):
