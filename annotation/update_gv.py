@@ -110,22 +110,11 @@ def run_snpeff(out_name):
         except subprocess.CalledProcessError as e:
              print e.output
 
-# process new variants by chromosome
-for chrom in chroms:
-    new_vars = get_vars(input_db, input_table, chrom)
-    if len(new_vars) > 0:
-        create_vcf(result_name, chrom, new_vars)
-        check_vcf(result_name)
-        run_snpeff(result_name)
-
-
-
-
 # output snpeff effects as tsv file with one effect per line
 def parse_snpeff(out_name):
-    print "Parsing snpeff output. \n"
-    vcf_in = out_name + '_snpeff.vcf'
-    tsv_out = out_name + '.tsv'
+    print "Parsing snpeff output for chromosome {}. \n".format(chrom)
+    vcf_in = "chr" + str(chrom) + '_' + out_name + '_snpeff.vcf'
+    tsv_out = "chr" + str(chrom) + '_' + out_name + '.tsv'
     # create command to parse snpeff
     snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
     - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
@@ -138,12 +127,34 @@ def parse_snpeff(out_name):
 
 # remove header so strange characters don't break impala
 def remove_header(out_name):
-    print "Removing header for upload to impala. \n"
-    tsv_in = out_name + '.tsv'
-    tsv_out = out_name + '_final.tsv'
+    print "Removing header on chromosome {} for upload to impala. \n".format(chrom)
+    tsv_in = "chr" + str(chrom) + '_' + out_name + '.tsv'
+    tsv_out = "chr" + str(chrom) + '_' + out_name + '_final.tsv'
     tsv_cmd = "sed '1d' {} > {}".format(tsv_in,tsv_out)
     tsv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     print tsv_proc.communicate()[0]
+
+# process new variants by chromosome
+for chrom in chroms:
+    new_vars = get_vars(input_db, input_table, chrom)
+    if len(new_vars) > 0:
+        create_vcf(result_name, chrom, new_vars)
+        check_vcf(result_name)
+        run_snpeff(result_name)
+        parse_snpeff(result_name)
+        remove_header(result_name)
+        cur.close()
+        sys.exit("New variants added to global variants table.")
+    else:
+        cur.close()
+        sys.exit("No new variants found.")
+
+
+
+
+
+
+
 
 # upload results to hdfs
 def upload_hdfs(out_name):
@@ -217,25 +228,8 @@ def stats_coding(out_name):
 
 # annotate variants with ensembl
 
-# if new variants are found, annotate with snpeff and upload to impala as a table
-# if len(new_vars) > 0:
-    # print str(len(new_vars)) + " new variant(s) were found. \n"
-    # create_vcf(result_name)
-    # check_vcf(result_name)
-    # run_snpeff(result_name)
-    # parse_snpeff(result_name)
-    # remove_header(result_name)
-    # upload_hdfs(result_name)
-    # create_table(result_name)
-    # results_to_table(result_name)
-    # stats_coding(result_name)
 
-#     sys.exit("New variants added to global variants table.")
-#     cur.close()
-#
-# else:
-#     sys.exit("No new variants found.")
-#     cur.close()
+
 
 # annoate with kaviar
 
