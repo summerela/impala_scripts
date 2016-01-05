@@ -73,18 +73,18 @@ def create_vcf(out_name, chrom_name):
     # store results as pandas table
     results = as_pandas(cur)
     if len(results) > 0:
-        print "Creating VCF files for chromosome {}... \n".format(chrom)
-    #     # create header for file
-    #     create_header(vcf_out)
-    #     # write variants to file row by row to save memory
-    #     with open(vcf_out, 'a') as csvfile:
-    #         try:
-    #             for row in cur:
-    #                 writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n')
-    #                 writer.writerow(row)
-    #         except Exception as e:
-    #             print e
-        print results
+        print "\n Creating VCF files for chromosome {}... \n".format(chrom)
+        # create header for file
+        create_header(vcf_out)
+        # write variants to file row by row to save memory
+        with open(vcf_out, 'a') as csvfile:
+            try:
+                for row in cur:
+                    writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n')
+                    writer.writerow(row)
+            except Exception as e:
+                print e
+
 
 # download each chromosome in input_table and turn into vcf file
 for chrom in chroms:
