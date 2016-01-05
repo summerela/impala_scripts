@@ -79,9 +79,10 @@ def create_vcf(out_name, chrom_name):
         # write variants to file row by row to save memory
         with open(vcf_out, 'a') as csvfile:
             try:
-                for row in cur:
-                    writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n', mode='a')
-                    writer.writerow(row)
+                for row in results:
+                    print results
+                    # writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n', mode='a')
+                    # writer.writerow(row)
             except Exception as e:
                 print e
 
