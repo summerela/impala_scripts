@@ -99,28 +99,27 @@ def check_vcf(out_name):
         except subprocess.CalledProcessError as e:
              print e.output
 
-for chrom in chroms:
-    new_vars = get_vars(input_db, input_table, chrom)
-    if len(new_vars) > 0:
-        create_vcf(result_name, chrom, new_vars)
-        check_vcf(result_name)
-
-
-
-# verify vcf format for each chromosome
-# for chrom in chroms:
-#     check_vcf(result_name)
-
 # function to run verified vcf files through snpeff
 def run_snpeff(out_name):
-    print "Annotating variants with coding consequences using snpeff. \n"
-    vcf_in = out_name + '_verified.vcf'
-    vcf_out = out_name + '_snpeff.vcf'
+    print "Adding coding consequences for chromosome {}. \n".format(chrom)
+    vcf_in = "chr" + str(chrom) + '_' + out_name + '_verified.vcf'
+    vcf_out = "chr" + str(chrom) + '_' + out_name + '_snpeff.vcf'
     with open(vcf_out, "w") as f:
         try:
             subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.75", vcf_in], stdout=f)
         except subprocess.CalledProcessError as e:
              print e.output
+
+# process new variants by chromosome
+for chrom in chroms:
+    new_vars = get_vars(input_db, input_table, chrom)
+    if len(new_vars) > 0:
+        create_vcf(result_name, chrom, new_vars)
+        check_vcf(result_name)
+        run_snpeff(result_name)
+
+
+
 
 # output snpeff effects as tsv file with one effect per line
 def parse_snpeff(out_name):
