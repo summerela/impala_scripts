@@ -116,7 +116,7 @@ def run_snpeff(out_name):
     vcf_out = out_name + '_snpeff.vcf'
     with open(vcf_out, "w") as f:
         try:
-            subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.75", vcf_in], stdout=f)
+            subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "-noStats", "GRCh37.83", vcf_in], stdout=f)
         except subprocess.CalledProcessError as e:
              print e.output
 
