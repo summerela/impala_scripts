@@ -80,7 +80,7 @@ def create_vcf(out_name, chrom_name):
         with open(vcf_out, 'a') as csvfile:
             try:
                 for row in cur:
-                    writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n')
+                    writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n', mode='a')
                     writer.writerow(row)
             except Exception as e:
                 print e
