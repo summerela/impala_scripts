@@ -34,6 +34,34 @@ conn=connect(host='glados16', port=21050)
 cur = conn.cursor()
 
 ##########################################
+## search for variants not in gv table  ##
+##########################################
+def get_vars(input_db, input_table, chrom_name):
+# create query to download variants from input table that are not in global_vars
+    comparison_query = '''
+    select chrom, pos, rs_id, ref, alt
+    from {}.{} t
+    where chrom = '{}'
+    and not exists (
+      select chrom, pos, rs_id, ref, alt
+      from p7_product.test_vars g
+      where t.chrom = g.chrom
+      and t.pos = g.pos
+      and t.ref = g.ref
+      and t.alt = g.alt
+      )
+      order by pos
+      '''.format(input_db, input_table, chrom_name)
+    # execute sql query
+    cur.execute(comparison_query)
+    # store results as pandas table
+    results = as_pandas(cur)
+    return results
+for chrom in chrom:
+    new_vars = create_vcf(input_db, input_table, chrom)
+
+print new_vars
+##########################################
 ## create vcf files for each chromosome ##
 ##########################################
 # create vcf header
@@ -53,38 +81,24 @@ def create_header(outfile_name):
 def create_vcf(out_name, chrom_name):
     # create named vcf file
     vcf_out = "chr" + str(chrom) + '_' + out_name + '.vcf'
-    # create query to download variants from input table that are not in global_vars
-    comparison_query = '''
-    select chrom, pos, rs_id, ref, alt
-    from {}.{} t
-    where chrom = '{}'
-    and not exists (
-      select chrom, pos, rs_id, ref, alt
-      from p7_product.test_vars g
-      where t.chrom = g.chrom
-      and t.pos = g.pos
-      and t.ref = g.ref
-      and t.alt = g.alt
-      )
-      order by pos
-      '''.format(input_db, input_table, chrom_name)
-    # execute sql query
-    cur.execute(comparison_query)
-    # store results as pandas table
-    results = as_pandas(cur)
-    if len(results) > 0:
-        print "\n Creating VCF files for chromosome {}... \n".format(chrom)
-        # create header for file
-        create_header(vcf_out)
-        # write variants to file
-        try:
-            results.to_csv(vcf_out, mode='a', sep='\t', header=False, index=False)
-        except error as e:
-            print e
+
+
+
+
+
+# if len(results) > 0:
+#         print "\n Creating VCF files for chromosome {}... \n".format(chrom)
+#         # create header for file
+#         create_header(vcf_out)
+#         # write variants to file
+#         try:
+#             results.to_csv(vcf_out, mode='a', sep='\t', header=False, index=False)
+#         except error as e:
+#             print e
 
 # download each chromosome in input_table and turn into vcf file
-for chrom in chroms:
-    create_vcf(result_name, chrom)
+# for chrom in chroms:
+#     create_vcf(result_name, chrom)
 
 # function to verify vcf format using GATK's barebones.pl script
 def check_vcf(out_name):
@@ -98,6 +112,7 @@ def check_vcf(out_name):
         except subprocess.CalledProcessError as e:
              print e.output
 
+# verify vcf format for each chromosome
 for chrom in chroms:
     check_vcf(result_name)
 
