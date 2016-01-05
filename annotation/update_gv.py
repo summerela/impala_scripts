@@ -143,22 +143,19 @@ def remove_header(out_name):
 
 # process new variants by chromosome
 for chrom in chroms:
-    try:
-        new_vars = get_vars(input_db, input_table, chrom)
-        if len(new_vars) > 0:
-            create_vcf(result_name, chrom, new_vars)
-            check_vcf(result_name)
-            #run_snpeff(result_name)
-            parse_snpeff(result_name)
-            #remove_header(result_name)
-            cur.close()
-            sys.exit("New variants added to global variants table.")
-        else:
-            cur.close()
-            sys.exit("No new variants found.")
-    except:
-        e = sys.exc_info()[0]
-        print e
+    new_vars = get_vars(input_db, input_table, chrom)
+    if len(new_vars) > 0:
+        create_vcf(result_name, chrom, new_vars)
+        check_vcf(result_name)
+        #run_snpeff(result_name)
+        parse_snpeff(result_name)
+        #remove_header(result_name)
+        cur.close()
+        sys.exit("New variants added to global variants table.")
+    else:
+        cur.close()
+        sys.exit("No new variants found.")
+
 
 
 
