@@ -147,8 +147,8 @@ for chrom in chroms:
     if len(new_vars) > 0:
         create_vcf(result_name, chrom, new_vars)
         check_vcf(result_name)
-        run_snpeff(result_name)
-        #parse_snpeff(result_name)
+        #run_snpeff(result_name)
+        parse_snpeff(result_name)
         remove_header(result_name)
         cur.close()
         sys.exit("New variants added to global variants table.")
