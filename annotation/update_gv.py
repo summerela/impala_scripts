@@ -59,7 +59,7 @@ def get_vars(input_db, input_table, chrom_name):
     return results
 
 for chrom in chroms:
-    new_vars = create_vcf(input_db, input_table, chrom)
+    new_vars = get_vars(input_db, input_table, chrom)
 
 print new_vars
 ##########################################
