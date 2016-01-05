@@ -58,11 +58,6 @@ def get_vars(input_db, input_table, chrom_name):
     results = as_pandas(cur)
     return results
 
-for chrom in chroms:
-    new_vars = get_vars(input_db, input_table, chrom)
-    if len(new_vars) > 0:
-        print new_vars
-
 ##########################################
 ## create vcf files for each chromosome ##
 ##########################################
@@ -80,27 +75,24 @@ def create_header(outfile_name):
     out.close()
 
 # function to create vcf file
-# def create_vcf(out_name, chrom_name):
-#     # create named vcf file
-#     vcf_out = "chr" + str(chrom) + '_' + out_name + '.vcf'
+def create_vcf(out_name, chrom, var_df):
+    # create named vcf file
+    vcf_out = "chr" + str(chrom) + '_' + out_name + '.vcf'
+    print "\n Creating VCF files for chromosome {}... \n".format(chrom)
+    # create header for file
+    create_header(vcf_out)
+    # write variants to file
+    try:
+        var_df.to_csv(vcf_out, mode='a', sep='\t', header=False, index=False)
+    except error as e:
+        print e
+
+for chrom in chroms:
+    new_vars = get_vars(result_name, chrom, var_df)
+    if len(new_vars) > 0:
+        create_vcf(new_vars)
 
 
-
-
-
-# if len(results) > 0:
-#         print "\n Creating VCF files for chromosome {}... \n".format(chrom)
-#         # create header for file
-#         create_header(vcf_out)
-#         # write variants to file
-#         try:
-#             results.to_csv(vcf_out, mode='a', sep='\t', header=False, index=False)
-#         except error as e:
-#             print e
-
-# download each chromosome in input_table and turn into vcf file
-# for chrom in chroms:
-#     create_vcf(result_name, chrom)
 
 # function to verify vcf format using GATK's barebones.pl script
 def check_vcf(out_name):
