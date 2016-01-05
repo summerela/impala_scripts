@@ -150,11 +150,7 @@ for chrom in chroms:
         #run_snpeff(result_name)
         parse_snpeff(result_name)
         #remove_header(result_name)
-        cur.close()
-        sys.exit("New variants added to global variants table.")
-    else:
-        cur.close()
-        sys.exit("No new variants found.")
+
 
 
 
