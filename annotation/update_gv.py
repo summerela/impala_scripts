@@ -73,6 +73,7 @@ def create_vcf(out_name, chrom_name):
     # store results as pandas table
     results = as_pandas(cur)
     if len(results) > 0:
+        print "Creating VCF files for chromosome {}... \n".format(chrom)
     #     # create header for file
     #     create_header(vcf_out)
     #     # write variants to file row by row to save memory
@@ -83,11 +84,10 @@ def create_vcf(out_name, chrom_name):
     #                 writer.writerow(row)
     #         except Exception as e:
     #             print e
-        print len(results)
+        print results
 
 # download each chromosome in input_table and turn into vcf file
 for chrom in chroms:
-    print "Creating VCF files for chromosome {}... \n".format(chrom)
     create_vcf(result_name, chrom)
 
 # function to verify vcf format using GATK's barebones.pl script
