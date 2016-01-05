@@ -88,7 +88,7 @@ def create_vcf(out_name, chrom, var_df):
         print e
 
 for chrom in chroms:
-    new_vars = get_vars(result_name, chrom)
+    new_vars = get_vars(input_db, input_table, chrom)
     if len(new_vars) > 0:
         create_vcf(result_name, new_vars)
 
