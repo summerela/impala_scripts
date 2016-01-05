@@ -125,7 +125,8 @@ def parse_snpeff(out_name):
     try:
         ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
         print ps.communicate()[0]
-    except Exception as e:
+    except:
+        e = sys.exc_info()[0]
         print e
 
 # remove header so strange characters don't break impala
@@ -147,7 +148,7 @@ for chrom in chroms:
         create_vcf(result_name, chrom, new_vars)
         check_vcf(result_name)
         run_snpeff(result_name)
-        parse_snpeff(result_name)
+        #parse_snpeff(result_name)
         remove_header(result_name)
         cur.close()
         sys.exit("New variants added to global variants table.")
