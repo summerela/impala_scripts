@@ -57,6 +57,7 @@ def get_vars(input_db, input_table, chrom_name):
     # store results as pandas table
     results = as_pandas(cur)
     return results
+
 for chrom in chroms:
     new_vars = create_vcf(input_db, input_table, chrom)
 
@@ -78,9 +79,9 @@ def create_header(outfile_name):
     out.close()
 
 # function to create vcf file
-def create_vcf(out_name, chrom_name):
-    # create named vcf file
-    vcf_out = "chr" + str(chrom) + '_' + out_name + '.vcf'
+# def create_vcf(out_name, chrom_name):
+#     # create named vcf file
+#     vcf_out = "chr" + str(chrom) + '_' + out_name + '.vcf'
 
 
 
@@ -113,8 +114,8 @@ def check_vcf(out_name):
              print e.output
 
 # verify vcf format for each chromosome
-for chrom in chroms:
-    check_vcf(result_name)
+# for chrom in chroms:
+#     check_vcf(result_name)
 
 # function to run verified vcf files through snpeff
 def run_snpeff(out_name):
