@@ -87,13 +87,6 @@ def create_vcf(out_name, chrom, var_df):
     except error as e:
         print e
 
-for chrom in chroms:
-    new_vars = get_vars(input_db, input_table, chrom)
-    if len(new_vars) > 0:
-        create_vcf(result_name, chrom, new_vars)
-
-
-
 # function to verify vcf format using GATK's barebones.pl script
 def check_vcf(out_name):
     print "Verifying VCF format for chromosome {}. \n".format(chrom)
@@ -105,6 +98,14 @@ def check_vcf(out_name):
             subprocess.call(['perl', vcf_basic, vcf_in], stdout=out_file)
         except subprocess.CalledProcessError as e:
              print e.output
+
+for chrom in chroms:
+    new_vars = get_vars(input_db, input_table, chrom)
+    if len(new_vars) > 0:
+        create_vcf(result_name, chrom, new_vars)
+        check_vcf(result_name)
+
+
 
 # verify vcf format for each chromosome
 # for chrom in chroms:
