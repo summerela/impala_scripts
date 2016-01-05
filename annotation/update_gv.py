@@ -57,7 +57,7 @@ def get_vars(input_db, input_table, chrom_name):
     # store results as pandas table
     results = as_pandas(cur)
     return results
-for chrom in chrom:
+for chrom in chroms:
     new_vars = create_vcf(input_db, input_table, chrom)
 
 print new_vars
