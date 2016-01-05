@@ -72,7 +72,7 @@ def create_vcf(out_name, chrom_name):
     cur.execute(comparison_query)
     # store results as pandas table
     results = as_pandas(cur)
-    # if len(results) > 0:
+    if len(results) > 0:
     #     # create header for file
     #     create_header(vcf_out)
     #     # write variants to file row by row to save memory
@@ -83,7 +83,7 @@ def create_vcf(out_name, chrom_name):
     #                 writer.writerow(row)
     #         except Exception as e:
     #             print e
-    print len(results)
+        print len(results)
 
 # download each chromosome in input_table and turn into vcf file
 for chrom in chroms:
