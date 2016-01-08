@@ -1,3 +1,7 @@
+# TODO change input to sample id
+# TODO check for differences between M and MT
+# TODO merge with dbsnp before creating vcf to ensure as many rsid's as possible
+
 # specify table to check for new variants
 input_db = "p7_product"
 input_table =  "test"
@@ -18,9 +22,7 @@ vcf_basic = '/users/selasady/my_titan_itmi/impala_scripts/annotation/parse_vcf.p
 from impala.dbapi import connect
 from impala.util import as_pandas
 import time
-import csv
 import subprocess
-import numpy as np
 import sys
 import datetime
 now = datetime.datetime.now()
@@ -241,24 +243,25 @@ def stats_coding(out_name):
              print e
 
 #upload_hdfs(result_name)
-create_table(result_name)
-results_to_table(result_name)
-stats_coding(result_name)
+# create_table(result_name)
+# results_to_table(result_name)
+# stats_coding(result_name)
 
-# annotate variants with ensembl
-
-
-
+#######################
+## annotate variants ##
+#######################
 
 # annoate with kaviar
 
 
+# annotate with clinvar
 
 
+# annotate with dbnsfp
 
-# run through snpeff
-# add to table
-
+################################################
+## insert new variants into global_vars table ##
+################################################
 
 
 
