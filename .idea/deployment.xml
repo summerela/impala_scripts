@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" serverName="glados17">
+  <component name="PublishConfigData">
     <serverData>
       <paths name="glados17">
         <serverdata>
           <mappings>
-            <mapping deploy="/users/selasady/impala_scripts" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/impala_scripts" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

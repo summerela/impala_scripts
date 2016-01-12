@@ -1,5 +1,5 @@
 # TODO change input to sample id
-# TODO check for differences between M and MT
+# TODO create subset where rs_id is not null, but impact is null and run through VEP
 # TODO merge with dbsnp before creating vcf to ensure as many rsid's as possible
 
 # specify table to check for new variants
@@ -159,15 +159,15 @@ def remove_header(out_name):
 ## Run variants through snpeff  ##
 ##################################
 
-# process new variants by chromosome
-# for chrom in chroms:
-#     new_vars = get_vars(input_db, input_table, chrom)
-#     if len(new_vars) > 0:
-        #create_vcf(result_name, chrom, new_vars)
-        #check_vcf(result_name)
-        #run_snpeff(result_name)
-        #parse_snpeff(result_name)
-        #remove_header(result_name)
+process new variants by chromosome
+for chrom in chroms:
+    new_vars = get_vars(input_db, input_table, chrom)
+    if len(new_vars) > 0:
+        create_vcf(result_name, chrom, new_vars)
+        check_vcf(result_name)
+        run_snpeff(result_name)
+        parse_snpeff(result_name)
+        remove_header(result_name)
 
 #############################
 ## Upload results to hdfs  ##
@@ -242,10 +242,10 @@ def stats_coding(out_name):
     except Exception as e:
              print e
 
-#upload_hdfs(result_name)
-# create_table(result_name)
-# results_to_table(result_name)
-# stats_coding(result_name)
+upload_hdfs(result_name)
+create_table(result_name)
+results_to_table(result_name)
+stats_coding(result_name)
 
 #######################
 ## annotate variants ##

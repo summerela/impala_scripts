@@ -434,6 +434,51 @@ LEFT JOIN t2
 --- compute stats on new table
 compute stats global_vars;
 
+--- duplications were induced in table due to having to repeat queries to ensure no variants were missed when server crashed
+--- creating new table with distinct variants and transforming MT chromosome to M
+CREATE TABLE p7_product.global_variants
+   (pos int,
+    ref string,
+    alt string,
+    rs_id string,
+    strand string,
+    gene_name string,
+    gene_id string,
+    clin_dbn string,
+    kav_freq float,
+    kav_source string,
+    dbsnp_build int,
+    var_type string,
+    cadd_raw float,
+    dann_score float,
+    interpro_domain string,
+    EFFECT string,
+    FEATURE string,
+    FEATUREID string,
+    BIOTYPE string,
+    RANK int,
+    HGVS_C string ,
+    HGVS_P string )
+partitioned by (chrom string, pos_block int, clin_sig string, kav_rank string, impact string)
+COMMENT "Annotated table of all variants from Kaviar_ISB, ClinVar and dbSNP."
+
+#for x in $(seq 1 22) X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+insert into table p7_product.global_variants partition (chrom, pos_block, clin_sig, kav_rank, impact)
+select distinct * from p7_product.global_vars where chrom = '$x' and pos_block = $y
+# " ; done ; done
+
+# nohup impala-shell -q "\
+insert into table p7_product.global_variants partition (chrom, pos_block, clin_sig, kav_rank, impact)
+select pos, ref, alt, rs_id, strand, gene_name, gene_id, clin_dbn, kav_freq, kav_source, dbsnp_build, var_type, cadd_raw, dann_score, interpro_domain,
+EFFECT, FEATURE, FEATUREID, BIOTYPE, RANK, HGVS_C, HGVS_P, 'M' as chrom, pos_block, clin_sig, kav_rank, impact
+  from p7_product.global_vars
+  where chrom = 'MT'
+# "
+
+--- compute stats on new table
+compute stats global_variants;
+
+
 --- run unit tests
 
 -- clean up temp tables
