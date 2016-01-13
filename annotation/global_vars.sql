@@ -1,14 +1,23 @@
+-- ASSUMPTIONS:
+-- all mitochondrial chromosomes have been converted to 'M' instead of 'MT'
+-- all Kaviar rs_id's with a NULL value in the source column have been converted to 'dbSNP'
+-- all reference sources are left-aligned
+
 # noinspection SqlNoDataSourceInspectionForFile
 -- GLOBAL VARIANTS TABLE PIPELINE
 
 -- SUBSET TABLES TO BE JOINED FOR MORE EFFICIENT QUERIES
 
--- create distinct subset of kaviar table
+-- CREATE DISTINCT KAVIAR SUBSET
 
+-- 531660844 rows in table
+-- 531624737 rows with distinct chrom, pos, ref, alt, allele_freq, sources
+-- 36107 duplicates removed
+
+-- create table
 create table p7_product.kav_distinct
 (
   pos      INT,
-  stop     INT,
   ref STRING,
   alt STRING,
   kav_freq FLOAT,
@@ -16,15 +25,28 @@ create table p7_product.kav_distinct
 )
   PARTITIONED BY (chrom string);
 
+-- insert columns into table
+#for x in $(seq 1 22) X Y; do echo "$x"; nohup impala-shell -q "\
 insert into table p7_product.kav_distinct partition (chrom)
-  select distinct pos, stop, ref, alt,
-  allele_freq as kav_freq, sources as kav_source, chrom
-  from p7_ref_grch37.kaviar_isb;
+  select distinct pos, ref, alt,
+  allele_freq as kav_freq,
+    CASE when sources is NULL then 'dbSNP'
+      else sources
+      END as kav_source, chrom
+  from p7_ref_grch37.kaviar_isb
+  where chrom = '$x';
+# "; done
 
+-- compute stats on new table
 compute stats p7_product.kav_distinct;
 
--- create distinct subset of clinvar table
+-- CREATE DISTINCT CLINVAR SUBSET
 
+-- 117299 rows in clinvar table
+-- 117160 distinct rows with distinct chrom, pos, ref, alt, clin_sig, clin_dbn
+-- 139 duplicate rows removed
+
+-- create empty table
 create table p7_product.clin_distinct
   (pos int,
   ref string,
@@ -34,14 +56,20 @@ create table p7_product.clin_distinct
 )
   partitioned by (chrom string);
 
+-- insert distinct subset into table
 insert into table p7_product.clin_distinct partition (chrom)
   select distinct pos, ref, alt, clin_sig, clin_dbn, chrom
   from p7_ref_grch37.clinvar;
 
+-- compute stats on new table
 compute stats p7_product.clin_distinct;
 
--- create distinct subset of dbsnp table
+-- CREATE DBSNP SUBSET
+-- 152848169 rows in dbsnp table
+-- 152848169 rows in distinct chrom, pos, ref, alt, rs_id, dbsnpbuildid, vc
+-- no need for distinct clause
 
+-- create table
 create table p7_product.dbsnp_distinct
     (pos int,
     ref string,
@@ -52,45 +80,68 @@ create table p7_product.dbsnp_distinct
     )
   partitioned by (chrom string);
 
+-- insert subset into table
 insert into p7_product.dbsnp_distinct partition (chrom)
-select distinct pos, ref, alt,
+select pos, ref, alt,
   rs_id, dbsnpbuildid as dbsnp_buildid, vc as var_type, chrom
   from p7_ref_grch37.dbsnp;
 
+-- compute stats on new table
 compute stats p7_product.dbsnp_distinct;
 
-# select count used to compare rows in all tables to original
+-- CREATE DISTINCT ILLUMINA VARIANT SUBSET
 
--- TODO: add distinct RCF variants here when available
--- TODO: reassess after normalization
+-- 22189000636 rows in wgs_illumina_variant table
+-- 208302707 rows with distinct chrom, pos, ref, alt
+-- 21980697929 duplicated rows removed
 
--- JOIN ALL VARIANT TABLES TO CREATE ALL_VARIANTS TABLE
+-- create empty table
+create table p7_product.illumina_distinct
+   (pos int,
+   ref string,
+   alt string
+    )
+partitioned by (chrom string, pos_block int)
 
+
+  -- insert subset into table
+
+# uncomment bash lines and run in shell
+#for x in $(seq 1 22) M X Y; do echo "$x"; nohup impala-shell -q "\
+insert into p7_product.illumina_distinct partition (chrom, pos_block)
+select distinct pos, ref, alt, chrom, cast(pos/1000000 as INT) as pos_block
+from p7_ref_grch37.dbsnp
+where chrom = '$x';
+# "; done
+
+-- compute stats on new table
+compute stats p7_product.illumina_distinct;
+
+
+-- FULL OUTER JOIN ILLUMINA DISTINCT and KAVIAR tables to return all variants from both with annotations
 
 --- create blank partitioned table
-create table p7_product.clin_kav_distinct
+create table p7_product.ill_kav
    (pos int,
    ref string,
    alt string,
-   clin_sig string,
-   clin_dbn string,
    kav_freq float,
    kav_source string)
-partitioned by (chrom string) 
+partitioned by (chrom string);
 
---- outer join kaviar and clinvar tables and insert into p7_product.clin_kav_distinct by chrom
+--- outer join illumina and kaviar tables and insert into p7_product.ill_kav by chrom and pos_block
+
 # uncomment bash lines and run in shell
-#for x in $(seq 1 22) M MT X Y; do echo "$x"; impala-shell -q "\
-insert into p7_product.clin_kav_distinct partition (chrom)
+
+#for x in $(seq 1 22) M X Y; do echo "$x"; nohup impala-shell -q "\
+insert into p7_product.ill_kav partition (chrom)
 WITH t0 as
 (select * from p7_product.kav_distinct where chrom = '$x'),
 t1 as
-(select * from p7_product.clin_distinct where chrom = '$x')
+(select * from p7_product.illumina_distinct where chrom = '$x')
 SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
        coalesce(t0.ref, t1.ref) AS ref,
        coalesce(t0.alt, t1.alt) AS alt,
-       t1.clin_sig,
-       t1.clin_dbn,
        t0.kav_freq,
        t0.kav_source,
        coalesce(t0.chrom, t1.chrom) AS chrom
@@ -103,7 +154,47 @@ FULL OUTER JOIN t1
 # "; done
 
 --- compute stats on new table
-compute stats p7_product.clin_kav_distinct; 
+compute stats p7_product.ill_kav;
+
+-- FULL OUTER JOIN ILL_KAV and CLIN_DISTINCT tables
+
+--- create blank partitioned table
+create table p7_product.ill_kav_clin
+   (pos int,
+   ref string,
+   alt string,
+   kav_freq float,
+   kav_source string,
+   clin_sig string,
+   clin_dbn string)
+partitioned by (chrom string, pos_block int);
+
+-- insert variants into table
+#for x in $(seq 1 22) M MT X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+insert into table p7_product.ill_kav_clin partition (chrom, pos_block)
+WITH t0 as
+(select * from p7_product.ill_kav where chrom = '$x'
+    and pos_block = $y),
+t1 as
+(select * from p7_product.clin_distinct where chrom = '$x')
+SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
+       coalesce(t0.ref, t1.ref) AS ref,
+       coalesce(t0.alt, t1.alt) AS alt,
+        t0.kav_freq,
+        t0.kav_source,
+        t1.clin_sig,
+        t1.clin_dbn,
+        coalesce(t0.chrom, t1.chrom) AS chrom,
+        CAST(coalesce(t0.pos, t1.pos)/1000000 as int) AS pos_block
+FROM t0
+FULL OUTER JOIN t1
+    ON t0.chrom = t1.chrom AND
+       t0.pos = t1.pos AND
+       t0.ref = t1.ref AND
+       t0.alt = t1.alt;
+# "; done; done
+
+
 
 -- add rsID and variants from dbsnp to create all_variants table
 create table p7_product.all_vars
@@ -489,7 +580,8 @@ drop table clin_kav_distinct;
 
 
 
-
+-- TODO: add distinct RCF variants here when available
+-- TODO: reassess after normalization
 
 
 
