@@ -23,16 +23,15 @@ create table p7_product.kav_distinct
   kav_freq FLOAT,
   kav_source STRING
 )
-  PARTITIONED BY (chrom string);
+  PARTITIONED BY (chrom string, pos_block int);
 
 -- insert columns into table
 #for x in $(seq 1 22) X Y; do echo "$x"; nohup impala-shell -q "\
-insert into table p7_product.kav_distinct partition (chrom)
-  select distinct pos, ref, alt,
-  allele_freq as kav_freq,
+insert into table p7_product.kav_distinct partition (chrom, pos_block)
+  select distinct pos, ref, alt, allele_freq as kav_freq,
     CASE when sources is NULL then 'dbSNP'
       else sources
-      END as kav_source, chrom
+      END as kav_source, chrom, cast(pos/1000000 as INT) as pos_block
   from p7_ref_grch37.kaviar_isb
   where chrom = '$x';
 # "; done
@@ -104,39 +103,149 @@ create table p7_product.illumina_distinct
 partitioned by (chrom string, pos_block int)
 
 
-  -- insert subset into table
+-- insert subset into table, dividing max(pos) in half to save on memory
 
 # uncomment bash lines and run in shell
+
 #for x in $(seq 1 22) M X Y; do echo "$x"; nohup impala-shell -q "\
 insert into p7_product.illumina_distinct partition (chrom, pos_block)
 select distinct pos, ref, alt, chrom, cast(pos/1000000 as INT) as pos_block
-from p7_ref_grch37.dbsnp
-where chrom = '$x';
+from p7_platform.wgs_illumina_variant
+where chrom = '$x'
+and pos < 124620308;
+# "; done
+
+#for x in $(seq 1 22) M X Y; do echo "$x"; nohup impala-shell -q "\
+insert into p7_product.illumina_distinct partition (chrom, pos_block)
+select distinct pos, ref, alt, chrom, cast(pos/1000000 as INT) as pos_block
+from p7_platform.wgs_illumina_variant
+where chrom = '$x'
+and pos >= 124620308;
 # "; done
 
 -- compute stats on new table
 compute stats p7_product.illumina_distinct;
 
+-- number of rows in illumina_distinct =  208302707;  PASS
 
--- FULL OUTER JOIN ILLUMINA DISTINCT and KAVIAR tables to return all variants from both with annotations
+-- CREATE DISTINCT COMGEN VARIANT SUBSET
+-- create empty table
+create table p7_product.comgen_distinct
+   (pos int,
+   ref string,
+   alt string
+    )
+partitioned by (chrom string, pos_block int)
 
---- create blank partitioned table
-create table p7_product.ill_kav
+-- 11066152314 total rows in table
+--  rows decomposed into separeate rows for allele1seq and allele2seq with chrom, start as pos, ref, alt
+-- 248265502 + 17525708 =   265791210  and ref not null, and alt <> ref
+
+-- insert allele1seq distinct variants into comgen_distinct table
+#for x in $(seq 1 22) M X Y; do echo "$x"; nohup impala-shell -q "\
+insert into p7_product.comgen_distinct partition (chrom, pos_block)
+select distinct start as pos, ref, allele1seq as alt, chrom, cast(start/1000000 as INT) as pos_block
+from p7_platform.wgs_comgen_variant
+where chrom = '$x'
+and start < 124619939
+and ref is not null
+and allele1seq <> ref;
+# "; done
+
+#for x in $(seq 1 22) M X Y; do echo "$x"; nohup impala-shell -q "\
+insert into p7_product.comgen_distinct partition (chrom, pos_block)
+select distinct start as pos, ref, allele1seq as alt, chrom, cast(start/1000000 as INT) as pos_block
+from p7_platform.wgs_comgen_variant
+where chrom = '$x'
+and start >= 124619939
+and ref is not null
+and allele1seq <> ref;
+# "; done
+
+-- insert allele1seq distinct variants into comgen_distinct table
+#for x in $(seq 1 22) M X Y; do echo "$x"; nohup impala-shell -q "\
+insert into p7_product.comgen_distinct partition (chrom, pos_block)
+select distinct start as pos, ref, allele2seq as alt, chrom, cast(start/1000000 as INT) as pos_block
+from p7_platform.wgs_comgen_variant
+where chrom = '$x'
+and start < 124619939
+and ref is not null
+and allele2seq <> ref;
+# "; done
+
+#for x in $(seq 1 22) M X Y; do echo "$x"; nohup impala-shell -q "\
+insert into p7_product.comgen_distinct partition (chrom, pos_block)
+select distinct start as pos, ref, allele2seq as alt, chrom, cast(start/1000000 as INT) as pos_block
+from p7_platform.wgs_comgen_variant
+where chrom = '$x'
+and start >= 124619939
+and ref is not null
+and allele2seq <> ref;
+# "; done
+
+-- compute stats on new table
+compute stats comgen_distinct;
+
+-- Checking to see if any variants were repeated between allele1seq and allele2seq
+-- 265791210 rows in comgen_distinct = PASS
+
+-- FULL OUTER JOIN ILLUMINA DISTINCT and COMGEN_DISTINCT tables to return all variants from both with annotations
+
+-- create empty table to store variants
+create table p7_product.distinct_vars
+   (pos int,
+   ref string,
+   alt string)
+partitioned by (chrom string, pos_block int);
+
+-- insert full join of unique variants from ill_distinct and comgen_distinct tables
+#for x in $(seq 1 22) M MT X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+insert into p7_product.distinct_vars partition (chrom, pos_block)
+WITH t0 as
+(select * from p7_product.illumina_distinct
+where chrom = '$x'
+and pos_block = $y),
+t1 as
+(select *
+from p7_product.comgen_distinct
+where chrom = '$x'
+and pos_block = $y)
+-- taking distinct here in case variants appear in both tables
+SELECT distinct CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
+       coalesce(t0.ref, t1.ref) AS ref,
+       coalesce(t0.alt, t1.alt) AS alt,
+       coalesce(t0.chrom, t1.chrom) AS chrom,
+       CAST(coalesce(t0.pos, t1.pos)/1000000 AS int) as pos_block
+FROM t0
+FULL OUTER JOIN t1
+    ON t0.chrom = t1.chrom
+    AND t0.pos = t1.pos
+    AND t0.ref = t1.ref
+    AND t0.alt = t1.alt;
+# "; done; done
+
+-- compute stats on new table
+compute stats p7_product.distinct_vars;
+
+-- FULL OUTER JOIN ILLUMINA/CGI VARIANTS (distinct_vars) WITH KAVIAR VARIANTS
+
+--- create blank table
+create table p7_product.kav_vars
    (pos int,
    ref string,
    alt string,
    kav_freq float,
    kav_source string)
-partitioned by (chrom string);
+partitioned by (chrom string, pos_block);
 
---- outer join illumina and kaviar tables and insert into p7_product.ill_kav by chrom and pos_block
+--- insert variants into p7_product.kav_vars and annotate with kaviar frequency and source
 
-# uncomment bash lines and run in shell
-
-#for x in $(seq 1 22) M X Y; do echo "$x"; nohup impala-shell -q "\
-insert into p7_product.ill_kav partition (chrom)
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+insert into p7_product.kav_vars partition (chrom, pos_block)
 WITH t0 as
-(select * from p7_product.kav_distinct where chrom = '$x'),
+(select *
+from p7_product.kav_distinct
+where chrom = '$x'),
 t1 as
 (select * from p7_product.illumina_distinct where chrom = '$x')
 SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
@@ -144,7 +253,8 @@ SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
        coalesce(t0.alt, t1.alt) AS alt,
        t0.kav_freq,
        t0.kav_source,
-       coalesce(t0.chrom, t1.chrom) AS chrom
+       coalesce(t0.chrom, t1.chrom) AS chrom,
+       CAST(coalesce(t0.pos, t1.pos)/1000000 AS int) as pos_block
 FROM t0
 FULL OUTER JOIN t1
     ON t0.chrom = t1.chrom
@@ -170,11 +280,10 @@ create table p7_product.ill_kav_clin
 partitioned by (chrom string, pos_block int);
 
 -- insert variants into table
-#for x in $(seq 1 22) M MT X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+#for x in $(seq 1 22) M X Y; do nohup impala-shell -q "\
 insert into table p7_product.ill_kav_clin partition (chrom, pos_block)
 WITH t0 as
-(select * from p7_product.ill_kav where chrom = '$x'
-    and pos_block = $y),
+(select * from p7_product.ill_kav where chrom = '$x'),
 t1 as
 (select * from p7_product.clin_distinct where chrom = '$x')
 SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
@@ -192,9 +301,13 @@ FULL OUTER JOIN t1
        t0.pos = t1.pos AND
        t0.ref = t1.ref AND
        t0.alt = t1.alt;
-# "; done; done
+# "; done
+
+-- compute stats on new table
+compute stats p7_product.ill_kav_clin;
 
 
+-- Add rs_id's and FULL OUTER JOIN with dbSNP_distinct table
 
 -- add rsID and variants from dbsnp to create all_variants table
 create table p7_product.all_vars
