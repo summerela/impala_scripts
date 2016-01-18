@@ -85,32 +85,32 @@ chroms = map( str, range(1,23) ) + ['X','Y','M']
 # ##################################################################
 # # check vcf formatting with vcfBareBones.pl from snpeff scripts ##
 # ##################################################################
-for chrom in chroms:
-    print "Verifying VCF format for chromosome {}... \n".format(chrom)
-    vcf_checked_in =  'chr' + chrom + '_' + out_name + '.vcf'
-    vcf_checked_out = 'chr' + chrom + '_verified.vcf'
-    # create the file and run snpeff
-    with open(vcf_checked_out, "w") as out_file:
-        try:
-            subprocess.call(['perl', vcf_basic, vcf_checked_in], stdout=out_file)
-        except subprocess.CalledProcessError as e:
-             print e.output
+# for chrom in chroms:
+#     print "Verifying VCF format for chromosome {}... \n".format(chrom)
+#     vcf_checked_in =  'chr' + chrom + '_' + out_name + '.vcf'
+#     vcf_checked_out = 'chr' + chrom + '_verified.vcf'
+#     # create the file and run snpeff
+#     with open(vcf_checked_out, "w") as out_file:
+#         try:
+#             subprocess.call(['perl', vcf_basic, vcf_checked_in], stdout=out_file)
+#         except subprocess.CalledProcessError as e:
+#              print e.output
 
 # ############################################################
 # # annotate variants with coding consequences using snpeff ##
 # ############################################################
-# for chrom in chroms:
-#     print "Annotating coding consequences for chromosome {} with snpeff... \n".format(chrom)
-#     # create names for input and output files
-#     vcf_in = 'chr' + chrom + '_verified.vcf'
-#     vcf_out = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
-#     # create the file and run snpeff
-#     with open(vcf_out, "w") as f:
-#         try:
-#             subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", " -csvStats", "GRCh37.75", vcf_in], stdout=f)
-#         except subprocess.CalledProcessError as e:
-#              print e.output
-#
+for chrom in chroms:
+    print "Annotating coding consequences for chromosome {} with snpeff... \n".format(chrom)
+    # create names for input and output files
+    vcf_in = 'chr' + chrom + '_verified.vcf'
+    vcf_out = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
+    # create the file and run snpeff
+    with open(vcf_out, "w") as f:
+        try:
+            subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", " -csvStats", "GRCh37.75", vcf_in], stdout=f)
+        except subprocess.CalledProcessError as e:
+             print e.output
+
 # ##########################################################
 # ## Output SnpEff effects as tsv file, one effect per line ##
 # ############################################################
