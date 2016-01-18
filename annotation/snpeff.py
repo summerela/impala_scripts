@@ -70,12 +70,10 @@ def create_vcf(db_name, table_name, chrom_name):
     get_vars = "SELECT chrom, pos, rs_id, ref, alt, '.' as qual, '.' as filter, '.' as info, '.' as form, '.' as sample from {}.{} WHERE chrom = '{}' order by pos".format(input_db, input_table, chrom_name)
     cur.execute(get_vars)
     vars = as_pandas(cur)
-    print len(vars)
-    # write variants to file row by row to save memory
-    # with open(vcf_out, 'a') as csvfile:
-        # for row in cur:
-            # writer = csv.writer(csvfile, delimiter="\t", lineterminator = '\n')
-            # writer.writerow(row)
+    # write variants to file
+    vcf_out = 'chr' + chrom_name + '_' + out_name + '.vcf'
+    if len(vars) > 0:
+        vars.to_csv(vcf_out, sep='\t')
 
 # create list of chromosomes to process
 chroms = map( str, range(1,23) ) + ['X','Y','M']
