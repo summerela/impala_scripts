@@ -107,7 +107,7 @@ for chrom in chroms:
     # create the file and run snpeff
     with open(vcf_out, "w") as f:
         try:
-            subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", " -csvStats", "GRCh37.75", vcf_in], stdout=f)
+            subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "GRCh37.75", vcf_in], stdout=f)
         except subprocess.CalledProcessError as e:
              print e.output
 
