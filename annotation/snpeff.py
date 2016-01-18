@@ -66,7 +66,7 @@ def create_vcf(db_name, table_name, chrom_name):
     # TODO: make this one function instead of calling header function
     create_header(vcf_out)
     # connect to vars_to_snpeff table
-    get_vars = "SELECT chrom, pos, rs_id, ref, alt from {}.{} WHERE chrom = '{}' order by pos".format(input_db, input_table, chrom_name)
+    get_vars = "SELECT chrom, pos, rs_id, ref, alt, '.' as qual, '.' as filter, '.' as info, '.' as form, '.' as sample from {}.{} WHERE chrom = '{}' order by pos".format(input_db, input_table, chrom_name)
     cur.execute(get_vars)
     # write variants to file row by row to save memory
     with open(vcf_out, 'a') as csvfile:
