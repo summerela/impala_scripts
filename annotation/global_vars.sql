@@ -53,11 +53,16 @@ create table p7_product.clin_distinct
   clin_sig string,
   clin_dbn string
 )
-  partitioned by (chrom string);
+  partitioned by (chrom string, pos_block int);
 
 -- insert distinct subset into table
-insert into table p7_product.clin_distinct partition (chrom)
-  select distinct pos, ref, alt, clin_sig, clin_dbn, chrom
+insert into table p7_product.clin_distinct partition (chrom, pos_block)
+  select distinct pos, ref, alt, clin_sig, clin_dbn,
+    CASE
+      when chrom = 'MT' then 'M'
+        else chrom
+    END as chrom,
+    cast(pos/1000000 as INT) as pos_block
   from p7_ref_grch37.clinvar;
 
 -- compute stats on new table
@@ -77,12 +82,17 @@ create table p7_product.dbsnp_distinct
     dbsnp_buildid string,
     var_type string
     )
-  partitioned by (chrom string);
+  partitioned by (chrom string, pos_block int);
 
 -- insert subset into table
-insert into p7_product.dbsnp_distinct partition (chrom)
+insert into p7_product.dbsnp_distinct partition (chrom, pos_block)
 select pos, ref, alt,
-  rs_id, dbsnpbuildid as dbsnp_buildid, vc as var_type, chrom
+  rs_id, dbsnpbuildid as dbsnp_buildid, vc as var_type,
+  CASE
+      when chrom = 'MT' then 'M'
+        else chrom
+    END as chrom,
+  cast(pos/1000000 as INT) as pos_block
   from p7_ref_grch37.dbsnp;
 
 -- compute stats on new table
@@ -236,7 +246,7 @@ create table p7_product.kav_vars
    alt string,
    kav_freq float,
    kav_source string)
-partitioned by (chrom string, pos_block);
+partitioned by (chrom string, pos_block int);
 
 --- insert variants into p7_product.kav_vars and annotate with kaviar frequency and source
 
@@ -245,9 +255,14 @@ insert into p7_product.kav_vars partition (chrom, pos_block)
 WITH t0 as
 (select *
 from p7_product.kav_distinct
-where chrom = '$x'),
+where chrom = '$x'
+and pos_block = $y),
 t1 as
-(select * from p7_product.illumina_distinct where chrom = '$x')
+(select *
+ from p7_product.distinct_vars
+ where chrom = '$x'
+and pos_block = $y)
+
 SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
        coalesce(t0.ref, t1.ref) AS ref,
        coalesce(t0.alt, t1.alt) AS alt,
@@ -264,12 +279,12 @@ FULL OUTER JOIN t1
 # "; done
 
 --- compute stats on new table
-compute stats p7_product.ill_kav;
+compute stats p7_product.kav_vars;
 
--- FULL OUTER JOIN ILL_KAV and CLIN_DISTINCT tables
+-- FULL OUTER JOIN kav_vars and clin_distinct tables
 
 --- create blank partitioned table
-create table p7_product.ill_kav_clin
+create table p7_product.kav_clin_vars
    (pos int,
    ref string,
    alt string,
@@ -280,12 +295,18 @@ create table p7_product.ill_kav_clin
 partitioned by (chrom string, pos_block int);
 
 -- insert variants into table
-#for x in $(seq 1 22) M X Y; do nohup impala-shell -q "\
-insert into table p7_product.ill_kav_clin partition (chrom, pos_block)
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+insert into table p7_product.kav_clin_vars partition (chrom, pos_block)
 WITH t0 as
-(select * from p7_product.ill_kav where chrom = '$x'),
+(select *
+from p7_product.kav_vars
+where chrom = '$x'
+and pos_block = $y),
 t1 as
-(select * from p7_product.clin_distinct where chrom = '$x')
+(select *
+from p7_product.clin_distinct
+where chrom = '$x'
+and pos_block = $y)
 SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
        coalesce(t0.ref, t1.ref) AS ref,
        coalesce(t0.alt, t1.alt) AS alt,
@@ -294,7 +315,7 @@ SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
         t1.clin_sig,
         t1.clin_dbn,
         coalesce(t0.chrom, t1.chrom) AS chrom,
-        CAST(coalesce(t0.pos, t1.pos)/1000000 as int) AS pos_block
+        coalesce(t0.pos_block, t1.pos_block) as pos_block
 FROM t0
 FULL OUTER JOIN t1
     ON t0.chrom = t1.chrom AND
@@ -304,8 +325,9 @@ FULL OUTER JOIN t1
 # "; done
 
 -- compute stats on new table
-compute stats p7_product.ill_kav_clin;
+compute stats p7_product.kav_clin_vars;
 
+-- 694405468 rows in table
 
 -- Add rs_id's and FULL OUTER JOIN with dbSNP_distinct table
 
@@ -321,17 +343,22 @@ create table p7_product.all_vars
     kav_source string,
     dbsnp_build string,
     var_type string)
-partitioned by (chrom string);
+partitioned by (chrom string, pos_block int);
 
 --- insert variants into partitioned table
-#for x in $(seq 1 22) M MT X Y; do echo "$x"; nohup impala-shell -q "\
-insert into p7_product.all_vars partition (chrom)
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+insert into p7_product.all_vars partition (chrom, pos_block)
 WITH t0 as
-(select * from p7_product.clin_kav_distinct where chrom = '$x'),
+(select *
+from p7_product.kav_clin_vars
+where chrom = '$x'
+and pos_block = $y),
 t1 as
-(select * from p7_product.dbsnp_distinct where chrom = '$x')
-SELECT DISTINCT
-       CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
+(select *
+from p7_product.dbsnp_distinct
+where chrom = '$x'
+and pos_block = $y)
+SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
        coalesce(t0.ref, t1.ref) AS ref,
        coalesce(t0.alt, t1.alt) AS alt,
         t1.rs_id,
@@ -341,7 +368,8 @@ SELECT DISTINCT
         t0.kav_source,
         t1.dbsnp_buildid,
         t1.var_type,
-        coalesce(t0.chrom, t1.chrom) AS chrom
+        coalesce(t0.chrom, t1.chrom) AS chrom,
+        coalesce(t0.pos_block, t1.pos_block) AS pos_block
 FROM t0
 FULL OUTER JOIN t1
     ON t0.chrom = t1.chrom AND
@@ -353,33 +381,11 @@ FULL OUTER JOIN t1
 --- compute stats on new table
 compute stats p7_product.all_vars;
 
---- compared number of rows in each chromosome with number of rows in kav_distinct to ensure rows were retained
-
---- add additional positional partition to all_vars table to avoid exceeding memory on impala
-create table p7_product.all_variants
-( pos int,
- ref string,
- alt string,
- rs_id string,
- clin_sig string,
- clin_dbn string,
- kav_freq float,
- kav_source string,
- dbsnp_buildid int,
- var_type string
- )
- partitioned by (chrom string, pos_block int);
-
-insert into p7_product.all_variants partition (chrom, pos_block)
-select pos, ref, alt, rs_id, clin_sig, clin_dbn, kav_freq,
-    kav_source, cast(dbsnp_build as int), var_type, chrom,
-    cast(pos/1000000 as int) as pos_block
-from p7_product.all_vars;
-
-compute stats all_variants;
+-- 698889772 rows in table, all are distinct
 
 -- ANNOTATE ALL_VARIANTS TABLE TO CREATE GLOBAL VARIANTS TABLE
 
+-- TODO add exon and exon number
 -- create distinct subset of ensembl table
 create table p7_product.ens_distinct
 (
