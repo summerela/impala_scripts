@@ -63,24 +63,25 @@ def create_header(outfile_name):
 def create_vcf(db_name, table_name, chrom_name):
     # create named file for each chromosome
     vcf_out = 'chr' + chrom_name + '_' + out_name + '.vcf'
-    # create header for each chromosome file
-    # TODO: make this one function instead of calling header function
-    create_header(vcf_out)
     # connect to vars_to_snpeff table
-    get_vars = "SELECT chrom, pos, rs_id, ref, alt, '.' as qual, '.' as filter, '.' as info, '.' as form, '.' as sample from {}.{} WHERE chrom = '{}' order by pos".format(input_db, input_table, chrom_name)
+    get_vars = "SELECT chrom, pos, rs_id, ref, alt, '.' as qual, '.' as filter, '.' as info, '.' as form, '.' as sample from {}.{} WHERE chrom = '{}' order by pos".format(db_name, table_name, chrom_name)
     cur.execute(get_vars)
     vars = as_pandas(cur)
     # write variants to file
-    vcf_out = 'chr' + chrom_name + '_' + out_name + '.vcf'
     if len(vars) > 0:
+        # create header for each chromosome file
+        # TODO: make this one function instead of calling header function
+        create_header(vcf_out)
+        print "Creating VCF files for chromosome {}... \n".format(chrom_name)
         vars.to_csv(vcf_out, sep='\t')
+    else:
+        print "No variants found for chromosome {} \n".format(chrom_name)
 
 # create list of chromosomes to process
 chroms = map( str, range(1,23) ) + ['X','Y','M']
 
 # download each chromosome in input_table and turn into vcf file
 for chrom in chroms:
-    print "Creating VCF files for chromosome {}... \n".format(chrom)
     create_vcf(input_db, input_table, chrom)
 
 # ##################################################################
