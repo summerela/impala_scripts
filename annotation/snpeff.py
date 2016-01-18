@@ -34,6 +34,7 @@ import time
 import csv
 import subprocess
 import numpy as np
+from impala.util import as_pandas
 
 # disable extraneous pandas warning
 pd.options.mode.chained_assignment = None
@@ -67,7 +68,8 @@ def create_vcf(db_name, table_name, chrom_name):
     create_header(vcf_out)
     # connect to vars_to_snpeff table
     get_vars = "SELECT chrom, pos, rs_id, ref, alt, '.' as qual, '.' as filter, '.' as info, '.' as form, '.' as sample from {}.{} WHERE chrom = '{}' order by pos".format(input_db, input_table, chrom_name)
-    vars = cur.execute(get_vars)
+    cur.execute(get_vars)
+    vars = as_pandas(cur)
     print len(vars)
     # write variants to file row by row to save memory
     # with open(vcf_out, 'a') as csvfile:
