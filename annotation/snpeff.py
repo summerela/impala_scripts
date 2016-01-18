@@ -78,7 +78,7 @@ def create_vcf(db_name, table_name, chrom_name):
 # create list of chromosomes to process
 chroms = map( str, range(1,23) ) + ['X','Y','M']
 
-download each chromosome in input_table and turn into vcf file
+# download each chromosome in input_table and turn into vcf file
 for chrom in chroms:
     print "Creating VCF files for chromosome {}... \n".format(chrom)
     create_vcf(input_db, input_table, chrom)
