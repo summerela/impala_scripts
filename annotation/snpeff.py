@@ -112,26 +112,26 @@ for file in os.listdir(os.getcwd()):
         # create the file and run snpeff
         with open(vcf_out, "w") as f:
             try:
-                subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "closest", "-t", "-v", "GRCh37.75", file], stdout=f)
+                subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "GRCh37.75", file], stdout=f)
             except subprocess.CalledProcessError as e:
                  print e.output
 
 # ##########################################################
 # ## Output SnpEff effects as tsv file, one effect per line ##
 # ############################################################
-# for file in os.listdir(os.getcwd()):
-#     if file.endswith('_snpeff.vcf'):
-#         print "Parsing snpeff output for {}... \n".format(file)
-#         tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_final.tsv'
-#         # create command to parse snpeff
-#         snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
-#         - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
-#         "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" \
-#         "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(vcf_in, snpeff_oneperline_perl, \
-#         java_path, snpsift_jar,tsv_out)
-#         # call subprocess and communicate to pipe output between commands
-#         ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-#         print ps.communicate()[0]
+for file in os.listdir(os.getcwd()):
+    if file.endswith('_snpeff.vcf'):
+        print "Parsing snpeff output for {}... \n".format(file)
+        tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_final.tsv'
+        # create command to parse snpeff
+        snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
+        - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
+        "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" \
+        "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(vcf_in, snpeff_oneperline_perl, \
+        java_path, snpsift_jar,tsv_out)
+        # call subprocess and communicate to pipe output between commands
+        ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+        print ps.communicate()[0]
 #
 # ####################
 # ## Remove Header  ##
