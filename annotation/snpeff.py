@@ -93,7 +93,7 @@ def create_vcf(db_name, table_name, chrom_name):
 for file in os.listdir(os.getcwd()):
     if file.endswith( '_' + out_name + '.vcf'):
         print "Verifying VCF format for chromosome {}... \n".format(file)
-        vcf_checked_out = [os.path.splitext(os.path.basename(fn))[0] for fn in file] + '_verified.vcf'
+        vcf_checked_out = '.'.join(file.split('.')[:-1]) if '.' in file else file + '_verified.vcf'
         # create the file and run snpeff
         with open(vcf_checked_out, "w") as out_file:
             try:
