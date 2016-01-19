@@ -119,31 +119,31 @@ def create_vcf(db_name, table_name, chrom_name):
 # ##########################################################
 # ## Output SnpEff effects as tsv file, one effect per line ##
 # ############################################################
-for file in os.listdir(os.getcwd()):
-    if file.endswith('_snpeff.vcf'):
-        print "Parsing snpeff output for {}... \n".format(file)
-        tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_final.tsv'
-        # create command to parse snpeff
-        snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
-        - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
-        "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" \
-        "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(file, snpeff_oneperline_perl, \
-        java_path, snpsift_jar,tsv_out)
-        # call subprocess and communicate to pipe output between commands
-        ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-        print ps.communicate()[0]
+# for file in os.listdir(os.getcwd()):
+#     if file.endswith('_snpeff.vcf'):
+#         print "Parsing snpeff output for {}... \n".format(file)
+#         tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_final.tsv'
+#         # create command to parse snpeff
+#         snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
+#         - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
+#         "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" \
+#         "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(file, snpeff_oneperline_perl, \
+#         java_path, snpsift_jar,tsv_out)
+#         # call subprocess and communicate to pipe output between commands
+#         ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+#         print ps.communicate()[0]
 #
 # ####################
 # ## Remove Header  ##
 # ####################
-# # remove header need for running snpeff to create out own column names on impala
-# for chrom in chroms:
-#     print "Removing header for chromosome {} upload to impala... \n".format(chrom)
-#     tsv_in = 'chr' + chrom + '_' + out_name + '.tsv'
-#     tsv_out = 'chr' + chrom + '_' + out_name + '_final.tsv'
-#     tsv_cmd = "sed '1d' {} > {}".format(tsv_in,tsv_out)
-#     tsv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-#     print tsv_proc.communicate()[0]
+# remove header need for running snpeff to create out own column names on impala
+for file in os.listdir(os.getcwd()):
+    if file.endswith('_final.tsv'):
+    print "Removing header for {}... \n".format(file)
+    tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_final.tsv'
+    tsv_cmd = "sed '1d' {} > {}".format(file,tsv_out)
+    tsv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    print tsv_proc.communicate()[0]
 #
 # ###############################
 # ## Upload results to hdfs  ##
