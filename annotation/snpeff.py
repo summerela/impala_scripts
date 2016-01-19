@@ -83,8 +83,8 @@ def create_vcf(db_name, table_name, chrom_name):
         print "No variants found for chromosome {} \n".format(chrom_name)
 
 # download each chromosome in input_table and turn into vcf file
-# for chrom in chroms:
-#     create_vcf(input_db, input_table, chrom)
+for chrom in chroms:
+    create_vcf(input_db, input_table, chrom)
 
 # ##################################################################
 # # check vcf formatting with vcfBareBones.pl from snpeff scripts ##
