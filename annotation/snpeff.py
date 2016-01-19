@@ -36,6 +36,7 @@ import csv
 import subprocess
 import numpy as np
 from impala.util import as_pandas
+import os
 
 # disable extraneous pandas warning
 pd.options.mode.chained_assignment = None
@@ -43,6 +44,9 @@ pd.options.mode.chained_assignment = None
 ## create connection to impala
 conn=connect(host=impala_host, port=impala_port, timeout=10000, user=impala_user_name)
 cur = conn.cursor()
+
+# create list of chromosomes to process
+chroms = map( str, range(1,23) ) + ['X','Y','M']
 
 #################################################
 ## create vcf files by row for each chromosome ##
@@ -78,26 +82,24 @@ def create_vcf(db_name, table_name, chrom_name):
     else:
         print "No variants found for chromosome {} \n".format(chrom_name)
 
-# create list of chromosomes to process
-chroms = map( str, range(1,23) ) + ['X','Y','M']
-
 # download each chromosome in input_table and turn into vcf file
-for chrom in chroms:
-    create_vcf(input_db, input_table, chrom)
+# for chrom in chroms:
+#     create_vcf(input_db, input_table, chrom)
 
 # ##################################################################
 # # check vcf formatting with vcfBareBones.pl from snpeff scripts ##
 # ##################################################################
-# for chrom in chroms:
-#     print "Verifying VCF format for chromosome {}... \n".format(chrom)
-#     vcf_checked_in =  'chr' + chrom + '_' + out_name + '.vcf'
-#     vcf_checked_out = 'chr' + chrom + '_verified.vcf'
-#     # create the file and run snpeff
-#     with open(vcf_checked_out, "w") as out_file:
-#         try:
-#             subprocess.call(['perl', vcf_basic, vcf_checked_in], stdout=out_file)
-#         except subprocess.CalledProcessError as e:
-#              print e.output
+# process all vcf files created from the query
+for file in os.listdir(os.getcwd()):
+    if file.endswith( '_' + out_name + '.vcf'):
+        print "Verifying VCF format for chromosome {}... \n".format(file)
+        vcf_checked_out = 'chr' + chrom + '_verified.vcf'
+        # create the file and run snpeff
+        with open(vcf_checked_out, "w") as out_file:
+            try:
+                subprocess.call(['perl', vcf_basic, file], stdout=out_file)
+            except subprocess.CalledProcessError as e:
+                 print e.output
 
 # ############################################################
 # # annotate variants with coding consequences using snpeff ##
