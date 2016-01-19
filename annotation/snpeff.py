@@ -78,7 +78,7 @@ def create_vcf(db_name, table_name, chrom_name):
         # TODO: make this one function instead of calling header function
         create_header(vcf_out)
         print "Creating VCF files for chromosome {}... \n".format(chrom_name)
-        vars.to_csv(vcf_out, sep='\t')
+        vars.to_csv(vcf_out, sep='\t', index=None)
     else:
         print "No variants found for chromosome {} \n".format(chrom_name)
 
@@ -104,17 +104,17 @@ def create_vcf(db_name, table_name, chrom_name):
 # ############################################################
 # # annotate variants with coding consequences using snpeff ##
 # ############################################################
-for file in os.listdir(os.getcwd()):
-    if file.endswith('_verified.vcf'):
-        print "Annotating coding consequences for chromosome {} with snpeff... \n".format(file)
-        # create names for input and output files
-        vcf_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_snpeff.vcf'
-        # create the file and run snpeff
-        with open(vcf_out, "w") as f:
-            try:
-                subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "GRCh37.75", file], stdout=f)
-            except subprocess.CalledProcessError as e:
-                 print e.output
+# for file in os.listdir(os.getcwd()):
+#     if file.endswith('_verified.vcf'):
+#         print "Annotating coding consequences for chromosome {} with snpeff... \n".format(file)
+#         # create names for input and output files
+#         vcf_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_snpeff.vcf'
+#         # create the file and run snpeff
+#         with open(vcf_out, "w") as f:
+#             try:
+#                 subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "GRCh37.75", file], stdout=f)
+#             except subprocess.CalledProcessError as e:
+#                  print e.output
 
 # ##########################################################
 # ## Output SnpEff effects as tsv file, one effect per line ##
