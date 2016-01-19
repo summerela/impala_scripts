@@ -64,13 +64,14 @@ def create_header(outfile_name):
     out.write(header)
     out.close()
 
-### download variants by row and chromosome
+### download variants that are not intergenic
 def create_vcf(db_name, table_name, chrom_name):
     # create named file for each chromosome
     vcf_out = 'chr' + chrom_name + '_' + out_name + '.vcf'
     # connect to vars_to_snpeff table
-    get_vars = "SELECT chrom, pos, rs_id, ref, alt, '.' as qual, '.' as filter, '.' as info, '.' as form, '.' as sample from {}.{} WHERE chrom = '{}' order by pos".format(db_name, table_name, chrom_name)
-    cur.execute(get_vars)
+    gene_vars = "SELECT chrom, pos, rs_id, ref, alt, '.' as qual, '.' as filter, '.' as info, '.' as form, '.' as \
+                sample from {}.{} WHERE chrom = '{}' and gene_name is not null order by pos".format(db_name, table_name, chrom_name)
+    cur.execute(gene_vars)
     vars = as_pandas(cur)
     # write variants to file
     if len(vars) > 0:
@@ -82,9 +83,32 @@ def create_vcf(db_name, table_name, chrom_name):
     else:
         print "No variants found for chromosome {} \n".format(chrom_name)
 
+
+### download variants that are in intergenic regions
+def intergenic_vcf(db_name, table_name, chrom_name):
+    # create named file for each chromosome
+    vcf_out = 'chr' + chrom_name + '_' + out_name + '_intergenic.vcf'
+    # connect to vars_to_snpeff table
+    intergenic_vars = "SELECT chrom, pos, rs_id, ref, alt, '.' as qual, '.' as filter, '.' as info, '.' as form, '.' as \
+                sample from {}.{} WHERE chrom = '{}' and gene_name is null order by pos".format(db_name, table_name, chrom_name)
+    cur.execute(intergenic_vars)
+    int_vars = as_pandas(cur)
+    # write variants to file
+    if len(int_vars) > 0:
+        # create header for each chromosome file
+        # TODO: make this one function instead of calling header function
+        create_header(vcf_out)
+        print "Creating VCF files for chromosome {} intergenic variants... \n".format(chrom_name)
+        int_vars.to_csv(vcf_out, sep='\t', index=None)
+    else:
+        print "No intergenic variants found for chromosome {} \n".format(chrom_name)
+
 # download each chromosome in input_table and turn into vcf file
-# for chrom in chroms:
-#     create_vcf(input_db, input_table, chrom)
+for chrom in chroms:
+    create_vcf(input_db, input_table, chrom)
+
+for chrom in chroms:
+    intergenic_vcf(input_db, input_table, chrom)
 
 # ##################################################################
 # # check vcf formatting with vcfBareBones.pl from snpeff scripts ##
@@ -137,13 +161,13 @@ def create_vcf(db_name, table_name, chrom_name):
 # ## Remove Header  ##
 # ####################
 # remove header need for running snpeff to create out own column names on impala
-for file in os.listdir(os.getcwd()):
-    if file.endswith('_final.tsv'):
-        print "Removing header for {}... \n".format(file)
-        tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_nohead.tsv'
-        tsv_cmd = "sed '1d' {} > {}".format(file,tsv_out)
-        tsv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        print tsv_proc.communicate()[0]
+# for file in os.listdir(os.getcwd()):
+#     if file.endswith('_final.tsv'):
+#         print "Removing header for {}... \n".format(file)
+#         tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_nohead.tsv'
+#         tsv_cmd = "sed '1d' {} > {}".format(file,tsv_out)
+#         tsv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+#         print tsv_proc.communicate()[0]
 #
 # ###############################
 # ## Upload results to hdfs  ##
