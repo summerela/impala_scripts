@@ -516,7 +516,7 @@ create table p7_product.dbnsfp_vars
     )
     partitioned by (chrom string, pos_block int);
 
-#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+#for x in $(seq 20 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
 insert into table p7_product.dbnsfp_vars partition (chrom, pos_block)
 WITH ens as (
     SELECT *
