@@ -81,22 +81,22 @@ def create_vcf(db_name, table_name, chrom_name):
 chroms = map( str, range(1,23) ) + ['X','Y','M']
 
 # download each chromosome in input_table and turn into vcf file
-for chrom in chroms:
-    create_vcf(input_db, input_table, chrom)
+# for chrom in chroms:
+#     create_vcf(input_db, input_table, chrom)
 
 # ##################################################################
 # # check vcf formatting with vcfBareBones.pl from snpeff scripts ##
 # ##################################################################
-# for chrom in chroms:
-#     print "Verifying VCF format for chromosome {}... \n".format(chrom)
-#     vcf_checked_in =  'chr' + chrom + '_' + out_name + '.vcf'
-#     vcf_checked_out = 'chr' + chrom + '_verified.vcf'
-#     # create the file and run snpeff
-#     with open(vcf_checked_out, "w") as out_file:
-#         try:
-#             subprocess.call(['perl', vcf_basic, vcf_checked_in], stdout=out_file)
-#         except subprocess.CalledProcessError as e:
-#              print e.output
+for chrom in chroms:
+    print "Verifying VCF format for chromosome {}... \n".format(chrom)
+    vcf_checked_in =  'chr' + chrom + '_' + out_name + '.vcf'
+    vcf_checked_out = 'chr' + chrom + '_verified.vcf'
+    # create the file and run snpeff
+    with open(vcf_checked_out, "w") as out_file:
+        try:
+            subprocess.call(['perl', vcf_basic, vcf_checked_in], stdout=out_file)
+        except subprocess.CalledProcessError as e:
+             print e.output
 
 # ############################################################
 # # annotate variants with coding consequences using snpeff ##

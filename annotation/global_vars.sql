@@ -147,7 +147,7 @@ create table p7_product.comgen_distinct
     )
 partitioned by (chrom string, pos_block int)
 
--- 11066152314 total rows in table
+-- 11,066,152,314 total rows in table
 --  rows decomposed into separeate rows for allele1seq and allele2seq with chrom, start as pos, ref, alt
 -- 248265502 + 17525708 =   265791210  and ref not null, and alt <> ref
 
@@ -381,32 +381,45 @@ FULL OUTER JOIN t1
 --- compute stats on new table
 compute stats p7_product.all_vars;
 
--- 698889772 rows in table, all are distinct
+-- 698,889,772 rows in table, all are distinct
 
 -- ANNOTATE ALL_VARIANTS TABLE TO CREATE GLOBAL VARIANTS TABLE
 
 -- TODO add exon and exon number
 -- create distinct subset of ensembl table
+-- 2244857 rows in the ensembl_genes table
+-- 2,243,527 distinct rows in subset
+-- using distinct clause to remove 1330 duplicated rows
+
 create table p7_product.ens_distinct
 (
-  start      INT,
-  stop     INT,
+  start INT,
+  stop INT,
   strand STRING,
   gene_name STRING,
-  gene_id STRING
+  gene_id STRING,
+  transcript_name string,
+  transcript_id string,
+  exon_name string,
+  exon_number int
 )
   PARTITIONED BY (chrom string, pos_block int);
 
-INSERT INTO p7_product.ens_distinct partition (chrom)
+INSERT INTO p7_product.ens_distinct partition (chrom, pos_block)
     select distinct start, stop, strand, gene_name, gene_id,
-      chrom,  cast(start/1000000 as int) as pos_block
+      transcript_name, transcript_id, exon_id as exon_name, exon_number,
+      CASE when chrom = 'MT' then 'M'
+        else chrom
+          END as chrom,  cast(start/1000000 as int) as pos_block
     from p7_ref_grch37.ensembl_genes;
 
 --- compute stats on new table
 compute stats p7_product.ens_distinct;
 
+-- 2243527 rows in table: PASS
+
 -- add ensembl annotations to vars_partitioned to create ens_partitioned table
-create table p7_product.ens_partitioned
+create table p7_product.ens_vars
     (pos int,
     ref string,
     alt string,
@@ -414,6 +427,10 @@ create table p7_product.ens_partitioned
     strand string,
     gene_name string,
     gene_id string,
+    transcript_name string,
+    transcript_id string,
+    exon_name string,
+    exon_number int,
     clin_sig string,
     clin_dbn string,
     kav_freq float,
@@ -424,10 +441,10 @@ create table p7_product.ens_partitioned
     partitioned by (chrom string, pos_block int);
 
 -- inserted each chromosome into partitioned table as follows
-#for x in $(seq 1 22) M MT X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
-insert into table p7_product.ens_partitioned partition (chrom, pos_block)
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+insert into table p7_product.ens_vars partition (chrom, pos_block)
 with t0 as (
-    SELECT * FROM p7_product.all_variants
+    SELECT * FROM p7_product.all_vars
     WHERE chrom = '$x'
     AND pos_block = $y),
 t1 as (
@@ -436,49 +453,20 @@ t1 as (
   AND pos_block = $y)
 
 SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
-   t1.gene_name, t1.gene_id, t0.clin_sig, t0.clin_dbn, t0.kav_freq,
-  t0.kav_source, t0.dbsnp_buildid as buildid, t0.var_type, t0.chrom, cast(pos/1000000 as int) as pos_block
+  t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id, t1.exon_name, t1.exon_number,
+  t0.clin_sig, t0.clin_dbn, t0.kav_freq,
+  t0.kav_source, cast(t0.dbsnp_build as int), t0.var_type, t0.chrom, t0.pos_block
 FROM t0
 LEFT JOIN t1
     ON t0.chrom = t1.chrom
     AND (t0.pos BETWEEN t1.start and t1.stop);
 # " ; done ; done
 
-compute stats ens_partitioned;
+compute stats p7_product.ens_vars;
 
---- check that row counts are as expected by comparing results with all_vars table
-# for x in $(seq 1 22) M MT X Y; do impala-shell -q  \
-# "select count(*) from p7_product.ens_partitioned where chrom = '$x';"; done
-
-##for x in $(seq 1 22) M MT X Y; do impala-shell -q \
-##"select count(*) from p7_product.all_vars where chrom = '$x';"; done
-
---- due to server issues, had to redo chromosomes 18 through MT, taking distcint of table
-create table p7_product.ens_vars
-    (pos int,
-    ref string,
-    alt string,
-    rs_id string,
-    strand string,
-    gene_name string,
-    gene_id string,
-    clin_sig string,
-    clin_dbn string,
-    kav_freq float,
-    kav_source string,
-    dbsnp_build int,
-    var_type string
-    )
-    partitioned by (chrom string, pos_block int);
-
-#for x in $(seq 1 22) M MT X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
-insert into table p7_product.ens_vars partition (chrom, pos_block)
-select distinct *
-from p7_product.ens_partitioned
-where chrom = '$x'
-and pos_block = $y;
-#" ; done; done
-
+-- check that row counts are as expected by comparing results with all_vars table
+-- 776,862,245 rows in table
+-- 775742611 distinct rows in table, will use distinct clause on next table merge
 
 -- create distinct subset of dbsnfp table
 create table p7_product.dbnsfp_distinct
@@ -512,6 +500,10 @@ create table p7_product.dbnsfp_vars
     strand string,
     gene_name string,
     gene_id string,
+    transcript_name string,
+    transcript_id string,
+    exon_name string,
+    exon_number int,
     clin_sig string,
     clin_dbn string,
     kav_freq float,
@@ -524,7 +516,7 @@ create table p7_product.dbnsfp_vars
     )
     partitioned by (chrom string, pos_block int);
 
-#for x in $(seq 1 22) M MT X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
 insert into table p7_product.dbnsfp_vars partition (chrom, pos_block)
 WITH ens as (
     SELECT *
@@ -537,8 +529,9 @@ d as (
     where chrom = '$x'
     and pos_block = $y)
 
-SELECT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
-  ens.gene_id, ens.clin_sig, ens.clin_dbn, ens.kav_freq, ens.kav_source,
+SELECT DISTINCT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
+  ens.gene_id, ens.transcript_name, ens.transcript_id, ens.exon_name, ens.exon_number,
+  ens.clin_sig, ens.clin_dbn, ens.kav_freq, ens.kav_source,
   ens.dbsnp_build, ens.var_type, d.cadd_raw, d.dann_score, d.interpro_domain,
   ens.chrom, ens.pos_block
 from ens
