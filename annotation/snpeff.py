@@ -92,7 +92,7 @@ def create_vcf(db_name, table_name, chrom_name):
 # process all vcf files created from the query
 # for file in os.listdir(os.getcwd()):
 #     if file.endswith( '_' + out_name + '.vcf'):
-#         print "Verifying VCF format for chromosome {}... \n".format(file)
+#         print "Verifying VCF format for {}... \n".format(file)
 #         vcf_checked_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_verified.vcf'
 #         # create the file and run snpeff
 #         with open(vcf_checked_out, "w") as out_file:
@@ -106,23 +106,23 @@ def create_vcf(db_name, table_name, chrom_name):
 # ############################################################
 for file in os.listdir(os.getcwd()):
     if file.endswith('_verified.vcf'):
-        print "Annotating coding consequences for chromosome {} with snpeff... \n".format(file)
+        print "Annotating coding consequences for {} with snpeff... \n".format(file)
         # create names for input and output files
         vcf_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_snpeff.vcf'
         # create the file and run snpeff
         with open(vcf_out, "w") as f:
             try:
-                subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "closest", "-t", "-v", "GRCh37.75", file], stdout=f)
+                subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "closest", "-t", "-v", "-lof", "GRCh37.75", file], stdout=f)
             except subprocess.CalledProcessError as e:
                  print e.output
 
 # ##########################################################
 # ## Output SnpEff effects as tsv file, one effect per line ##
 # ############################################################
-# for chrom in chroms:
-#     print "Parsing snpeff output for chromosome {}... \n".format(chrom)
-#     vcf_in = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
-#     tsv_out = 'chr' + chrom + '_' + out_name + '.tsv'
+# for file in os.listdir(os.getcwd()):
+#     if file.endswith('_snpeff.vcf'):
+#     print "Parsing snpeff output for {}... \n".format(file)
+#     tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_final.tsv'
 #     # create command to parse snpeff
 #     snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
 #     - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
