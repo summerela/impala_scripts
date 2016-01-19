@@ -90,31 +90,31 @@ def create_vcf(db_name, table_name, chrom_name):
 # # check vcf formatting with vcfBareBones.pl from snpeff scripts ##
 # ##################################################################
 # process all vcf files created from the query
-for file in os.listdir(os.getcwd()):
-    if file.endswith( '_' + out_name + '.vcf'):
-        print "Verifying VCF format for chromosome {}... \n".format(file)
-        vcf_checked_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_verified.vcf'
-        # create the file and run snpeff
-        with open(vcf_checked_out, "w") as out_file:
-            try:
-                subprocess.call(['perl', vcf_basic, file], stdout=out_file)
-            except subprocess.CalledProcessError as e:
-                 print e.output
+# for file in os.listdir(os.getcwd()):
+#     if file.endswith( '_' + out_name + '.vcf'):
+#         print "Verifying VCF format for chromosome {}... \n".format(file)
+#         vcf_checked_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_verified.vcf'
+#         # create the file and run snpeff
+#         with open(vcf_checked_out, "w") as out_file:
+#             try:
+#                 subprocess.call(['perl', vcf_basic, file], stdout=out_file)
+#             except subprocess.CalledProcessError as e:
+#                  print e.output
 
 # ############################################################
 # # annotate variants with coding consequences using snpeff ##
 # ############################################################
-# for chrom in chroms:
-#     print "Annotating coding consequences for chromosome {} with snpeff... \n".format(chrom)
-#     # create names for input and output files
-#     vcf_in = 'chr' + chrom + '_verified.vcf'
-#     vcf_out = 'chr' + chrom + '_' + out_name + '_snpeff.vcf'
-#     # create the file and run snpeff
-#     with open(vcf_out, "w") as f:
-#         try:
-#             subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "GRCh37.75", vcf_in], stdout=f)
-#         except subprocess.CalledProcessError as e:
-#              print e.output
+for file in os.listdir(os.getcwd()):
+    if file.endswith('_verified.vcf'):
+        print "Annotating coding consequences for chromosome {} with snpeff... \n".format(file)
+        # create names for input and output files
+        vcf_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_snpeff.vcf'
+        # create the file and run snpeff
+        with open(vcf_out, "w") as f:
+            try:
+                subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "GRCh37.75", file], stdout=f)
+            except subprocess.CalledProcessError as e:
+                 print e.output
 
 # ##########################################################
 # ## Output SnpEff effects as tsv file, one effect per line ##
