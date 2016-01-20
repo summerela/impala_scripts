@@ -129,7 +129,17 @@ def intergenic_vcf(db_name, table_name, chrom_name):
 # # annotate variants with coding consequences using snpeff ##
 # ############################################################
 for file in os.listdir(os.getcwd()):
-    if file.endswith('_verified.vcf'):
+    if file.endswith('intergenic_verified.vcf'):
+        print "Annotating coding consequences for {} with snpeff... \n".format(file)
+        # create names for input and output files
+        vcf_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + 'intergenic_snpeff.vcf'
+        # create the file and run snpeff
+        with open(vcf_out, "w") as f:
+            try:
+                subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "closest" "-t", "-v", "GRCh37.75", file], stdout=f)
+            except subprocess.CalledProcessError as e:
+                 print e.output
+    elif file.endswith(out_name + '_verified.vcf'):
         print "Annotating coding consequences for {} with snpeff... \n".format(file)
         # create names for input and output files
         vcf_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_snpeff.vcf'
