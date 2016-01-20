@@ -48,9 +48,9 @@ cur = conn.cursor()
 # create list of chromosomes to process
 chroms = map( str, range(1,23) ) + ['X','Y','M']
 
-#################################################
-## create vcf files by row for each chromosome ##
-#################################################
+##########################################
+## create vcf files for each chromosome ##
+##########################################
 # create vcf header
 def create_header(outfile_name):
    # create vcf header
@@ -171,13 +171,13 @@ def intergenic_vcf(db_name, table_name, chrom_name):
 #         ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
 #         print ps.communicate()[0]
 
-for file in os.listdir(os.getcwd()):
-    if file.endswith('intergenic_snpeff.vcf'):
-        print "Parsing snpeff output for {}... \n".format(file)
-        tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_parsed.tsv'
-        # create command to parse snpeff
-        df = pd.read_csv(file, sep='\t', skiprows=4, names=['CHROM', 'POS', 'ID', 'REF', 'ALT', 'CLOSEST'])
-        print df['CHROM']
+# for file in os.listdir(os.getcwd()):
+#     if file.endswith('intergenic_snpeff.vcf'):
+#         print "Parsing snpeff output for {}... \n".format(file)
+#         tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_parsed.tsv'
+#         # create command to parse snpeff
+#         df = pd.read_csv(file, sep='\t', skiprows=4, names=['CHROM', 'POS', 'ID', 'REF', 'ALT', 'CLOSEST'])
+#         print df['CHROM']
 
 #
 
