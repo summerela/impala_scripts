@@ -116,7 +116,7 @@ def intergenic_vcf(db_name, table_name, chrom_name):
 # process all vcf files created from the query
 for file in os.listdir(os.getcwd()):
     # if file.endswith( '_' + out_name + '.vcf'):
-    if any(filename.endswith(x) for x in ((out_name + '.vcf'), (out_name + '_intergenic.vcf')))
+    if any(filename.endswith(x) for x in ((out_name + '.vcf'), (out_name + '_intergenic.vcf'))):
         print "Verifying VCF format for {}... \n".format(file)
         vcf_checked_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_verified.vcf'
         # create the file and run snpeff
