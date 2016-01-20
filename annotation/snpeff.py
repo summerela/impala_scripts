@@ -175,7 +175,7 @@ for file in os.listdir(os.getcwd()):
         tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_parsed.tsv'
         # create command to parse snpeff
         df = pd.read_csv(file, sep='\t', skiprows=4, names=['CHROM', 'POS', 'ID', 'REF', 'ALT', 'CLOSEST'])
-        print df
+        print df['CHROM']
 
 #
 
