@@ -125,6 +125,8 @@ def intergenic_vcf(db_name, table_name, chrom_name):
 #             except subprocess.CalledProcessError as e:
 #                  print e.output
 
+
+# TODO verification process is mis-aligning rsid for intergenic, check on genic
 # ############################################################
 # # annotate variants with coding consequences using snpeff ##
 # ############################################################
