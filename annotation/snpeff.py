@@ -198,7 +198,7 @@ for file in os.listdir(os.getcwd()):
                 out = ','.join(map(str, my_row))
 
                 with open('./test.csv','a') as outfile:
-                    writer = csv.writer(outfile, delimiter='\t' , line_num=False)
+                    writer = csv.writer(outfile, delimiter='\t', index=False)
                     writer.writerow([out])
 
 
