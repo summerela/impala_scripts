@@ -136,7 +136,7 @@ for file in os.listdir(os.getcwd()):
         # create the file and run snpeff
         with open(vcf_out, "w") as f:
             try:
-                subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "closest" "-t", "-v", "GRCh37.75", file], stdout=f)
+                subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "closest", "-t", "-v", "GRCh37.75", file], stdout=f)
             except subprocess.CalledProcessError as e:
                  print e.output
     elif file.endswith(out_name + '_verified.vcf'):
