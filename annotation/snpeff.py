@@ -176,6 +176,8 @@ def intergenic_vcf(db_name, table_name, chrom_name):
 #         ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
 #         print ps.communicate()[0]
 
+import copy
+
 for file in os.listdir(os.getcwd()):
     if file.endswith('intergenic_verified_snpeff.vcf'):
         print "Parsing snpeff output for {}... \n".format(file)
