@@ -71,7 +71,7 @@ def create_vcf(db_name, table_name, chrom_name):
     # connect to vars_to_snpeff table
     gene_vars = "SELECT chrom, pos, \
     CASE when rs_id is null then '.' \
-     else rs_id
+     else rs_id \
     END AS rs_id,ref, alt, '.' as qual, '.' as filter, '.' as info, '.' as form, '.' as sample \
             from {}.{} WHERE chrom = '{}' and gene_name is not null order by pos".format(db_name, table_name, chrom_name)
     cur.execute(gene_vars)
@@ -94,7 +94,7 @@ def intergenic_vcf(db_name, table_name, chrom_name):
     # connect to vars_to_snpeff table
     intergenic_vars = "SELECT chrom, pos, \
     CASE when rs_id is null then '.' \
-     else rs_id
+     else rs_id \
     END AS rs_id,ref, alt, '.' as qual, '.' as filter, '.' as info, '.' as form, '.' as sample \
             from {}.{} WHERE chrom = '{}' and gene_name is null order by pos".format(db_name, table_name, chrom_name)
     cur.execute(intergenic_vars)
