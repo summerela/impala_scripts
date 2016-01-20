@@ -140,7 +140,7 @@ def intergenic_vcf(db_name, table_name, chrom_name):
 #     if file.endswith('intergenic_verified.vcf'):
 #         print "Annotating coding consequences for {} with snpeff... \n".format(file)
 #         # create names for input and output files
-#         vcf_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_intergenic_snpeff.vcf'
+#         vcf_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_snpeff.vcf'
 #         # create the file and run snpeff
 #         with open(vcf_out, "w") as f:
 #             try:
@@ -162,29 +162,42 @@ def intergenic_vcf(db_name, table_name, chrom_name):
 # ##########################################################
 # ## Output SnpEff effects as tsv file, one effect per line ##
 # ############################################################
-for file in os.listdir(os.getcwd()):
-    if file.endswith('_snpeff.vcf'):
-        print "Parsing snpeff output for {}... \n".format(file)
-        tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_parsed.tsv'
-        # create command to parse snpeff
-        snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
-        - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].ALLELE" "ANN[*].EFFECT" "ANN[*].IMPACT" \
-        "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
-        "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(file, snpeff_oneperline_perl, \
-        java_path, snpsift_jar,tsv_out)
-        # call subprocess and communicate to pipe output between commands
-        ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-        print ps.communicate()[0]
-
 # for file in os.listdir(os.getcwd()):
-#     if file.endswith('intergenic_snpeff.vcf'):
+#     if file.endswith('_snpeff.vcf'):
 #         print "Parsing snpeff output for {}... \n".format(file)
 #         tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_parsed.tsv'
 #         # create command to parse snpeff
-#         df = pd.read_csv(file, sep='\t', skiprows=4, names=['CHROM', 'POS', 'ID', 'REF', 'ALT', 'CLOSEST'])
-#         print df['CHROM']
+#         snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
+#         - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
+#         "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
+#         "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(file, snpeff_oneperline_perl, \
+#         java_path, snpsift_jar,tsv_out)
+#         # call subprocess and communicate to pipe output between commands
+#         ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+#         print ps.communicate()[0]
 
-#
+for file in os.listdir(os.getcwd()):
+    if file.endswith('intergenic_verified_snpeff.vcf'):
+        print "Parsing snpeff output for {}... \n".format(file)
+        # create command to parse snpeff
+        df = pd.read_csv(file, sep='\t', skiprows=3, usecols=['#CHROM', 'POS', 'ID', 'REF', 'ALT', 'INFO'])
+
+        for row in df.itertuples():
+            fixed_cols = list(row[:-1])
+            parts = row[-1].split('|')
+
+            # the first one is CLOSEST=0 or something
+            fixed_cols.append(parts.pop(0))
+
+            for el in parts:
+                my_row = copy.deepcopy(fixed_cols)
+                my_row.extend(el.split(','))
+
+                out = ','.join(map(str, my_row))
+
+                with open('./test.csv','a') as outfile:
+                    writer = csv.writer(outfile)
+                    writer.writerow([out ])
 
 
 # ####################
@@ -202,6 +215,8 @@ for file in os.listdir(os.getcwd()):
 # ###############################
 # ## Upload results to hdfs  ##
 # #############################
+# TODO add distance column to non-intergenic variants table
+
 # import datetime
 # now = datetime.datetime.now()
 #
