@@ -199,7 +199,7 @@ for file in os.listdir(os.getcwd()):
 
                 with open('./test.csv','a') as outfile:
                     writer = csv.writer(outfile)
-                    writer.writerow([out ])
+                    writer.writerow([out], delimiter='\t' , line_num=False)
 
 
 # ####################
