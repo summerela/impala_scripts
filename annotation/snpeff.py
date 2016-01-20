@@ -79,7 +79,7 @@ def create_vcf(db_name, table_name, chrom_name):
         # TODO: make this one function instead of calling header function
         create_header(vcf_out)
         print "Creating VCF files for chromosome {}... \n".format(chrom_name)
-        vars.to_csv(vcf_out, sep='\t', index=None, mode='a')
+        vars.to_csv(vcf_out, sep='\t', index=None, mode='a', header=False)
     else:
         print "No variants found for chromosome {} \n".format(chrom_name)
 
@@ -99,7 +99,7 @@ def intergenic_vcf(db_name, table_name, chrom_name):
         # TODO: make this one function instead of calling header function
         create_header(vcf_out)
         print "Creating VCF files for chromosome {} intergenic variants... \n".format(chrom_name)
-        int_vars.to_csv(vcf_out, sep='\t', index=None, mode='a')
+        int_vars.to_csv(vcf_out, sep='\t', index=None, mode='a', header=False)
     else:
         print "No intergenic variants found for chromosome {} \n".format(chrom_name)
 
