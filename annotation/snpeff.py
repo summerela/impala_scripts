@@ -168,7 +168,7 @@ for file in os.listdir(os.getcwd()):
         tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_parsed.tsv'
         # create command to parse snpeff
         snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
-        - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*}.ALLELE" "ANN[*].EFFECT" "ANN[*].IMPACT" \
+        - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].ALLELE" "ANN[*].EFFECT" "ANN[*].IMPACT" \
         "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
         "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(file, snpeff_oneperline_perl, \
         java_path, snpsift_jar,tsv_out)
