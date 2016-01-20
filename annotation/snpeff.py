@@ -104,27 +104,27 @@ def intergenic_vcf(db_name, table_name, chrom_name):
         print "No intergenic variants found for chromosome {} \n".format(chrom_name)
 
 # download each chromosome in input_table and turn into vcf file
-for chrom in chroms:
-    create_vcf(input_db, input_table, chrom)
-
-for chrom in chroms:
-    intergenic_vcf(input_db, input_table, chrom)
+# for chrom in chroms:
+#     create_vcf(input_db, input_table, chrom)
+#
+# for chrom in chroms:
+#     intergenic_vcf(input_db, input_table, chrom)
 
 # ##################################################################
 # # check vcf formatting with vcfBareBones.pl from snpeff scripts ##
 # ##################################################################
 # process all vcf files created from the query
-# for file in os.listdir(os.getcwd()):
-#     # if file.endswith( '_' + out_name + '.vcf'):
-#     if any(file.endswith(x) for x in ((out_name + '.vcf'), (out_name + '_intergenic.vcf'))):
-#         print "Verifying VCF format for {}... \n".format(file)
-#         vcf_checked_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_verified.vcf'
-#         # create the file and run snpeff
-#         with open(vcf_checked_out, "w") as out_file:
-#             try:
-#                 subprocess.call(['perl', vcf_basic, file], stdout=out_file)
-#             except subprocess.CalledProcessError as e:
-#                  print e.output
+for file in os.listdir(os.getcwd()):
+    # if file.endswith( '_' + out_name + '.vcf'):
+    if any(file.endswith(x) for x in ((out_name + '.vcf'), (out_name + '_intergenic.vcf'))):
+        print "Verifying VCF format for {}... \n".format(file)
+        vcf_checked_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_verified.vcf'
+        # create the file and run snpeff
+        with open(vcf_checked_out, "w") as out_file:
+            try:
+                subprocess.call(['perl', vcf_basic, file], stdout=out_file)
+            except subprocess.CalledProcessError as e:
+                 print e.output
 
 # ############################################################
 # # annotate variants with coding consequences using snpeff ##
