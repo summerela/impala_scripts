@@ -221,7 +221,7 @@ def intergenic_vcf(db_name, table_name, chrom_name):
 for file in os.listdir(os.getcwd()):
     if file.endswith('_parsed.tsv'):
         final_df = pd.read_csv(file, sep='\t', skiprows=1)
-        cols = [col for col in final_df if col != final_df.columns[1]] + final_df.columns[1] + final_df.columns[2]/1000000
+        cols = [col for col in final_df if col != final_df.columns[1]] + final_df.columns[1]
         final_df= final_df[cols]
         print final_df.head()
 
