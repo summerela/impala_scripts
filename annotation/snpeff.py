@@ -220,7 +220,7 @@ def intergenic_vcf(db_name, table_name, chrom_name):
 
 for file in os.listdir(os.getcwd()):
     if file.endswith('_parsed.tsv'):
-        final_df = pd.read_csv(file, sep='\t')
+        final_df = pd.read_csv(file, sep='\t', skiprows=1)
         print final_df
 
 ###############################
