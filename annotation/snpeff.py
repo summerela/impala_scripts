@@ -163,19 +163,19 @@ def intergenic_vcf(db_name, table_name, chrom_name):
 ##########################################################
 ## Output SnpEff effects as tsv file, one effect per line ##
 ############################################################
-for file in os.listdir(os.getcwd()):
-    if file.endswith('_snpeff.vcf'):
-        print "Parsing snpeff output for {}... \n".format(file)
-        tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_parsed.tsv'
-        # create command to parse snpeff
-        snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
-        - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
-        "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
-        "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(file, snpeff_oneperline_perl, \
-        java_path, snpsift_jar,tsv_out)
-        # call subprocess and communicate to pipe output between commands
-        ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-        print ps.communicate()[0]
+# for file in os.listdir(os.getcwd()):
+#     if file.endswith('_snpeff.vcf'):
+#         print "Parsing snpeff output for {}... \n".format(file)
+#         tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_parsed.tsv'
+#         # create command to parse snpeff
+#         snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
+#         - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
+#         "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
+#         "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(file, snpeff_oneperline_perl, \
+#         java_path, snpsift_jar,tsv_out)
+#         # call subprocess and communicate to pipe output between commands
+#         ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+#         print ps.communicate()[0]
 
 
 # TODO enable function when snpeff closest function is fixed by Broad Inst.
@@ -210,13 +210,13 @@ for file in os.listdir(os.getcwd()):
 ## Remove Header  ##
 ####################
 # remove header need for running snpeff to create out own column names on impala
-for file in os.listdir(os.getcwd()):
-    if file.endswith('_parsed.tsv'):
-        print "Removing header for {}... \n".format(file)
-        tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_final.tsv'
-        tsv_cmd = "sed '1d' {} > {}".format(file,tsv_out)
-        tsv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        print tsv_proc.communicate()[0]
+# for file in os.listdir(os.getcwd()):
+#     if file.endswith('_parsed.tsv'):
+#         print "Removing header for {}... \n".format(file)
+#         tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_final.tsv'
+#         tsv_cmd = "sed '1d' {} > {}".format(file,tsv_out)
+#         tsv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+#         print tsv_proc.communicate()[0]
 
 ###############################
 ## Upload results to hdfs  ##
@@ -230,18 +230,20 @@ now = datetime.datetime.now()
 out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
 mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
-print mkdir_proc.communicate()[0]
+print "Errors creating HDFS directory: " + mkdir_proc.communicate()[0]
 
  # put each file in the snpeff directory
-print "Uploading files to HDFS... \n"
-hdfs_cmd = 'hdfs dfs -put *_final.tsv {}'.format(out_path)
-hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
-print hdfs_proc.communicate()[0]
+ for file in os.listdir(os.getcwd()):
+    if file.endswith('_final.tsv'):
+        print "Uploading files to HDFS... \n"
+        hdfs_cmd = 'hdfs dfs -put {} {}'.format(file, out_path)
+        hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
+        print "Errors uploading files to HDFS: " + hdfs_proc.communicate()[0]
 
 # set read/write permissions on directory
 chown_dir_cmd = "hdfs dfs -chown -R impala:supergroup {}".format(hdfs_path)
 chown_proc = subprocess.Popen(chown_dir_cmd, shell=True, stderr=subprocess.STDOUT)
-print chown_proc.communicate()[0]
+print "Errors setting read/write permissions on HDFS directory: " + chown_proc.communicate()[0]
 
 # ####################################
 # ## Create table to store results  ##
@@ -322,7 +324,7 @@ cur.execute(create_parition)
 
 # insert unpartitioned table
 insert_partition = '''
-insert into table {}.all_coding partition(chrom)
+insert into table {}.all_coding partition(chrom, pos_block)
     (
       select  pos, id, ref, alt, gene, gene_id, effect, impact, feature, feature_id,
       biotype, rank, hgvs_c, hgvs_p, chrom, cast(pos/1000000 as int) as pos_block
