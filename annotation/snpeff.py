@@ -230,7 +230,8 @@ now = datetime.datetime.now()
 out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
 mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
 mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
-print "Errors creating HDFS directory: " + mkdir_proc.communicate()[0]
+if mkdir_proc.communicate()[0]:
+    print "Errors creating HDFS directory: " + mkdir_proc.communicate()[0]
 
  # put each file in the snpeff directory
 for file in os.listdir(os.getcwd()):
@@ -238,12 +239,14 @@ for file in os.listdir(os.getcwd()):
         print "Uploading files to HDFS... \n"
         hdfs_cmd = 'hdfs dfs -put {} {}'.format(file, out_path)
         hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
-        print "Errors uploading files to HDFS: " + hdfs_proc.communicate()[0]
+        if hdfs_proc.communicate()[0]:
+            print "Errors uploading files to HDFS: " + hdfs_proc.communicate()[0]
 
 # set read/write permissions on directory
 chown_dir_cmd = "hdfs dfs -chown -R impala:supergroup {}".format(hdfs_path)
 chown_proc = subprocess.Popen(chown_dir_cmd, shell=True, stderr=subprocess.STDOUT)
-print "Errors setting read/write permissions on HDFS directory: " + chown_proc.communicate()[0]
+if chown_proc.communicate()[0]:
+    print "Errors setting read/write permissions on HDFS directory: " + chown_proc.communicate()[0]
 
 # ####################################
 # ## Create table to store results  ##
