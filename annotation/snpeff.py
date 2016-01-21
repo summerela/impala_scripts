@@ -233,7 +233,7 @@ mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
 print "Errors creating HDFS directory: " + mkdir_proc.communicate()[0]
 
  # put each file in the snpeff directory
- for file in os.listdir(os.getcwd()):
+for file in os.listdir(os.getcwd()):
     if file.endswith('_final.tsv'):
         print "Uploading files to HDFS... \n"
         hdfs_cmd = 'hdfs dfs -put {} {}'.format(file, out_path)
