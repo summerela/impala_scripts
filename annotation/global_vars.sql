@@ -211,27 +211,21 @@ partitioned by (chrom string, pos_block int);
 -- insert full join of unique variants from ill_distinct and comgen_distinct tables
 #for x in $(seq 1 22) M MT X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
 insert into p7_product.distinct_vars partition (chrom, pos_block)
-WITH t0 as
-(select * from p7_product.illumina_distinct
-where chrom = '$x'
-and pos_block = $y),
-t1 as
-(select *
-from p7_product.comgen_distinct
-where chrom = '$x'
-and pos_block = $y)
--- taking distinct here in case variants appear in both tables
 SELECT distinct CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
        coalesce(t0.ref, t1.ref) AS ref,
        coalesce(t0.alt, t1.alt) AS alt,
        coalesce(t0.chrom, t1.chrom) AS chrom,
        CAST(coalesce(t0.pos, t1.pos)/1000000 AS int) as pos_block
-FROM t0
-FULL OUTER JOIN t1
+FROM p7_product.illumina_distinct t0
+FULL OUTER JOIN p7_product.comgen_distinct t1
     ON t0.chrom = t1.chrom
     AND t0.pos = t1.pos
     AND t0.ref = t1.ref
-    AND t0.alt = t1.alt;
+    AND t0.alt = t1.alt
+where t0.chrom = '$x'
+and t0.pos_block = $y
+and t1.chrom = '$x'
+and t1.pos_block = $y;
 # "; done; done
 
 -- compute stats on new table
@@ -252,17 +246,6 @@ partitioned by (chrom string, pos_block int);
 
 #for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
 insert into p7_product.kav_vars partition (chrom, pos_block)
-WITH t0 as
-(select *
-from p7_product.kav_distinct
-where chrom = '$x'
-and pos_block = $y),
-t1 as
-(select *
- from p7_product.distinct_vars
- where chrom = '$x'
-and pos_block = $y)
-
 SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
        coalesce(t0.ref, t1.ref) AS ref,
        coalesce(t0.alt, t1.alt) AS alt,
@@ -270,12 +253,16 @@ SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
        t0.kav_source,
        coalesce(t0.chrom, t1.chrom) AS chrom,
        CAST(coalesce(t0.pos, t1.pos)/1000000 AS int) as pos_block
-FROM t0
-FULL OUTER JOIN t1
+FROM p7_product.kav_distinct t0
+FULL OUTER JOIN p7_product.distinct_vars t1
     ON t0.chrom = t1.chrom
     AND t0.pos = t1.pos
     AND t0.ref = t1.ref
-    AND t0.alt = t1.alt;
+    AND t0.alt = t1.alt
+where t0.chrom = '$x'
+and t0.pos_block = $y
+and t1.chrom = '$x'
+and t1.pos_block = $y;
 # "; done
 
 --- compute stats on new table
@@ -297,16 +284,6 @@ partitioned by (chrom string, pos_block int);
 -- insert variants into table
 #for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
 insert into table p7_product.kav_clin_vars partition (chrom, pos_block)
-WITH t0 as
-(select *
-from p7_product.kav_vars
-where chrom = '$x'
-and pos_block = $y),
-t1 as
-(select *
-from p7_product.clin_distinct
-where chrom = '$x'
-and pos_block = $y)
 SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
        coalesce(t0.ref, t1.ref) AS ref,
        coalesce(t0.alt, t1.alt) AS alt,
@@ -316,12 +293,16 @@ SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
         t1.clin_dbn,
         coalesce(t0.chrom, t1.chrom) AS chrom,
         coalesce(t0.pos_block, t1.pos_block) as pos_block
-FROM t0
-FULL OUTER JOIN t1
+FROM p7_product.kav_vars t0
+FULL OUTER JOIN p7_product.clin_distinct t1
     ON t0.chrom = t1.chrom AND
        t0.pos = t1.pos AND
        t0.ref = t1.ref AND
-       t0.alt = t1.alt;
+       t0.alt = t1.alt
+WHERE t0.chrom = '$x'
+AND t0.pos_block = $y
+AND t1.chrom = '$x'
+AND t1.pos_block = $y;
 # "; done
 
 -- compute stats on new table
@@ -348,16 +329,6 @@ partitioned by (chrom string, pos_block int);
 --- insert variants into partitioned table
 #for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
 insert into p7_product.all_vars partition (chrom, pos_block)
-WITH t0 as
-(select *
-from p7_product.kav_clin_vars
-where chrom = '$x'
-and pos_block = $y),
-t1 as
-(select *
-from p7_product.dbsnp_distinct
-where chrom = '$x'
-and pos_block = $y)
 SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
        coalesce(t0.ref, t1.ref) AS ref,
        coalesce(t0.alt, t1.alt) AS alt,
@@ -370,12 +341,16 @@ SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
         t1.var_type,
         coalesce(t0.chrom, t1.chrom) AS chrom,
         coalesce(t0.pos_block, t1.pos_block) AS pos_block
-FROM t0
-FULL OUTER JOIN t1
+FROM p7_product.kav_clin_vars t0
+FULL OUTER JOIN p7_product.dbsnp_distinct t1
     ON t0.chrom = t1.chrom AND
        t0.pos = t1.pos AND
        t0.ref = t1.ref AND
-       t0.alt = t1.alt;
+       t0.alt = t1.alt
+where t0.chrom = '$x'
+and t0.pos_block = $y
+and t1.chrom = '$x'
+and t1.pos_block = $y;
 # " ; done
 
 --- compute stats on new table
@@ -443,23 +418,18 @@ create table p7_product.ens_vars
 -- inserted each chromosome into partitioned table as follows
 #for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
 insert into table p7_product.ens_vars partition (chrom, pos_block)
-with t0 as (
-    SELECT * FROM p7_product.all_vars
-    WHERE chrom = '$x'
-    AND pos_block = $y),
-t1 as (
-  SELECT * FROM p7_product.ens_distinct
-  WHERE chrom = '$x'
-  AND pos_block = $y)
-
 SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id, t1.exon_name, t1.exon_number,
   t0.clin_sig, t0.clin_dbn, t0.kav_freq,
   t0.kav_source, cast(t0.dbsnp_build as int), t0.var_type, t0.chrom, t0.pos_block
-FROM t0
-LEFT JOIN t1
+FROM p7_product.all_vars t0
+LEFT JOIN p7_product.ens_distinct t1
     ON t0.chrom = t1.chrom
-    AND (t0.pos BETWEEN t1.start and t1.stop);
+    AND (t0.pos BETWEEN t1.start and t1.stop)
+WHERE t0.chrom = '$x'
+AND t0.pos_block = $y
+AND t1.chrom = '$x'
+AND t1.pos_block = $y;
 # " ; done ; done
 
 compute stats p7_product.ens_vars;
@@ -518,28 +488,21 @@ create table p7_product.dbnsfp_vars
 
 #for x in $(seq 20 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
 insert into table p7_product.dbnsfp_vars partition (chrom, pos_block)
-WITH ens as (
-    SELECT *
-    from p7_product.ens_vars
-    where chrom = '$x'
-    and pos_block = $y),
-d as (
-    SELECT *
-    from p7_product.dbnsfp_distinct
-    where chrom = '$x'
-    and pos_block = $y)
-
 SELECT DISTINCT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
   ens.gene_id, ens.transcript_name, ens.transcript_id, ens.exon_name, ens.exon_number,
   ens.clin_sig, ens.clin_dbn, ens.kav_freq, ens.kav_source,
   ens.dbsnp_build, ens.var_type, d.cadd_raw, d.dann_score, d.interpro_domain,
   ens.chrom, ens.pos_block
-from ens
-left join d
+from p7_product.ens_vars ens
+left join p7_product.dbnsfp_distinct d
     on ens.chrom = d.chrom
     and ens.pos = d.pos
     and ens.ref = d.ref
-    and ens.alt  = d.alt;
+    and ens.alt  = d.alt
+where ens.chrom = '$x'
+and ens.pos_block = $y
+and d.chrom = '$x'
+and d.pos_block = $y;
 # " ; done
 
 compute stats p7_product.dbnsfp_vars;

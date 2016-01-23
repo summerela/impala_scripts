@@ -212,84 +212,80 @@ def intergenic_vcf(db_name, table_name, chrom_name):
 # remove header that was needed for running snpeff
 # for file in os.listdir(os.getcwd()):
 #     if file.endswith('_parsed.tsv'):
-#         print "Removing header for {}... \n".format(file)
-#         tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_final.tsv'
-#         tsv_cmd = "sed '1d' {} > {}".format(file,tsv_out)
-#         tsv_proc = subprocess.Popen(tsv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-#         print tsv_proc.communicate()[0]
-
-for file in os.listdir(os.getcwd()):
-    if file.endswith('_parsed.tsv'):
-        final_df = pd.read_csv(file, sep='\t', skiprows=1)
-        final_df= final_df[[final_df.columns, 1]]
-        print final_df.head()
+#         final_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_final.tsv'
+#         final_df = pd.read_csv(file, sep='\t', skiprows=1, header=None)
+#         # cant use seq in pandas df slicing
+#         final_df = final_df[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0]]
+#         final_df['pos_block'] = final_df[1].div(1000000).astype(int)
+#         final_df.to_csv(final_out, sep='\t', header=False, index=False)
 
 ###############################
 ## Upload results to hdfs  ##
 #############################
 # TODO add distance column to non-intergenic variants table when fixed
-
-# import datetime
-# now = datetime.datetime.now()
+#
+import datetime
+now = datetime.datetime.now()
 #
 # # define output path on hdfs
-# out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
-# mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
-# mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
-# if mkdir_proc.communicate()[0]:
-#     print "Errors creating HDFS directory: " + mkdir_proc.communicate()[0]
-#
-#  # put each file in the snpeff directory
-# for file in os.listdir(os.getcwd()):
-#     if file.endswith('_final.tsv'):
-#         print "Uploading files to HDFS... \n"
-#         hdfs_cmd = 'hdfs dfs -put {} {}'.format(file, out_path)
-#         hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
-#         if hdfs_proc.communicate()[0]:
-#             print "Errors uploading files to HDFS: " + hdfs_proc.communicate()[0]
-#
-# # set read/write permissions on directory
-# chown_dir_cmd = "hdfs dfs -chown -R impala:supergroup {}".format(hdfs_path)
-# chown_proc = subprocess.Popen(chown_dir_cmd, shell=True, stderr=subprocess.STDOUT)
-# if chown_proc.communicate()[0]:
-#     print "Errors setting read/write permissions on HDFS directory: " + chown_proc.communicate()[0]
-#
+out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
+mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
+mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
+if mkdir_proc.communicate()[0]:
+    print "Errors creating HDFS directory: " + mkdir_proc.communicate()[0]
+
+# put each file in the snpeff directory
+for file in os.listdir(os.getcwd()):
+    if file.endswith('_final.tsv'):
+        print "Uploading files to HDFS... \n"
+        hdfs_cmd = 'hdfs dfs -put {} {}'.format(file, out_path)
+        hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
+        if hdfs_proc.communicate()[0]:
+            print "Errors uploading files to HDFS: " + hdfs_proc.communicate()[0]
+
+# set read/write permissions on directory
+chown_dir_cmd = "hdfs dfs -chown -R impala:supergroup {}".format(hdfs_path)
+chown_proc = subprocess.Popen(chown_dir_cmd, shell=True, stderr=subprocess.STDOUT)
+if chown_proc.communicate()[0]:
+    print "Errors setting read/write permissions on HDFS directory: " + chown_proc.communicate()[0]
+
 ##############################
 # Insert results into table ##
 ##############################
 # drop the table if it already exists
-# drop_coding = "drop table if exists {}.coding_{}".format(input_db, str(now.strftime("%Y%m%d")))
-# cur.execute(drop_coding)
-#
-# # create partitioned table
-# create_coding_table = '''
-# create table {}.coding_{}
-#     (
-#       pos int,
-#       id string,
-#       ref string,
-#       alt string,
-#       gene string,
-#       gene_id string,
-#       effect string,
-#       impact string,
-#       feature string,
-#       feature_id string,
-#       biotype string,
-#       rank int,
-#       distance int,
-#       hgvs_c string,
-#       hgvs_p string
-#       )
-# partitioned by (chrom string)'''.format(input_db, str(now.strftime("%Y%m%d")))
-# cur.execute(create_coding_table)
-#
-# # load hdfs files into table
-# load_query = '''
-# load data inpath '{}' into table {}.coding_{}
-# '''.format(out_path, input_db, str(now.strftime("%Y%m%d")))
-# cur.execute(load_query)
-#
+drop_coding = "drop table if exists {}.coding_{}".format(input_db, str(now.strftime("%Y%m%d")))
+cur.execute(drop_coding)
+
+# create partitioned table
+create_coding_table = '''
+create table {}.coding_{}
+    (
+      pos int,
+      id string,
+      ref string,
+      alt string,
+      gene string,
+      gene_id string,
+      effect string,
+      impact string,
+      feature string,
+      feature_id string,
+      biotype string,
+      rank int,
+      distance int,
+      hgvs_c string,
+      hgvs_p string,
+      chrom string,
+      pos_block int
+      )'''.format(input_db, str(now.strftime("%Y%m%d")))
+cur.execute(create_coding_table)
+
+# load hdfs files into table
+load_query = '''
+load data inpath '{}' into table {}.coding_{}
+'''.format(out_path, input_db, str(now.strftime("%Y%m%d")))
+cur.execute(load_query)
+
 # ############################
 # # add pos_block partition ##
 # ############################
