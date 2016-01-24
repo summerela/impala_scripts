@@ -210,14 +210,14 @@ def intergenic_vcf(db_name, table_name, chrom_name):
 ## Remove Header and add pos_block column ##
 ############################################
 # remove header that was needed for running snpeff
-# for file in os.listdir(os.getcwd()):
-#     if file.endswith('_parsed.tsv'):
-#         final_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_final.tsv'
-#         final_df = pd.read_csv(file, sep='\t', skiprows=1, header=None)
-#         # cant use seq in pandas df slicing
-#         final_df = final_df[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0]]
-#         final_df['pos_block'] = final_df[1].div(1000000).astype(int)
-#         final_df.to_csv(final_out, sep='\t', header=False, index=False)
+for file in os.listdir(os.getcwd()):
+    if file.endswith('_parsed.tsv'):
+        final_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_final.csv'
+        final_df = pd.read_csv(file, sep='\t', skiprows=1, header=None)
+        # cant use seq in pandas df slicing
+        final_df = final_df[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0]]
+        final_df['pos_block'] = final_df[1].div(1000000).astype(int)
+        final_df.to_csv(final_out, sep=',', header=False, index=False)
 
 ###############################
 ## Upload results to hdfs  ##
@@ -226,9 +226,10 @@ def intergenic_vcf(db_name, table_name, chrom_name):
 #
 import datetime
 now = datetime.datetime.now()
+today = str(now.strftime("%Y%m%d"))
 #
 # # define output path on hdfs
-out_path = "{}snpeff_{}".format(hdfs_path, str(now.strftime("%Y%m%d")))
+out_path = "{}snpeff_{}".format(hdfs_path, today)
 mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
 mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
 if mkdir_proc.communicate()[0]:
@@ -236,7 +237,7 @@ if mkdir_proc.communicate()[0]:
 
 # put each file in the snpeff directory
 for file in os.listdir(os.getcwd()):
-    if file.endswith('_final.tsv'):
+    if file.endswith('_final.csv'):
         print "Uploading files to HDFS... \n"
         hdfs_cmd = 'hdfs dfs -put {} {}'.format(file, out_path)
         hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
@@ -253,7 +254,7 @@ if chown_proc.communicate()[0]:
 # Insert results into table ##
 ##############################
 # drop the table if it already exists
-drop_coding = "drop table if exists {}.coding_{}".format(input_db, str(now.strftime("%Y%m%d")))
+drop_coding = "drop table if exists {}.coding_{}".format(input_db, today)
 cur.execute(drop_coding)
 
 # create partitioned table
@@ -277,13 +278,14 @@ create table {}.coding_{}
       hgvs_p string,
       chrom string,
       pos_block int
-      )'''.format(input_db, str(now.strftime("%Y%m%d")))
+      )
+   '''.format(input_db, today)
 cur.execute(create_coding_table)
 
 # load hdfs files into table
 load_query = '''
 load data inpath '{}' into table {}.coding_{}
-'''.format(out_path, input_db, str(now.strftime("%Y%m%d")))
+'''.format(out_path, input_db, today)
 cur.execute(load_query)
 
 # ############################
