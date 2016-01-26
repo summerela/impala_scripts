@@ -135,16 +135,26 @@ for file in os.listdir(os.getcwd()):
         print "Verifying VCF format for {}... \n".format(file)
         vcf_checked_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_verified.vcf'
         snp_verify_cmd = 'cat {} | /tools/bin/python {} chrom pos ref alt > {}'.format(file, vcf_verify,vcf_checked_out)
+<<<<<<< HEAD
         # create the file and run snpeff
+=======
+        create the file and run snpeff
+>>>>>>> a6f5f77a7c0fd07a9b23c7e573b251c180c96207
         with open(vcf_checked_out, "w") as out_file:
             try:
                 ps = subprocess.Popen(snp_verify_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as e:
                  print e.output
 
+<<<<<<< HEAD
 
 
 
+=======
+
+
+
+>>>>>>> a6f5f77a7c0fd07a9b23c7e573b251c180c96207
 # ############################################################
 # # annotate variants with coding consequences using snpeff ##
 # ############################################################
