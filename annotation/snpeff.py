@@ -11,7 +11,7 @@ input_db = 'p7_product'
 input_table = 'dbnsfp_vars'
 
 # prefix for output files
-out_name = 'global_vars'
+out_name = 'snpeff_vars'
 
 # home path to user's hdfs directory
 hdfs_path = '/user/selasady/'
@@ -23,9 +23,7 @@ ref_fasta = '/users/selasady/my_titan_itmi/tools/human_g1k_v37.fasta'
 snpeff_jar = '/users/selasady/my_titan_itmi/tools/snpEff/snpEff.jar'
 snpeff_oneperline_perl = '/users/selasady/my_titan_itmi/tools/snpEff/scripts/vcfEffOnePerLine.pl'
 snpsift_jar = '/users/selasady/my_titan_itmi/tools/snpEff//SnpSift.jar'
-chrom_splitter = '/users/selasady/my_titan_itmi/tools/snpEff/scripts/splitChr.pl'
-vcf_basic = '/users/selasady/my_titan_itmi/impala_scripts/annotation/parse_vcf.pl'
-vcf_verify = '/users/selasady/my_titan_itmi/tools/snpEff/scripts/txt2vcf.py'
+vcf_verify = '/users/selasady/my_titan_itmi/tools/snpEff/scripts/vcfBareBones.pl'
 
 ####################
 ## import modules ##
@@ -53,108 +51,60 @@ chroms = map( str, range(1,23) ) + ['X','Y','M']
 ## create vcf files for each chromosome ##
 ##########################################
 # create vcf header
-# def create_header(outfile_name):
-#    # create vcf header
-#     lines=[]
-#     lines.append('##fileformat=VCFv4.0')
-#     lines.append('##fileDate='+ time.strftime("%y%m%d"))
-#     lines.append('##reference=grch37 v.74')
-#     lines.append('CHROM\t' + 'POS\t' + 'ID\t' + 'REF\t' + 'ALT\t' + INFO\t' + '\n')
-#     header = '\n'.join(lines)
-#     out = open(outfile_name, 'wb')
-#     out.write(header)
-#     out.close()
+def create_header(outfile_name):
+   # create vcf header
+    lines=[]
+    lines.append('##fileformat=VCFv4.0')
+    lines.append('##fileDate='+ time.strftime("%y%m%d"))
+    lines.append('##reference=grch37 v.74')
+    lines.append('#CHROM\t' + 'POS\t' + 'ID\t' + 'REF\t' + 'ALT\t' + 'INFO\t' + '\n')
+    header = '\n'.join(lines)
+    out = open(outfile_name, 'wb')
+    out.write(header)
+    out.close()
 
 ### download variants that are not intergenic
 def create_vcf(db_name, table_name, chrom_name):
+    print "Looking for variants in chromosome {}... \n".format(chrom_name)
     # create named file for each chromosome
     vcf_out = 'chr' + chrom_name + '_' + out_name + '.vcf'
     # connect to vars_to_snpeff table
     gene_vars = "SELECT chrom, pos, \
     CASE when rs_id is null then '.' \
      else rs_id \
-    END AS rs_id, ref, alt, '.' as info from {}.{} WHERE chrom = '{}' order by pos".format(db_name, table_name, chrom_name)
+    END AS id, ref, alt, '.' as info from {}.{} WHERE chrom = '{}' order by pos".format(db_name, table_name, chrom_name)
     cur.execute(gene_vars)
     vars = as_pandas(cur)
     # write variants to file
     if len(vars) > 0:
         print "Creating VCF files for chromosome {}... \n".format(chrom_name)
-        vars.to_csv(vcf_out, sep='\t', index=None, mode='a', header=True)
+        create_header(vcf_out)
+        vars.to_csv(vcf_out, sep='\t', index=None, mode='a', header=False)
     else:
         print "No variants found for chromosome {} \n".format(chrom_name)
 
 
-### download variants that are in intergenic regions
-def intergenic_vcf(db_name, table_name, chrom_name):
-    # create named file for each chromosome
-    vcf_out = 'chr' + chrom_name + '_' + out_name + '_intergenic.vcf'
-    # connect to vars_to_snpeff table
-    intergenic_vars = "SELECT chrom, pos, \
-    CASE when rs_id is null then '.' \
-     else rs_id \
-    END AS rs_id,ref, alt, '.' as info from {}.{} WHERE chrom = '{}' and gene_name is null order by pos".format(db_name, table_name, chrom_name)
-    cur.execute(intergenic_vars)
-    int_vars = as_pandas(cur)
-    # write variants to file
-    if len(int_vars) > 0:
-        # create header for each chromosome file
-        create_header(vcf_out)
-        print "Creating VCF files for chromosome {} intergenic variants... \n".format(chrom_name)
-        int_vars.to_csv(vcf_out, sep='\t', index=None, mode='a', header=False)
-    else:
-        print "No intergenic variants found for chromosome {} \n".format(chrom_name)
-
 # download each chromosome in input_table and turn into vcf file
-# for chrom in chroms:
-#     create_vcf(input_db, input_table, chrom)
+for chrom in chroms:
+    create_vcf(input_db, input_table, chrom)
 
-
-# TODO modify pipeline to enable intergenic annotation when snpeff is fixed
-# for chrom in chroms:
-#     intergenic_vcf(input_db, input_table, chrom)
-
-# ##################################################################
-# # check vcf formatting with vcfBareBones.pl from snpeff scripts ##
-# ##################################################################
-# OLD FORMAT USING vcftools verify
-# process all vcf files created from the query
+######################################################
+# check vcf formatting using snpeff vcfBareBones.pl ##
+######################################################
+# process all vcf files created from the query using snpeff tsv to vcf
 # for file in os.listdir(os.getcwd()):
-#     if any(file.endswith(x) for x in ((out_name + '.vcf'), (out_name + '_intergenic.vcf'))):
+#     if file.endswith(out_name + '.vcf'):
 #         print "Verifying VCF format for {}... \n".format(file)
 #         vcf_checked_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_verified.vcf'
+#         snp_verify_cmd = 'cat {} | {} > {}'.format(file, vcf_verify,vcf_checked_out)
 #         # create the file and run snpeff
 #         with open(vcf_checked_out, "w") as out_file:
 #             try:
-#                 subprocess.call(['perl', vcf_basic, file], stdout=out_file)
+#                 ps = subprocess.Popen(snp_verify_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+#                 print ps.communicate()[0]
 #             except subprocess.CalledProcessError as e:
 #                  print e.output
 
-# process all vcf files created from the query using snpeff tsv to vcf
-for file in os.listdir(os.getcwd()):
-    if any(file.endswith(x) for x in ((out_name + '.vcf'), (out_name + '_intergenic.vcf'))):
-        print "Verifying VCF format for {}... \n".format(file)
-        vcf_checked_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_verified.vcf'
-        snp_verify_cmd = 'cat {} | /tools/bin/python {} chrom pos ref alt > {}'.format(file, vcf_verify,vcf_checked_out)
-<<<<<<< HEAD
-        # create the file and run snpeff
-=======
-        create the file and run snpeff
->>>>>>> a6f5f77a7c0fd07a9b23c7e573b251c180c96207
-        with open(vcf_checked_out, "w") as out_file:
-            try:
-                ps = subprocess.Popen(snp_verify_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-            except subprocess.CalledProcessError as e:
-                 print e.output
-
-<<<<<<< HEAD
-
-
-
-=======
-
-
-
->>>>>>> a6f5f77a7c0fd07a9b23c7e573b251c180c96207
 # ############################################################
 # # annotate variants with coding consequences using snpeff ##
 # ############################################################
@@ -181,7 +131,7 @@ for file in os.listdir(os.getcwd()):
 #                 subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "GRCh37.75", file], stdout=f)
 #             except subprocess.CalledProcessError as e:
 #                  print e.output
-#
+
 # ##########################################################
 # ## Output SnpEff effects as tsv file, one effect per line ##
 # ############################################################
@@ -231,6 +181,9 @@ for file in os.listdir(os.getcwd()):
 # ############################################
 # ## Remove Header and add pos_block column ##
 # ############################################
+
+# TODO convert '.' to '\n' for impala import
+
 # # remove header that was needed for running snpeff
 # for file in os.listdir(os.getcwd()):
 #     if file.endswith('_parsed.tsv'):
@@ -319,8 +272,23 @@ for file in os.listdir(os.getcwd()):
 # ############################
 # coding_compstats = "compute stats {}.coding_{}".format(input_db, today)
 # cur.execute(coding_compstats)
-#
-# #####################
-# # close connection ##
-# #####################
-# cur.close()
+
+#####################
+# close connection ##
+#####################
+cur.close()
+
+# vcf_basic = '/users/selasady/my_titan_itmi/impala_scripts/annotation/parse_vcf.pl'
+
+# OLD FORMAT USING vcftools verify
+# process all vcf files created from the query
+# for file in os.listdir(os.getcwd()):
+#     if any(file.endswith(x) for x in ((out_name + '.vcf'), (out_name + '_intergenic.vcf'))):
+#         print "Verifying VCF format for {}... \n".format(file)
+#         vcf_checked_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_verified.vcf'
+#         # create the file and run snpeff
+#         with open(vcf_checked_out, "w") as out_file:
+#             try:
+#                 subprocess.call(['perl', vcf_basic, file], stdout=out_file)
+#             except subprocess.CalledProcessError as e:
+#                  print e.output
