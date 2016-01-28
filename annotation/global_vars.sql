@@ -223,9 +223,7 @@ FULL OUTER JOIN p7_product.comgen_distinct t1
     AND t0.ref = t1.ref
     AND t0.alt = t1.alt
 where t0.chrom = '$x'
-and t0.pos_block = $y
-and t1.chrom = '$x'
-and t1.pos_block = $y;
+and t0.pos_block = $y;
 # "; done; done
 
 -- compute stats on new table
@@ -260,9 +258,7 @@ FULL OUTER JOIN p7_product.distinct_vars t1
     AND t0.ref = t1.ref
     AND t0.alt = t1.alt
 where t0.chrom = '$x'
-and t0.pos_block = $y
-and t1.chrom = '$x'
-and t1.pos_block = $y;
+and t0.pos_block = $y;
 # "; done
 
 --- compute stats on new table
@@ -300,9 +296,7 @@ FULL OUTER JOIN p7_product.clin_distinct t1
        t0.ref = t1.ref AND
        t0.alt = t1.alt
 WHERE t0.chrom = '$x'
-AND t0.pos_block = $y
-AND t1.chrom = '$x'
-AND t1.pos_block = $y;
+AND t0.pos_block = $y;
 # "; done
 
 -- compute stats on new table
@@ -348,9 +342,7 @@ FULL OUTER JOIN p7_product.dbsnp_distinct t1
        t0.ref = t1.ref AND
        t0.alt = t1.alt
 where t0.chrom = '$x'
-and t0.pos_block = $y
-and t1.chrom = '$x'
-and t1.pos_block = $y;
+and t0.pos_block = $y;
 # " ; done
 
 --- compute stats on new table
@@ -486,7 +478,7 @@ create table p7_product.dbnsfp_vars
     )
     partitioned by (chrom string, pos_block int);
 
-#for x in $(seq 20 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
 insert into table p7_product.dbnsfp_vars partition (chrom, pos_block)
 SELECT DISTINCT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
   ens.gene_id, ens.transcript_name, ens.transcript_id, ens.exon_name, ens.exon_number,
@@ -500,12 +492,87 @@ left join p7_product.dbnsfp_distinct d
     and ens.ref = d.ref
     and ens.alt  = d.alt
 where ens.chrom = '$x'
-and ens.pos_block = $y
-and d.chrom = '$x'
-and d.pos_block = $y;
+and ens.pos_block = $y;
 # " ; done
 
 compute stats p7_product.dbnsfp_vars;
+
+--- ANNOTATE VARIANTS WITH HGMD ANNOTATIONS
+
+-- create HGMD table partitioned by chrom and position
+create table p7_product.hgmd_dist
+(
+  pos int,
+  hgmd_id string,
+  ref string,
+  alt string,
+  hgmd_class string,
+  hgmd_mut string,
+  hgmd_dna string,
+  hgmd_prot string,
+  hgmd_phen string
+)
+partitioned by (chrom string, pos_block int);
+
+-- insert subset of hgmd columns into table
+insert into table p7_product.hgmd_dist partition (chrom, pos_block)
+select pos, id as hgmd_id, ref, alt, var_class as hgmd_class,
+  mut_type as hgmd_mut, dna as hgmd_dna, prot as hgmd_prot, phen as hgmd_phen,
+  chrom, cast(pos/1000000 as int) as pos_block
+  from p7_ref_grch37.hgmd;
+
+-- compute stats on new table
+compute stats p7_product.hgmd_dist;
+
+-- join hgmd with dbsnpf_vars to create hgmd_vars
+create table hgmd_vars
+(
+    pos int,
+    ref string,
+    alt string,
+    rs_id string,
+    strand string,
+    gene_name string,
+    gene_id string,
+    transcript_name string,
+    transcript_id string,
+    exon_name string,
+    exon_number int,
+    clin_sig string,
+    clin_dbn string,
+    kav_freq float,
+    kav_source string,
+    dbsnp_build int,
+    var_type string,
+    cadd_raw float,
+    dann_score float,
+    interpro_domain string,
+    hgmd_id string,
+    hgmd_class string,
+    hgmd_mut string,
+    hgmd_dna string,
+    hgmd_prot string,
+    hgmd_phen string
+)
+partitioned by (chrom string, pos_block int)
+
+
+-- left join dbnsfp_vars with hgmd annotations
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+insert into table p7_product.hgmd_vars partition (chrom, pos_block)
+select d.pos, d.ref, d.alt, d.rs_id, d.strand, d.gene_name,d.gene_id, d.transcript_name,
+    d.transcript_id, d.exon_name, d.exon_number, d.clin_sig, d.clin_dbn, d.kav_freq,
+    d.kav_source, d.dbsnp_build, d.var_type,  d.cadd_raw, d.dann_score, d.interpro_domain,
+    h.hgmd_id, h.hgmd_class, h.hgmd_mut, h.hgmd_dna, h.hgmd_prot, h.hgmd_phen, d.chrom, d.pos_block
+from p7_product.dbnsfp_vars d
+left join p7_product.hgmd_dist h
+    on d.chrom = h.chrom
+    and d.pos = h.pos
+    and d.ref = h.ref
+    and d.alt = h.alt
+where d.chrom = '$x'
+and d.pos_block = $y;
+#"; done; done
 
 --- ANNOTATE VARIANTS WITH CODING CONSEQUENCES
 

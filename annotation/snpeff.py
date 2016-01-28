@@ -1,5 +1,5 @@
 ##############################################################
-## update the following variables before running the script ##
+## update this section as needed before running the script ##
 ##############################################################
 # impala connection strings
 impala_host = 'glados18'
@@ -85,8 +85,8 @@ def create_vcf(db_name, table_name, chrom_name):
 
 
 # download each chromosome in input_table and turn into vcf file
-for chrom in chroms:
-    create_vcf(input_db, input_table, chrom)
+# for chrom in chroms:
+#     create_vcf(input_db, input_table, chrom)
 
 ######################################################
 # check vcf formatting using snpeff vcfBareBones.pl ##
@@ -105,32 +105,32 @@ for chrom in chroms:
 #             except subprocess.CalledProcessError as e:
 #                  print e.output
 
-# ############################################################
-# # annotate variants with coding consequences using snpeff ##
-# ############################################################
-# for file in os.listdir(os.getcwd()):
-#     # run intergenic variants through snpeff using 'closest' feature to annotate to nearest gene
-#     if file.endswith('intergenic_verified.vcf'):
-#         print "Annotating coding consequences for {} with snpeff... \n".format(file)
-#         # create names for input and output files
-#         vcf_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_snpeff.vcf'
-#         # create the file and run snpeff
-#         with open(vcf_out, "w") as f:
-#             try:
-#                 subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "closest", "-t", "-v", "GRCh37.75", file], stdout=f)
-#             except subprocess.CalledProcessError as e:
-#                  print e.output
-#     # run non-intergenic variants through snpeff
-#     elif file.endswith(out_name + '_verified.vcf'):
-#         print "Annotating coding consequences for {} with snpeff... \n".format(file)
-#         # create names for input and output files
-#         vcf_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_snpeff.vcf'
-#         # create the file and run snpeff
-#         with open(vcf_out, "w") as f:
-#             try:
-#                 subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "GRCh37.75", file], stdout=f)
-#             except subprocess.CalledProcessError as e:
-#                  print e.output
+############################################################
+# annotate variants with coding consequences using snpeff ##
+############################################################
+for file in os.listdir(os.getcwd()):
+    # run intergenic variants through snpeff using 'closest' feature to annotate to nearest gene
+    if file.endswith('intergenic_verified.vcf'):
+        print "Annotating coding consequences for {} with snpeff... \n".format(file)
+        # create names for input and output files
+        vcf_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_snpeff.vcf'
+        # create the file and run snpeff
+        with open(vcf_out, "w") as f:
+            try:
+                subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "closest", "-t", "-v", "GRCh37.75", file], stdout=f)
+            except subprocess.CalledProcessError as e:
+                 print e.output
+    # run non-intergenic variants through snpeff
+    elif file.endswith(out_name + '_verified.vcf'):
+        print "Annotating coding consequences for {} with snpeff... \n".format(file)
+        # create names for input and output files
+        vcf_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_snpeff.vcf'
+        # create the file and run snpeff
+        with open(vcf_out, "w") as f:
+            try:
+                subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "GRCh37.75", file], stdout=f)
+            except subprocess.CalledProcessError as e:
+                 print e.output
 
 # ##########################################################
 # ## Output SnpEff effects as tsv file, one effect per line ##
