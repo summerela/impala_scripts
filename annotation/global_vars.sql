@@ -525,7 +525,7 @@ select pos, id as hgmd_id, ref, alt, var_class as hgmd_class,
 compute stats p7_product.hgmd_dist;
 
 -- join hgmd with dbsnpf_vars to create hgmd_vars
-create table hgmd_vars
+create table p7_product.hgmd_vars
 (
     pos int,
     ref string,
