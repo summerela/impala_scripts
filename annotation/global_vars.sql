@@ -1,7 +1,8 @@
--- ASSUMPTIONS:
--- all mitochondrial chromosomes have been converted to 'M' instead of 'MT'
+-- CAVEATS (desribe this better):
+-- all mitochondrial chromosomes have been converted to 'M' instead of 'MT' (cgi and illumina MT use diff references)
 -- all Kaviar rs_id's with a NULL value in the source column have been converted to 'dbSNP'
--- all reference sources are left-aligned
+-- all reference sources are left-normalized and parsimonious 
+
 
 # noinspection SqlNoDataSourceInspectionForFile
 -- GLOBAL VARIANTS TABLE PIPELINE
