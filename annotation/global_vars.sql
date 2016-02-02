@@ -80,15 +80,14 @@ create table p7_product.dbsnp_distinct
     ref string,
     alt string,
     rs_id string,
-    dbsnp_buildid string,
-    var_type string
+    dbsnp_buildid string
     )
   partitioned by (chrom string, pos_block int);
 
 -- insert subset into table
 insert into p7_product.dbsnp_distinct partition (chrom, pos_block)
 select pos, ref, alt,
-  rs_id, dbsnpbuildid as dbsnp_buildid, vc as var_type,
+  rs_id, dbsnpbuildid as dbsnp_buildid
   CASE
       when chrom = 'MT' then 'M'
         else chrom
@@ -333,7 +332,6 @@ SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
         t0.kav_freq,
         t0.kav_source,
         t1.dbsnp_buildid,
-        t1.var_type,
         coalesce(t0.chrom, t1.chrom) AS chrom,
         coalesce(t0.pos_block, t1.pos_block) AS pos_block
 FROM p7_product.kav_clin_vars t0
@@ -403,8 +401,7 @@ create table p7_product.ens_vars
     clin_dbn string,
     kav_freq float,
     kav_source string,
-    dbsnp_build int,
-    var_type string
+    dbsnp_build int
     )
     partitioned by (chrom string, pos_block int);
 
@@ -414,7 +411,7 @@ insert into table p7_product.ens_vars partition (chrom, pos_block)
 SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id, t1.exon_name, t1.exon_number,
   t0.clin_sig, t0.clin_dbn, t0.kav_freq,
-  t0.kav_source, cast(t0.dbsnp_build as int), t0.var_type, t0.chrom, t0.pos_block
+  t0.kav_source, cast(t0.dbsnp_build as int), t0.chrom, t0.pos_block
 FROM p7_product.all_vars t0
 LEFT JOIN p7_product.ens_distinct t1
     ON t0.chrom = t1.chrom
@@ -472,7 +469,6 @@ create table p7_product.dbnsfp_vars
     kav_freq float,
     kav_source string,
     dbsnp_build int,
-    var_type string,
     cadd_raw float,
     dann_score float,
     interpro_domain string
@@ -484,7 +480,7 @@ insert into table p7_product.dbnsfp_vars partition (chrom, pos_block)
 SELECT DISTINCT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
   ens.gene_id, ens.transcript_name, ens.transcript_id, ens.exon_name, ens.exon_number,
   ens.clin_sig, ens.clin_dbn, ens.kav_freq, ens.kav_source,
-  ens.dbsnp_build, ens.var_type, d.cadd_raw, d.dann_score, d.interpro_domain,
+  ens.dbsnp_build, d.cadd_raw, d.dann_score, d.interpro_domain,
   ens.chrom, ens.pos_block
 from p7_product.ens_vars ens
 left join p7_product.dbnsfp_distinct d
@@ -544,7 +540,6 @@ create table p7_product.hgmd_vars
     kav_freq float,
     kav_source string,
     dbsnp_build int,
-    var_type string,
     cadd_raw float,
     dann_score float,
     interpro_domain string,
@@ -563,7 +558,7 @@ partitioned by (chrom string, pos_block int)
 insert into table p7_product.hgmd_vars partition (chrom, pos_block)
 select d.pos, d.ref, d.alt, d.rs_id, d.strand, d.gene_name,d.gene_id, d.transcript_name,
     d.transcript_id, d.exon_name, d.exon_number, d.clin_sig, d.clin_dbn, d.kav_freq,
-    d.kav_source, d.dbsnp_build, d.var_type,  d.cadd_raw, d.dann_score, d.interpro_domain,
+    d.kav_source, d.dbsnp_build, d.cadd_raw, d.dann_score, d.interpro_domain,
     h.hgmd_id, h.hgmd_class, h.hgmd_mut, h.hgmd_dna, h.hgmd_prot, h.hgmd_phen, d.chrom, d.pos_block
 from p7_product.dbnsfp_vars d
 left join p7_product.hgmd_dist h
@@ -622,7 +617,6 @@ CREATE TABLE p7_product.global_vars
     kav_freq float,
     kav_source string,
     dbsnp_build int,
-    var_type string,
     cadd_raw float,
     dann_score float,
     interpro_domain string,
@@ -650,7 +644,7 @@ insert into table p7_product.global_vars partition (chrom, pos_block, clin_sig, 
       and pos_block = $y)
 
 SELECT t1.pos, t1.ref, t1.alt, t1.rs_id, t1.strand, t1.gene_name, t1.gene_id, t1.clin_dbn, t1.kav_freq, t1.kav_source,
-  t1.dbsnp_build, t1.var_type, t1.cadd_raw, t1.dann_score, t1.interpro_domain, t2.effect, t2.feature, t2.feature_id,
+  t1.dbsnp_build, t1.cadd_raw, t1.dann_score, t1.interpro_domain, t2.effect, t2.feature, t2.feature_id,
   t2.biotype, t2.rank, t2.hgvs_c, t2.hgvs_p, t1.chrom, t1.pos_block, t1.clin_sig,
     (CASE
        when (t1.kav_freq < .03 ) then 'under3'
@@ -682,7 +676,6 @@ CREATE TABLE p7_product.global_variants
     kav_freq float,
     kav_source string,
     dbsnp_build int,
-    var_type string,
     cadd_raw float,
     dann_score float,
     interpro_domain string,
@@ -703,7 +696,7 @@ select distinct * from p7_product.global_vars where chrom = '$x' and pos_block =
 
 # nohup impala-shell -q "\
 insert into table p7_product.global_variants partition (chrom, pos_block, clin_sig, kav_rank, impact)
-select pos, ref, alt, rs_id, strand, gene_name, gene_id, clin_dbn, kav_freq, kav_source, dbsnp_build, var_type, cadd_raw, dann_score, interpro_domain,
+select pos, ref, alt, rs_id, strand, gene_name, gene_id, clin_dbn, kav_freq, kav_source, dbsnp_build, cadd_raw, dann_score, interpro_domain,
 EFFECT, FEATURE, FEATUREID, BIOTYPE, RANK, HGVS_C, HGVS_P, 'M' as chrom, pos_block, clin_sig, kav_rank, impact
   from p7_product.global_vars
   where chrom = 'MT'
