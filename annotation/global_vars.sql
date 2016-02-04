@@ -1,7 +1,8 @@
--- ASSUMPTIONS:
--- all mitochondrial chromosomes have been converted to 'M' instead of 'MT'
+-- CAVEATS (desribe this better):
+-- all mitochondrial chromosomes have been converted to 'M' instead of 'MT' (cgi and illumina MT use diff references)
 -- all Kaviar rs_id's with a NULL value in the source column have been converted to 'dbSNP'
--- all reference sources are left-aligned
+-- all reference sources are left-normalized and parsimonious 
+
 
 # noinspection SqlNoDataSourceInspectionForFile
 -- GLOBAL VARIANTS TABLE PIPELINE
@@ -79,15 +80,14 @@ create table p7_product.dbsnp_distinct
     ref string,
     alt string,
     rs_id string,
-    dbsnp_buildid string,
-    var_type string
+    dbsnp_buildid string
     )
   partitioned by (chrom string, pos_block int);
 
 -- insert subset into table
 insert into p7_product.dbsnp_distinct partition (chrom, pos_block)
 select pos, ref, alt,
-  rs_id, dbsnpbuildid as dbsnp_buildid, vc as var_type,
+  rs_id, dbsnpbuildid as dbsnp_buildid
   CASE
       when chrom = 'MT' then 'M'
         else chrom
@@ -223,9 +223,7 @@ FULL OUTER JOIN p7_product.comgen_distinct t1
     AND t0.ref = t1.ref
     AND t0.alt = t1.alt
 where t0.chrom = '$x'
-and t0.pos_block = $y
-and t1.chrom = '$x'
-and t1.pos_block = $y;
+and t0.pos_block = $y;
 # "; done; done
 
 -- compute stats on new table
@@ -260,9 +258,7 @@ FULL OUTER JOIN p7_product.distinct_vars t1
     AND t0.ref = t1.ref
     AND t0.alt = t1.alt
 where t0.chrom = '$x'
-and t0.pos_block = $y
-and t1.chrom = '$x'
-and t1.pos_block = $y;
+and t0.pos_block = $y;
 # "; done
 
 --- compute stats on new table
@@ -300,9 +296,7 @@ FULL OUTER JOIN p7_product.clin_distinct t1
        t0.ref = t1.ref AND
        t0.alt = t1.alt
 WHERE t0.chrom = '$x'
-AND t0.pos_block = $y
-AND t1.chrom = '$x'
-AND t1.pos_block = $y;
+AND t0.pos_block = $y;
 # "; done
 
 -- compute stats on new table
@@ -338,7 +332,6 @@ SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
         t0.kav_freq,
         t0.kav_source,
         t1.dbsnp_buildid,
-        t1.var_type,
         coalesce(t0.chrom, t1.chrom) AS chrom,
         coalesce(t0.pos_block, t1.pos_block) AS pos_block
 FROM p7_product.kav_clin_vars t0
@@ -348,9 +341,7 @@ FULL OUTER JOIN p7_product.dbsnp_distinct t1
        t0.ref = t1.ref AND
        t0.alt = t1.alt
 where t0.chrom = '$x'
-and t0.pos_block = $y
-and t1.chrom = '$x'
-and t1.pos_block = $y;
+and t0.pos_block = $y;
 # " ; done
 
 --- compute stats on new table
@@ -410,8 +401,7 @@ create table p7_product.ens_vars
     clin_dbn string,
     kav_freq float,
     kav_source string,
-    dbsnp_build int,
-    var_type string
+    dbsnp_build int
     )
     partitioned by (chrom string, pos_block int);
 
@@ -421,7 +411,7 @@ insert into table p7_product.ens_vars partition (chrom, pos_block)
 SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id, t1.exon_name, t1.exon_number,
   t0.clin_sig, t0.clin_dbn, t0.kav_freq,
-  t0.kav_source, cast(t0.dbsnp_build as int), t0.var_type, t0.chrom, t0.pos_block
+  t0.kav_source, cast(t0.dbsnp_build as int), t0.chrom, t0.pos_block
 FROM p7_product.all_vars t0
 LEFT JOIN p7_product.ens_distinct t1
     ON t0.chrom = t1.chrom
@@ -479,19 +469,18 @@ create table p7_product.dbnsfp_vars
     kav_freq float,
     kav_source string,
     dbsnp_build int,
-    var_type string,
     cadd_raw float,
     dann_score float,
     interpro_domain string
     )
     partitioned by (chrom string, pos_block int);
 
-#for x in $(seq 20 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
 insert into table p7_product.dbnsfp_vars partition (chrom, pos_block)
 SELECT DISTINCT ens.pos, ens.ref, ens.alt, ens.rs_id, ens.strand, ens.gene_name,
   ens.gene_id, ens.transcript_name, ens.transcript_id, ens.exon_name, ens.exon_number,
   ens.clin_sig, ens.clin_dbn, ens.kav_freq, ens.kav_source,
-  ens.dbsnp_build, ens.var_type, d.cadd_raw, d.dann_score, d.interpro_domain,
+  ens.dbsnp_build, d.cadd_raw, d.dann_score, d.interpro_domain,
   ens.chrom, ens.pos_block
 from p7_product.ens_vars ens
 left join p7_product.dbnsfp_distinct d
@@ -500,12 +489,86 @@ left join p7_product.dbnsfp_distinct d
     and ens.ref = d.ref
     and ens.alt  = d.alt
 where ens.chrom = '$x'
-and ens.pos_block = $y
-and d.chrom = '$x'
-and d.pos_block = $y;
+and ens.pos_block = $y;
 # " ; done
 
 compute stats p7_product.dbnsfp_vars;
+
+--- ANNOTATE VARIANTS WITH HGMD ANNOTATIONS
+
+-- create HGMD table partitioned by chrom and position
+create table p7_product.hgmd_dist
+(
+  pos int,
+  hgmd_id string,
+  ref string,
+  alt string,
+  hgmd_class string,
+  hgmd_mut string,
+  hgmd_dna string,
+  hgmd_prot string,
+  hgmd_phen string
+)
+partitioned by (chrom string, pos_block int);
+
+-- insert subset of hgmd columns into table
+insert into table p7_product.hgmd_dist partition (chrom, pos_block)
+select pos, id as hgmd_id, ref, alt, var_class as hgmd_class,
+  mut_type as hgmd_mut, dna as hgmd_dna, prot as hgmd_prot, phen as hgmd_phen,
+  chrom, cast(pos/1000000 as int) as pos_block
+  from p7_ref_grch37.hgmd;
+
+-- compute stats on new table
+compute stats p7_product.hgmd_dist;
+
+-- join hgmd with dbsnpf_vars to create hgmd_vars
+create table p7_product.hgmd_vars
+(
+    pos int,
+    ref string,
+    alt string,
+    rs_id string,
+    strand string,
+    gene_name string,
+    gene_id string,
+    transcript_name string,
+    transcript_id string,
+    exon_name string,
+    exon_number int,
+    clin_sig string,
+    clin_dbn string,
+    kav_freq float,
+    kav_source string,
+    dbsnp_build int,
+    cadd_raw float,
+    dann_score float,
+    interpro_domain string,
+    hgmd_id string,
+    hgmd_class string,
+    hgmd_mut string,
+    hgmd_dna string,
+    hgmd_prot string,
+    hgmd_phen string
+)
+partitioned by (chrom string, pos_block int)
+
+
+-- left join dbnsfp_vars with hgmd annotations
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+insert into table p7_product.hgmd_vars partition (chrom, pos_block)
+select d.pos, d.ref, d.alt, d.rs_id, d.strand, d.gene_name,d.gene_id, d.transcript_name,
+    d.transcript_id, d.exon_name, d.exon_number, d.clin_sig, d.clin_dbn, d.kav_freq,
+    d.kav_source, d.dbsnp_build, d.cadd_raw, d.dann_score, d.interpro_domain,
+    h.hgmd_id, h.hgmd_class, h.hgmd_mut, h.hgmd_dna, h.hgmd_prot, h.hgmd_phen, d.chrom, d.pos_block
+from p7_product.dbnsfp_vars d
+left join p7_product.hgmd_dist h
+    on d.chrom = h.chrom
+    and d.pos = h.pos
+    and d.ref = h.ref
+    and d.alt = h.alt
+where d.chrom = '$x'
+and d.pos_block = $y;
+#"; done; done
 
 --- ANNOTATE VARIANTS WITH CODING CONSEQUENCES
 
@@ -554,7 +617,6 @@ CREATE TABLE p7_product.global_vars
     kav_freq float,
     kav_source string,
     dbsnp_build int,
-    var_type string,
     cadd_raw float,
     dann_score float,
     interpro_domain string,
@@ -582,7 +644,7 @@ insert into table p7_product.global_vars partition (chrom, pos_block, clin_sig, 
       and pos_block = $y)
 
 SELECT t1.pos, t1.ref, t1.alt, t1.rs_id, t1.strand, t1.gene_name, t1.gene_id, t1.clin_dbn, t1.kav_freq, t1.kav_source,
-  t1.dbsnp_build, t1.var_type, t1.cadd_raw, t1.dann_score, t1.interpro_domain, t2.effect, t2.feature, t2.feature_id,
+  t1.dbsnp_build, t1.cadd_raw, t1.dann_score, t1.interpro_domain, t2.effect, t2.feature, t2.feature_id,
   t2.biotype, t2.rank, t2.hgvs_c, t2.hgvs_p, t1.chrom, t1.pos_block, t1.clin_sig,
     (CASE
        when (t1.kav_freq < .03 ) then 'under3'
@@ -614,7 +676,6 @@ CREATE TABLE p7_product.global_variants
     kav_freq float,
     kav_source string,
     dbsnp_build int,
-    var_type string,
     cadd_raw float,
     dann_score float,
     interpro_domain string,
@@ -635,7 +696,7 @@ select distinct * from p7_product.global_vars where chrom = '$x' and pos_block =
 
 # nohup impala-shell -q "\
 insert into table p7_product.global_variants partition (chrom, pos_block, clin_sig, kav_rank, impact)
-select pos, ref, alt, rs_id, strand, gene_name, gene_id, clin_dbn, kav_freq, kav_source, dbsnp_build, var_type, cadd_raw, dann_score, interpro_domain,
+select pos, ref, alt, rs_id, strand, gene_name, gene_id, clin_dbn, kav_freq, kav_source, dbsnp_build, cadd_raw, dann_score, interpro_domain,
 EFFECT, FEATURE, FEATUREID, BIOTYPE, RANK, HGVS_C, HGVS_P, 'M' as chrom, pos_block, clin_sig, kav_rank, impact
   from p7_product.global_vars
   where chrom = 'MT'

@@ -45,8 +45,8 @@ conn=connect(host=impala_host, port=impala_port, timeout=10000, user=impala_user
 cur = conn.cursor()
 
 # create list of chromosomes to process
-chroms = map( str, range(1,23) ) + ['X','Y','M']
-
+#chroms = map( str, range(1,23) ) + ['X','Y','M']
+chroms =  ['M', '5', 'X']
 ##########################################
 ## create vcf files for each chromosome ##
 ##########################################
@@ -85,8 +85,8 @@ def create_vcf(db_name, table_name, chrom_name):
 
 
 # download each chromosome in input_table and turn into vcf file
-for chrom in chroms:
-    create_vcf(input_db, input_table, chrom)
+# for chrom in chroms:
+#     create_vcf(input_db, input_table, chrom)
 
 ######################################################
 # check vcf formatting using snpeff vcfBareBones.pl ##
@@ -120,17 +120,19 @@ for chrom in chroms:
 #                 subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "closest", "-t", "-v", "GRCh37.75", file], stdout=f)
 #             except subprocess.CalledProcessError as e:
 #                  print e.output
-#     # run non-intergenic variants through snpeff
-#     elif file.endswith(out_name + '_verified.vcf'):
-#         print "Annotating coding consequences for {} with snpeff... \n".format(file)
-#         # create names for input and output files
-#         vcf_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_snpeff.vcf'
-#         # create the file and run snpeff
-#         with open(vcf_out, "w") as f:
-#             try:
-#                 subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "GRCh37.75", file], stdout=f)
-#             except subprocess.CalledProcessError as e:
-#                  print e.output
+    # run non-intergenic variants through snpeff
+    #elif file.endswith(out_name + '_verified.vcf'):
+for chrom in chroms:
+    in_file = "chr{}_{}_verified.vcf".format(chrom, out_name)
+    print "Annotating coding consequences for {} with snpeff... \n".format(in_file)
+    # create names for input and output files
+    vcf_out = str('.'.join(in_file.split('.')[:-1]) if '.' in in_file else in_file) + '_snpeff.vcf'
+    # create the file and run snpeff
+    with open(vcf_out, "w") as f:
+        try:
+            subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "GRCh37.75", in_file], stdout=f)
+        except subprocess.CalledProcessError as e:
+             print e.output
 
 # ##########################################################
 # ## Output SnpEff effects as tsv file, one effect per line ##
