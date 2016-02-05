@@ -320,7 +320,7 @@ partitioned by (chrom string, pos_block int);
 
 -- insert variants into table
 #for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
-insert into table p7_product.kav_clin_vars partition (chrom, pos_block)
+insert into table p7_product.clin_vars partition (chrom, pos_block)
 SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
        coalesce(t0.ref, t1.ref) AS ref,
        coalesce(t0.alt, t1.alt) AS alt,
@@ -341,7 +341,7 @@ AND t0.pos_block = $y;
 # "; done
 
 -- compute stats on new table
-compute stats p7_product.kav_clin_vars;
+compute stats p7_product.clin_vars;
 
 -- 694405468 rows in table
 
@@ -387,7 +387,7 @@ and t0.pos_block = $y;
 # " ; done
 
 --- compute stats on new table
-compute stats p7_product.all_vars;
+compute stats p7_product.dbsnp_vars;
 
 -- 698,889,772 rows in table, all are distinct
 
@@ -417,8 +417,6 @@ create table p7_product.all_vars
     )
     partitioned by (chrom string, pos_block int);
 
--- TODO: CHECK IF THIS SHOULD BE AN OUTER JOIN INSTEAD OF LEFT
-
 #for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
 insert into table p7_product.all_vars partition (chrom, pos_block)
 SELECT DISTINCT COALESCE(ens.pos, d.pos) as pos, COALESCE(ens.ref, d.ref) as ref, COALESCE(ens.alt, d.alt) as alt,
@@ -438,10 +436,9 @@ and d.chrom = '$x'
 and d.pos_block = $y;
 # " ; done
 
-compute stats p7_product.dbnsfp_vars;
+-- compute stats on table
+compute stats p7_product.all_vars;
 
-
--- stop here
 
 -- ANNOTATE ALL_VARIANTS TABLE TO CREATE GLOBAL VARIANTS TABLE
 
@@ -499,7 +496,10 @@ create table p7_product.ens_vars
     clin_dbn string,
     kav_freq float,
     kav_source string,
-    dbsnp_build int
+    dbsnp_build int,
+    cadd_raw float,
+    dann_score float,
+    interpro_domain string
     )
     partitioned by (chrom string, pos_block int);
 
@@ -508,14 +508,16 @@ create table p7_product.ens_vars
 insert into table p7_product.ens_vars partition (chrom, pos_block)
 SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id, t1.exon_name, t1.exon_number,
-  t0.clin_sig, t0.clin_dbn, t0.kav_freq,
-  t0.kav_source, cast(t0.dbsnp_build as int), t0.chrom, t0.pos_block
+  t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
+  t0.cadd_raw, t0.dann_score, t0.interpro_domain, t0.chrom, t0.pos_block
 FROM p7_product.all_vars t0
 LEFT JOIN p7_product.ens_distinct t1
     ON t0.chrom = t1.chrom
     AND (t0.pos BETWEEN t1.start and t1.stop)
 WHERE t0.chrom = '$x'
-AND t0.pos_block = $y;
+AND t0.pos_block = $y
+AND t1.chrom = '$x'
+and t1.pos_block = $y;
 # " ; done ; done
 
 -- compute stats on ens_vars
