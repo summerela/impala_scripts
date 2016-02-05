@@ -1,14 +1,3 @@
-# impala connection strings
-impala_host = 'glados18'
-impala_port = '21050'
-impala_user = 'selasady'
-
-# Database to test
-input_db = "p7_product"
-input_table = "ens_partitioned"
-
-# enter rsID to use as test
-test_rsid = 'rs334'
 
 ####################
 ## import modules ##
@@ -91,3 +80,15 @@ class table_test(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+    
+ # impala connection strings
+impala_host = 'glados18'
+impala_port = '21050'
+impala_user = 'selasady'
+
+# Database to test
+input_db = "p7_product"
+input_table = "ens_partitioned"
+
+# enter rsID to use as test
+test_rsid = 'rs334'
