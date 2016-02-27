@@ -283,12 +283,16 @@ cur.close()
 
 # OLD FORMAT USING vcftools verify
 # process all vcf files created from the query
+
+# out_name = 'file_out_basename'
+# vcf_out =
+#
 # for file in os.listdir(os.getcwd()):
 #     if any(file.endswith(x) for x in ((out_name + '.vcf'), (out_name + '_intergenic.vcf'))):
 #         print "Verifying VCF format for {}... \n".format(file)
 #         vcf_checked_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_verified.vcf'
 #         # create the file and run snpeff
-#         with open(vcf_checked_out, "w") as out_file:
+#         with open(vcf_out, "w") as out_file:
 #             try:
 #                 subprocess.call(['perl', vcf_basic, file], stdout=out_file)
 #             except subprocess.CalledProcessError as e:
