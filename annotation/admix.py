@@ -202,7 +202,18 @@ missnp_file = timeStamped('_merged') + '.missnp'
 ##  run admixture ##
 ####################
 
-
+# while there is an error file
+while os.path.isfile(missnp_file):
+	# remove mis-matched snps from files
+    remove_snps(ref_dir, plink_path, missnp_file)
+    # delete the file
+    remove_file(missnp_file)
+    # find bed stems to merge
+    merge_list = findBedStems(input_dir, "_extracted.bed")
+    # create new merge text
+    create_merged_text(merge_list)
+    # try merging again
+    merge_bed(plink_path, kg_ref, mer)
 
 
 
