@@ -33,12 +33,13 @@ import datetime
 ##############################
 
 # create function to run bash command with subprocess
-def run_bash_cmd(input_cmd):
-    try:
-        ps = sp.Popen(input_cmd, shell=True,stdout=sp.PIPE,stderr=sp.STDOUT)
-        print ps.communicate()[0]
-    except sp.CalledProcessError as e:
-         print e.output
+# def run_bash_cmd(input_cmd):
+#     ps = sp.Popen(input_cmd, shell=True,stdout=sp.PIPE,stderr=sp.STDOUT)
+#     try:
+#         ps.communicate()[0]
+#     except sp.CalledProcessError as e:
+#          print e.output
+
 
 
 ### create sort file to sort output by population ###
@@ -133,7 +134,7 @@ def copy_marker(marker_no_extension, current_path):
     except sp.CalledProcessError as e:
         print e.output
 
-# function to add time stamp to output file name
+# add time stamp to output file name
 def timeStamped(fname, fmt='%Y-%m-%d{fname}'):
     '''
     add a time stamp to output files
@@ -201,6 +202,8 @@ def plink2_merge(plink_path, merge_file, out_file):
         sp.call(merge_cmd, shell=True,stdout=sp.PIPE,stderr=sp.STDOUT)
     except sp.CalledProcessError as e:
         print e.output
+
+
 
 # define function to remove file
 def remove_file(file_to_remove):
