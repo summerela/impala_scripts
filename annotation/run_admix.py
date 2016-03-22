@@ -51,7 +51,7 @@ def create_sorter(ref_panel):
     print ("Saving sorted reference text as {}".format(out_sort))
     sort_out.to_csv(out_sort, index=False, sep='\t', header=False)
 
-# # create function to run bash command with subprocess
+# create function to run bash command with subprocess
 def subprocess_cmd(command, input_dir):
     '''
     Run programs in bash via subprocess
