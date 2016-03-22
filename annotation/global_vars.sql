@@ -504,7 +504,7 @@ create table p7_product.ens_vars
     partitioned by (chrom string, pos_block int);
 
 -- inserted each chromosome into partitioned table as follows
-#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+#for x in $(seq 5 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
 insert into table p7_product.ens_vars partition (chrom, pos_block)
 SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id, t1.exon_name, t1.exon_number,

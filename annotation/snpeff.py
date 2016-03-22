@@ -45,8 +45,9 @@ conn=connect(host=impala_host, port=impala_port, timeout=10000, user=impala_user
 cur = conn.cursor()
 
 # create list of chromosomes to process
-#chroms = map( str, range(1,23) ) + ['X','Y','M']
-chroms =  ['M', '5', 'X']
+chroms = map( str, range(1,22) ) + ['X','Y','M']
+chroms = ['6','7','9','17','19','22','X']
+
 ##########################################
 ## create vcf files for each chromosome ##
 ##########################################
@@ -121,38 +122,36 @@ def create_vcf(db_name, table_name, chrom_name):
 #             except subprocess.CalledProcessError as e:
 #                  print e.output
     # run non-intergenic variants through snpeff
-    #elif file.endswith(out_name + '_verified.vcf'):
-for chrom in chroms:
-    in_file = "chr{}_{}_verified.vcf".format(chrom, out_name)
-    print "Annotating coding consequences for {} with snpeff... \n".format(in_file)
-    # create names for input and output files
-    vcf_out = str('.'.join(in_file.split('.')[:-1]) if '.' in in_file else in_file) + '_snpeff.vcf'
-    # create the file and run snpeff
-    with open(vcf_out, "w") as f:
-        try:
-            subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "GRCh37.75", in_file], stdout=f)
-        except subprocess.CalledProcessError as e:
-             print e.output
+    # elif file.endswith(out_name + '_verified.vcf'):
+    # print "Annotating coding consequences for {} with snpeff... \n".format(in_file)
+    # # create names for input and output files
+    # vcf_out = str('.'.join(in_file.split('.')[:-1]) if '.' in in_file else in_file) + '_snpeff.vcf'
+    # # create the file and run snpeff
+    # with open(vcf_out, "w") as f:
+    #     try:
+    #         subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "GRCh37.75", in_file], stdout=f)
+    #     except subprocess.CalledProcessError as e:
+    #          print e.output
 
 # ##########################################################
 # ## Output SnpEff effects as tsv file, one effect per line ##
 # ############################################################
-# for file in os.listdir(os.getcwd()):
-#     if file.endswith('_snpeff.vcf'):
-#         print "Parsing snpeff output for {}... \n".format(file)
-#         tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_parsed.tsv'
-#         # create command to parse snpeff
-#         snpout_cmd = 'cat {} | {} | {} -jar {} extractFields \
-#         - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
-#         "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
-#         "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(file, snpeff_oneperline_perl, \
-#         java_path, snpsift_jar,tsv_out)
-#         # call subprocess and communicate to pipe output between commands
-#         ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-#         print ps.communicate()[0]
-#
-#
-# # TODO enable function when snpeff closest function is fixed by Broad Inst.
+for file in os.listdir(os.getcwd()):
+    if file.endswith('_snpeff.vcf'):
+        print "Parsing snpeff output for {}... \n".format(file)
+        tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_parsed.tsv'
+        # create command to parse snpeff
+        snpout_cmd = 'cat {} | {} | {} -Xmx16g -jar {} extractFields \
+        - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
+        "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
+        "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(file, snpeff_oneperline_perl, \
+        java_path, snpsift_jar,tsv_out)
+        # call subprocess and communicate to pipe output between commands
+        ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+        print ps.communicate()[0]
+
+
+# # TODO enable function when snpeff 'closest' function is fixed by Broad Inst.
 #
 # import copy
 #
@@ -284,12 +283,16 @@ cur.close()
 
 # OLD FORMAT USING vcftools verify
 # process all vcf files created from the query
+
+# out_name = 'file_out_basename'
+# vcf_out =
+#
 # for file in os.listdir(os.getcwd()):
 #     if any(file.endswith(x) for x in ((out_name + '.vcf'), (out_name + '_intergenic.vcf'))):
 #         print "Verifying VCF format for {}... \n".format(file)
 #         vcf_checked_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_verified.vcf'
 #         # create the file and run snpeff
-#         with open(vcf_checked_out, "w") as out_file:
+#         with open(vcf_out, "w") as out_file:
 #             try:
 #                 subprocess.call(['perl', vcf_basic, file], stdout=out_file)
 #             except subprocess.CalledProcessError as e:
