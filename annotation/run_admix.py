@@ -27,6 +27,7 @@ java_path = '/tools/java/jdk1.7/bin/java -jar -Xmx16g'
 gatk_path = "{}GenomeAnalysisTK.jar".format(tool_path)
 admixture_path = "{}admixture_linux-1.3.0/admixture".format(tool_path)
 vcf_verify = "{}snpEff/scripts/vcfBareBones.pl".format(tool_path)
+bcftools = "{}bcftools.bcftools".format(tool_path)
 
 
 ####################################
@@ -78,15 +79,23 @@ def make_marker_function():
     # retain only maf/ld pruned variants and convert ped to bed/bim/fam file using plink
     pruned_file = '{}/{}_maf_ld.prune.in'.format(ref_dir, ped_base)
     ped2bed_cmd = '{} --file {}/{} --extract {} --make-bed --indiv-sort file {}/sorted_ref.txt --out {}/{}'.format(plink_path, ref_dir, ped_base, pruned_file, ref_dir, ref_dir, ped_base)
-    # convert the binary bed file to a readable map file to get genomic locations for extracting vcf regions
-    map_pos_cmd = "{} --noweb --bfile {}/{} --recode --out {}/{}_map".format(plink_path, ref_dir, ped_base, ref_dir, ped_base)
-    marker_cmds = [plink_cmd,ped2bed_cmd, map_pos_cmd]
-    for cmd in marker_cmds:
-        subprocess_cmd(cmd, ref_dir)
+    # # convert the binary bed file to a readable map file to get genomic locations for extracting vcf regions
+    # map_pos_cmd = "{} --noweb --bfile {}/{} --recode 12 --out {}/{}_map".format(plink_path, ref_dir, ped_base, ref_dir, ped_base)
+    # convert bed file to vcf
+    bed_to_vcf_cmd = "{} --file {}  --recode vcf --out {}".format(plink_path, ped_base, ped_base)
+    # extract chrom pos ref from marker vcf
+    extract_markers_cmd = r'''cat {}.vcf  | grep -v '^#' | awk '{{OFS="\t";print $1, $2, $4}}' | gzip > {}_markers.gz'''.format(ped_base, ped_base)
+    # marker_cmds = [plink_cmd,ped2bed_cmd, bed_to_vcf_cmd, extract_markers_cmd]
+    # for cmd in marker_cmds:
+    #     subprocess_cmd(cmd, ref_dir)
+    subprocess_cmd(extract_markers_cmd, ref_dir)
 
 ###############################
 ### Pre-process VCF file(s) ###
 ###############################
+
+# extract regions from vcf file that matches marker regions
+
 
 def strip_vcf(input_dir, input_vcf):
     '''
@@ -316,15 +325,15 @@ if __name__ == '__main__':
     ref_panel = 'integrated_call_samples_v3.20130502.ALL.panel'
 
     # mark true if reference marker needs to be created, else False
-    create_marker = 'False'
+    create_marker = 'True'
 
-    # if create_marker == 'True':
-    #     print ("Making marker... ")
-    #     make_marker_function()
+    if create_marker == 'True':
+        print ("Making marker... ")
+        make_marker_function()
 
     #process_vcf(vcf_dir)
 
-    merge_vcf(vcf_dir)
+    #merge_vcf(vcf_dir)
 
 
 
