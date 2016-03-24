@@ -28,6 +28,7 @@ gatk_path = "{}GenomeAnalysisTK.jar".format(tool_path)
 admixture_path = "{}admixture_linux-1.3.0/admixture".format(tool_path)
 vcf_verify = "{}snpEff/scripts/vcfBareBones.pl".format(tool_path)
 bcftools = "{}bcftools.bcftools".format(tool_path)
+extract_script = "/titan/ITMI1/workspaces/users/dmauldin/extract_regions_stream_job.pl"
 
 
 ####################################
@@ -84,18 +85,48 @@ def make_marker_function():
     # convert bed file to vcf
     bed_to_vcf_cmd = "{} --file {}  --recode vcf --out {}".format(plink_path, ped_base, ped_base)
     # extract chrom pos ref from marker vcf
-    extract_markers_cmd = r'''cat {}.vcf  | grep -v '^#' | awk '{{OFS="\t";print $1, $2, $4}}' | gzip > {}_markers.gz'''.format(ped_base, ped_base)
-    # marker_cmds = [plink_cmd,ped2bed_cmd, bed_to_vcf_cmd, extract_markers_cmd]
-    # for cmd in marker_cmds:
-    #     subprocess_cmd(cmd, ref_dir)
-    subprocess_cmd(extract_markers_cmd, ref_dir)
+    extract_markers_cmd = r'''cat {}.vcf  | grep -v '^#' | awk '{{OFS="\t";print "chr"$1, $2, $4}}' | gzip > {}_markers.gz'''.format(ped_base, ped_base)
+    marker_cmds = [plink_cmd,ped2bed_cmd, bed_to_vcf_cmd, extract_markers_cmd]
+    for cmd in marker_cmds:
+        subprocess_cmd(cmd, ref_dir)
 
 ###############################
 ### Pre-process VCF file(s) ###
 ###############################
 
-# extract regions from vcf file that matches marker regions
+# make list of vcf files in vcf_dir
+def make_vcf_list(input_dir):
+    '''
+    create list of all files in vcf_dir that end in vcf.gz
+    directory should not contain .vcf.gz files that you do not want to include in analysis
+    :param input_dir: path to directory containing vcf files to analyze
+    :return: python list object of the basename of each vcf.gz file in vcf_dir
+    '''
+    base_name = []
+    # create list of vcf files to subset
+    for file in os.listdir(input_dir):
+        if file.endswith('.vcf.gz'):
+            basename = str('.'.join(file.split('.')[:1]) if '.' in file else file)
+            base_name.append(basename)
+    return base_name
 
+def create_metadata_file(metadata_file, input_dir, input_vcf_list):
+    meta_names = ['Vendor',  'Bucket',  'Study',   'Family',  'Genome',  'Subject', 'Sample',  'Assembly', 'Gestalt ID', 'Gender',  'Term'
+                  'Country of Birth', 'Member',  'VCF', 'PATH', 'S3','BIGDATA', 'GESTALT',  'ITMI_MAPPINGS', 'COUNT', 'S3URL', 'BigdataURL',      'GestaltURL', 'MappingsURL']
+    # read in metadata file
+    meta_file = pd.read_csv(metadata_file, sep='\t', names=meta_names)
+    # subset metadata file and update vcf file paths
+    for file in os.listdir(input_dir):
+        if file.endswith('.vcf.gz'):
+            vcf_list = '|'.join(input_vcf_list)
+            ill_subset = meta_file[(meta_file['Assembly'].str.contains(vcf_list))]
+            ill_subset['VCF'] = os.path.abspath("{}/{}".format(input_dir, file))
+            ill_subset.to_csv('./metadata_test.txt', sep='\t')
+
+# extract regions from vcf file that match marker regions
+def extract_variants(input_dir, region_file, metadata_file):
+    print ("Extracting marker regions from vcf files... \n")
+    extract_cmd = "perl {} --regionFile ./ALL.wgs.phase3_shapeit2_filtered.20141217.maf0.05_markers.gz --metadata ../metadata_test.txt --outDir ../test2/".format(extract_script)
 
 def strip_vcf(input_dir, input_vcf):
     '''
@@ -104,7 +135,7 @@ def strip_vcf(input_dir, input_vcf):
     :param input_vcf: vcf file to process
     :return: _verified.vcf.gz files to merge with marker file before running ADMIXTURE
     '''
-    print "Verifying VCF format for {}... \n".format(input_vcf)
+    print ("Verifying VCF format for {}... \n".format(input_vcf))
     vcf_checked_out = str('.'.join(input_vcf.split('.')[:-2]) if '.' in input_vcf else input_vcf) + '_verified.vcf.gz'
     snp_verify_cmd = 'zcat {}/{} | {} | gzip > {}/{} '.format(input_dir, input_vcf, vcf_verify,input_dir, vcf_checked_out)
     ps = sp.Popen(snp_verify_cmd,shell=True,stdout=sp.PIPE,stderr=sp.STDOUT)
@@ -130,6 +161,11 @@ def process_vcf(input_dir):
                     strip_vcf(input_dir, file)
                     if file.endswith('_verified.vcf.gz'):
                         vcf_to_bed(input_dir, file)
+
+
+# TODO process_vcf should not be nested loop
+# stuff = make_vcf_list(vcf_dir)
+# create_metadata_file(ill_metadata, vcf_dir, stuff)
 
 #########################
 ### merge bed files  ####
@@ -316,16 +352,18 @@ def make_pop5(ref_file, out_pop, kval):
 if __name__ == '__main__':
 
     # path to input vcf files
-    vcf_dir = '/users/selasady/my_titan_itmi/impala_scripts/annotation/admix/test3'
+    vcf_dir = '/users/selasady/my_titan_itmi/impala_scripts/annotation/admix/test2'
     # path to reference ped/map files
     ref_dir = '/users/selasady/my_titan_itmi/impala_scripts/annotation/admix/1000g_vcf'
     # ped/map file basename
     ped_base = 'ALL.wgs.phase3_shapeit2_filtered.20141217.maf0.05'
     # panel file basename
     ref_panel = 'integrated_call_samples_v3.20130502.ALL.panel'
+    # path to illumina metadata file
+    ill_metadata = "/users/selasady/my_titan_itmi/impala_scripts/illumina_metdata.txt"
 
     # mark true if reference marker needs to be created, else False
-    create_marker = 'True'
+    create_marker = 'False'
 
     if create_marker == 'True':
         print ("Making marker... ")
@@ -336,8 +374,12 @@ if __name__ == '__main__':
     #merge_vcf(vcf_dir)
 
 
+    # for file in file_path:
+    #     ill_subset = ill_metadata[(ill_metadata['Assembly'].str.contains(base_name))]
+    #     print ill_subset
 
 # TODO add program path as arg to each function
 # TODO consistent variable names as input args to functions
 # TODO global var with vcf base name and pass to functions
+# TODO make basename function and replace this in functions
 
