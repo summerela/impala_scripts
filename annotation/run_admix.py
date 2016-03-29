@@ -94,63 +94,59 @@ def make_marker(ref_panel, plink_path, ref_dir, ped_base):
 ### Pre-process VCF file(s) ###
 ###############################
 
-# make list of vcf files in vcf_dir
-def make_vcf_list(input_dir):
+# subset metadata for input vcf file
+def subset_metadata(metadata_file, input_vcf):
     '''
-    create list of all files in vcf_dir that end in vcf.gz
-    directory should not contain .vcf.gz files that you do not want to include in analysis
-    :param input_dir: path to directory containing vcf files to analyze
-    :return: python list object of the basename of each vcf.gz file in vcf_dir
-    '''
-    base_name = []
-    # create list of vcf files to subset
-    for file in os.listdir(input_dir):
-        if file.endswith('.vcf.gz'):
-            basename = str('.'.join(file.split('.')[:1]) if '.' in file else file)
-            base_name.append(basename)
-    return base_name
-
-# create metadata file to input to perl extraction script
-def create_metadata_file(metadata_file, input_dir, input_vcf, input_vcf_list):
-    '''
-    create metadata file specifying file information and location to feed to perl script
-    columns to include are the same as meta_names variable
+    subset metadata file specifying path and subject info for feeding to perl extract
+    script; columns to include are the same as meta_names variable
     :param metadata_file: path to complete metadata file for each platform
-    :param input_dir: directory path to vcf files
-    :param input_vcf_list: vcf file list created using make_vcf_list()
-    :return: metadata file containing vcf files in input dir to input to perl extract script
+    :param input_vcf: vcf file to subset. assumes vcf file begins 102-00029-03.LP6005637-DNA_H05.etc...
+    as output by perl extract script
+    :return: metadata subset dataframe containing vcf file info to feed to update_meta_path()
     '''
+    vcf_basename = str('.'.join(input_vcf.split('.')[:1]) if '.' in input_vcf else input_vcf)
     meta_names = ['Vendor',  'Bucket',  'Study',   'Family',  'Genome',  'Subject', 'Sample',  'Assembly', 'Gestalt ID', 'Gender',  'Term'
                   'Country of Birth', 'Member',  'VCF', 'PATH', 'S3','BIGDATA', 'GESTALT',  'ITMI_MAPPINGS', 'COUNT', 'S3URL', 'BigdataURL',      'GestaltURL', 'MappingsURL']
     # read in metadata file
     meta_file = pd.read_csv(metadata_file, sep='\t', names=meta_names)
+    print meta_file.head()
     # subset metadata file and update vcf file paths
-    vcf_list = '|'.join(input_vcf_list)
-    vcf_subset = meta_file[(meta_file['Assembly'].str.contains(vcf_list))]
+    vcf_subset = meta_file[(meta_file['Assembly'].str.contains(vcf_basename))]
     return vcf_subset
 
-
-# TODO make meta file for each vcf file, not whole directory
 def update_meta_path(vcf_subset, input_dir, input_vcf, out_dir):
-    vcf_subset['VCF'] = os.path.abspath("{}/{}".format(input_dir, input_vcf))
-    out_file = "{}/metadata.txt".format(out_dir)
-    vcf_subset.to_csv(out_file, sep='\t')
+    '''
+    Update vcf file path for subset metadata file for current vcf location
+    :param vcf_subset: dataframe subset of platform metadata file created from subset_metadata()
+    :param input_dir: directory containing vcf file
+    :param input_vcf: vcf file to subset metadata for and update the file path to location of this vcf
+    :param out_dir: directory to store output metadata text
+    :return: subset metadata file containing information for input_vcf as tsv
+    '''
+    vcf_path = os.path.abspath(os.path.join(input_dir, input_vcf))
+    print ("\n Creating metadata file for {}".format(vcf_path))
+    vcf_subset['VCF'] = vcf_path
+    vcf_basename = str('.'.join(input_vcf.split('.')[:1]) if '.' in input_vcf else input_vcf)
+    out_file = "{}/{}_metadata.txt".format(out_dir, vcf_basename)
+    vcf_subset.to_csv(out_file, sep='\t', index=False)
 
 # extract regions from vcf file that match marker regions
-def extract_variants(input_dir, ped_base, out_dir):
+def extract_variants(input_vcf, ped_base, ref_dir, out_dir):
     '''
     Runs extract_regions_stream_job.pl written by Denise Maulden to extract regions from input vcf files
      that match regions in the marker file to save computational time
-    :param input_dir: path to vcf files to extract regions from
+    :param input_vcf: path to vcf file to extract regions from
     :param ped_base: base name of input ped file used to create marker file
+    :param ref_dir: dictory path to reference marker file
     :param metadata_file: file with metadata and location of input vcf files made from create_metadata_file()
     :param out_dir: directory to write output vcf's
     :return: *_filtered.vcf.gz files retaining only regions that match the maker file regions
     '''
     print ("Extracting marker regions from vcf files... \n")
-    region_file = "{}_markers.gz".format(ped_base)
-    metadata_file = "{}/metadata.txt".format(input_dir)
-    extract_cmd = "perl {} --regionFile {} --metadata {} --outDir {}".format(extract_script, region_file, metadata_file, out_dir)
+    vcf_basename = str('.'.join(input_vcf.split('.')[:1]) if '.' in input_vcf else input_vcf)
+    region_file = "{}/{}_markers.gz".format(ref_dir, ped_base)
+    metadata_file = "{}{}_metadata.txt".format(out_dir, vcf_basename)
+    extract_cmd = "perl {} --regionFile {} --metadata {} --outDir {}  --compressionType bzip2".format(extract_script, region_file, metadata_file, out_dir)
     subprocess_cmd(extract_cmd, vcf_dir)
 
 def strip_vcf(input_dir, input_vcf):
@@ -163,8 +159,7 @@ def strip_vcf(input_dir, input_vcf):
     print ("Verifying VCF format for {}... \n".format(input_vcf))
     vcf_checked_out = str('.'.join(input_vcf.split('.')[:-2]) if '.' in input_vcf else input_vcf) + '_verified.vcf.gz'
     snp_verify_cmd = 'bzcat {}/{} | {} | gzip > {}/{} '.format(input_dir, input_vcf, vcf_verify,input_dir, vcf_checked_out)
-    ps = sp.Popen(snp_verify_cmd,shell=True,stdout=sp.PIPE,stderr=sp.STDOUT)
-    print ps.communicate()[0]
+    subprocess_cmd(snp_verify_cmd, input_dir)
 
 def vcf_to_bed(input_dir, input_vcf):
     '''
@@ -176,17 +171,17 @@ def vcf_to_bed(input_dir, input_vcf):
     vcf_out = str('.'.join(input_vcf.split('.')[:-2]) if '.' in input_vcf else input_vcf)
     vcf2plink_cmd = "{} --vcf {}/{} --double-id --biallelic-only strict --memory 300000 --geno 0.1 --allow-no-sex --set-missing-var-ids @:#[b37]\$1,\$2 --make-bed --out {}/{}".format(plink_path, input_dir, input_vcf, input_dir, vcf_out)
     print ("Converting {} from vcf to bed/bim/fam").format(input_vcf)
-    ps = sp.Popen(vcf2plink_cmd,shell=True,stdout=sp.PIPE,stderr=sp.STDOUT)
-    print ps.communicate()[0]
+    subprocess_cmd(vcf2plink_cmd, input_dir)
 
 
-# run each process function
-def process_vcf(metadata_file, input_dir, out_dir):
-    vcf_out_list = make_vcf_list(input_dir)
+# run process vcf functions
+def process_vcf(metadata_file, input_dir, ref_dir, out_dir):
     for file in os.listdir(input_dir):
         if file.endswith('vcf.gz'):
-            meta_susbset = create_metadata_file(metadata_file, input_dir, file, vcf_out_list)
-            update_meta_path(meta_susbset,input_dir,file, out_dir)
+            meta_subset = subset_metadata(metadata_file, file)
+            #update_meta_path(meta_subset, input_dir, file, out_dir)
+            #extract_variants(file, ped_base, ref_dir, out_dir)
+
 
 
     # #extract_variants(input_dir, out_dir)
@@ -415,7 +410,7 @@ if __name__ == '__main__':
     ped_base = 'ALL.wgs.phase3_shapeit2_filtered.20141217.maf0.05'
     # path to illumina metadata file
     ill_metadata = "/users/selasady/my_titan_itmi/impala_scripts/illumina_metdata.txt"
-    # choose either 5 or 26 to run admix with super or sub populations
+    # choose either 5 to run admix with super pops, 26 for sub-populations, or 'both'
     pop_kval = 5
     # number of cores to run admixture
     admix_cores = 20
@@ -437,7 +432,6 @@ if __name__ == '__main__':
     #     # TODO change ref_panel to be determined programatically
     #     make_marker(ref_panel, plink_path, ref_dir, ped_base)
 
-    process_vcf(ill_metadata, vcf_dir, filtered_out)
 
     #merge_vcf(filtered_out, ped_base)
 
@@ -452,6 +446,9 @@ if __name__ == '__main__':
     #     if file.endswith('_merged.bed'):
     #         print ("Running admix for {}".format(file))
     #         run_admix(admixture_path, admix_cores, file, filtered_out, pop_kval)
+
+
+    process_vcf(ill_metadata, vcf_dir, ref_dir, filtered_out)
 
 
     # read admixture results in
