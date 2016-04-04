@@ -37,10 +37,17 @@ class run_admix(object):
         self.kval = kval
         self.num_cores = num_cores
         self.ref_panel = ''.join([f for f in os.listdir(self.ref_dir) if f.endswith('.panel')])
-
-    def out_dir(self):
-        filtered_out = "{}/filtered/".format(self.vcf_dir)
-        return filtered_out
+        self.ref_panel_file = "{}/{}".format(self.ref_dir, str(self.ref_panel))
+        # cmd to filter reference ped file to retain MAF between .05 and 0.5 and LD 50 5 0.5
+        self.plink_filter_cmd = "{plink} --file {ref}/{ped} --out {ref}/{ped}_maf_ld --maf 0.05 --max-maf .49 \
+            --indep-pairwise 50 5 0.5".format(plink=run_admix.plink_path, ref=ref_dir, ped=self.ped_base)
+        # cmd to retain only maf/ld pruned variants and convert ped to bed/bim/fam file using plink
+        self.pruned_file = '{ref}/{ped}_maf_ld.prune.in'.format(ref=self.ref_dir, ped=self.ped_base)
+        self.ped2bed_cmd = '{plink} --file {ref}/{ped} --extract {pruned} --make-bed --indiv-sort file {ref}/sorted_panel.txt \
+            --out {ref}/{ped}'.format(plink=run_admix.plink_path, ref=self.ref_dir, ped=self.ped_base, pruned=self.pruned_file)
+        # create list of snps from marker file to extract from input vcf files
+        self.ref_snps = "{plink} --bfile {ped} --write-snplist --out {ped}_snps".format(plink=run_admix.plink_path, ped=self.ped_base)
+        self.filtered_out = "{}/filtered/".format(vcf_dir)
 
     @staticmethod
     # create function to run bash command with subprocess
@@ -63,81 +70,75 @@ class run_admix(object):
         basename = str('.'.join(in_file.split('.')[:-int(num_to_remove)]) if '.' in in_file else in_file)
         return basename
 
+    ####################################
+    ### Create reference marker file ###
+    ####################################
 
+    # create text file with subject id's grouped by population for sorting subjects by population
+    def create_sorter_and_pop(self, input_dir):
+        '''
+        :param input_dir: ref_dir containing ref panel file (three columns, tsv, col headers = sample | pop | super_pop )
+        :return sorted_ref.txt a two column tsv ( sample | pop ) to be fed to plink for sorting by pop
+        '''
+        out_panel = "{}/sorted_panel.txt".format(input_dir)
+        print("Saving sorted panel file as {}".format(out_panel))
+        try:
+            panel = pd.read_csv(self.ref_panel_file, sep='\t', usecols=['sample', 'pop', 'super_pop', 'gender'])
+            panel.sort_values(by=['super_pop', 'pop'], axis = 0, inplace=True)
+            # create super_pop.txt file for super populations
+            super_out = panel[['sample', 'pop']]
+            super_out.to_csv("{}/super_pop.txt".format(input_dir), index=False, names=['sample', 'super_pop'])
+            return super_out
+            # create sub_pop.txt for subpopulations
+            sub_out = panel[['sample', 'super_pop']]
+            sub_out.to_csv("{}/sub_pop.txt".format(input_dir), index=False, names=['sample', 'pop'])
+            # create sorted_ref.txt for sorting marker tsv by pop in format family_id | subject_id
+            sorter_out = panel[['sample', 'sample']]
+            sorter_out.to_csv("{}/sorted_panel.txt".format(input_dir), index=False, sep='\t', header=False)
+        except Exception as e:
+            print e
 
+    def create_marker_file(self, input_dir):
+        '''
+        Runs commands to create marker file if make_marker == True
+        :param plink: path to plink1.9
+        :param ref_dir: path to dir containing plink ped/map files
+        :return: marker file to merge with input VCF files for running ADMIXTURE
+        '''
+        # run the vcf procesing commands
+        marker_cmds = [self.plink_filter_cmd,self.ped2bed_cmd, self.ref_snps]
+        for cmd in marker_cmds:
+            self.subprocess_cmd(cmd, input_dir)
 
+    def process_reference(self, input_dir):
+        print("\n Creating sorted panel file and pop files for super and sub populations... \n")
+        self.create_sorter_and_pop(input_dir)
+        print("\n Creating marker file... \n")
+        self.create_marker_file(input_dir)
 
-# ####################################
-# ### Create reference marker file ###
-# ####################################
-#
-# # create text file with subject id's grouped by population for sorting subjects by population
-# def create_sorter_and_pop(input_dir):
-#     '''
-#     :param input_dir: ref_dir containing ref panel file (three columns, tsv, col headers = sample | pop | super_pop )
-#     :return sorted_ref.txt a two column tsv ( sample | pop ) to be fed to plink for sorting by pop
-#     '''
-#     ref_panel = ''.join([f for f in os.listdir(input_dir) if f.endswith('.panel')])
-#     ref_panel_file = "{}/{}".format(input_dir, str(ref_panel))
-#     out_panel = "{}/sorted_panel.txt".format(input_dir)
-#     print("Saving sorted panel file as {}".format(out_panel))
-#     panel = pd.read_csv(ref_panel_file, sep='\t', usecols=['sample', 'pop', 'super_pop', 'gender'])
-#     panel.sort_values(by=['super_pop', 'pop'], axis = 0, inplace=True)
-#     # create super_pop.txt file for super populations
-#     super_out = panel[['sample', 'pop']]
-#     super_out.to_csv("{}/super_pop.txt".format(input_dir), index=False, names=['sample', 'super_pop'])
-#     # create sub_pop.txt for subpopulations
-#     sub_out = panel[['sample', 'super_pop']]
-#     sub_out.to_csv("{}/sub_pop.txt".format(input_dir), index=False, names=['sample', 'pop'])
-#     # create sorted_ref.txt for sorting marker tsv by pop in format family_id | subject_id
-#     sorter_out = panel[['sample', 'sample']]
-#     sorter_out.to_csv("{}/sorted_panel.txt".format(input_dir), index=False, sep='\t', header=False)
-#
-#
-# def create_marker_file(input_dir, plink):
-#     '''
-#     Runs commands to create marker file if make_marker == True
-#     :param plink: path to plink1.9
-#     :param ref_dir: path to dir containing plink ped/map files
-#     :return: marker file to merge with input VCF files for running ADMIXTURE
-#     '''
-#     # get basename of ped file in ref_dir
-#     ped_base = get_ped_base(input_dir)
-#     # filter reference ped file to retain MAF between .05 and 0.5 and LD 50 5 0.5
-#     plink_cmd = "{} --file {}/{} --out {}/{}_maf_ld --maf 0.05 --max-maf .49 --indep-pairwise 50 5 0.5".format(plink, input_dir, ped_base, input_dir, ped_base)
-#     # retain only maf/ld pruned variants and convert ped to bed/bim/fam file using plink
-#     pruned_file = '{}/{}_maf_ld.prune.in'.format(input_dir, ped_base)
-#     ped2bed_cmd = '{} --file {}/{} --extract {} --make-bed --indiv-sort file {}/sorted_panel.txt --out {}/{}'.format(plink, input_dir, ped_base, pruned_file, input_dir, input_dir, ped_base)
-#     # create list of snps from marker file to extract from input vcf files
-#     ref_snps = "{} --bfile {} --write-snplist --out {}_snps".format(plink, ped_base,ped_base)
-#     # run the vcf procesing commands
-#     marker_cmds = [plink_cmd,ped2bed_cmd, ref_snps]
-#     for cmd in marker_cmds:
-#         subprocess_cmd(cmd, input_dir)
-#
-# def process_reference(input_dir, plink):
-#     print("\n Creating sorted panel file and pop files for super and sub populations... \n")
-#     create_sorter_and_pop(input_dir)
-#     print("\n Creating marker file... \n")
-#     create_marker_file(input_dir, plink)
-#
-# ###############################
-# ### Pre-process VCF file(s) ###
-# ###############################
-#
-# def trim_vcf(input_dir, input_vcf, vcf_verify_path):
-#     '''
-#     process all vcf.gz files to retain only chrom, pos, ref, alt and gt
-#     :param input_dir: path to directory where vcf files are located
-#     :param input_vcf: vcf.gz file to trim
-#     :return: _trimmed.vcf.gz files to merge with marker file before running ADMIXTURE
-#     '''
-#     print ("\n Trimming VCF file {}... \n".format(input_vcf))
-#     vcf_base = get_gzVCF_base(input_vcf)
-#     vcf_out = "{}_trimmed.vcf.gz".format(vcf_base)
-#     out_dir = get_outdir(input_dir)
-#     snp_verify_cmd = 'nohup zcat {}/{} | {} | gzip > {}/{} '.format(input_dir, input_vcf, vcf_verify_path ,out_dir, vcf_out)
-#     subprocess_cmd(snp_verify_cmd, input_dir)
+    ###############################
+    ### Pre-process VCF file(s) ###
+    ###############################
+
+    def trim_vcf(self, input_vcf):
+        '''
+        process all vcf.gz files to retain only chrom, pos, ref, alt and gt
+        :param input_dir: path to directory where vcf files are located
+        :param input_vcf: vcf.gz file to trim
+        :return: _trimmed.vcf.gz files to merge with marker file before running ADMIXTURE
+        '''
+        print ("\n Trimming VCF file {}... \n".format(input_vcf))
+        vcf_base = run_admix.get_file_base(input_vcf, 2)
+        vcf_out = "{}_trimmed.vcf.gz".format(vcf_base)
+        snp_verify_cmd = 'nohup zcat {input_dir}/{vcf} | {verify} | gzip > {out}/{vcf_out} '.format(input_dir=self.filtered_out, \
+                        vcf=input_vcf, verify=run_admix.vcf_verify, out=self.filtered_out, vcf_out=vcf_out)
+        self.subprocess_cmd(snp_verify_cmd, self.filtered_out)
+
+    def process_vcf(self, filtered_out):
+        for file in os.listdir(filtered_out):
+            if file.endswith('.vcf.gz'):
+                self.trim_vcf(file)
+
 #
 # def vcf_to_bed(input_dir, input_vcf):
 #     '''
@@ -369,10 +370,11 @@ if __name__ == '__main__':
 
 
     admix = run_admix(vcf_file_dir, ref_file_dir, ped_base_name, pop_kval, admix_cores)
-    admix.out_dir()
 
-    print admix.get_file_base("/user/sum/test.txt", 1)
-    print admix.ref_panel
+
+    # run stuff
+    # admix.process_reference(admix.ref_dir)
+    admix.process_vcf(admix.filtered_out)
 
     # # mark true if reference marker needs to be created, else False
     # create_marker = 'False'
