@@ -123,7 +123,6 @@ class run_admix(object):
     def trim_vcf(self, input_vcf):
         '''
         process all vcf.gz files to retain only chrom, pos, ref, alt and gt
-        :param input_dir: path to directory where vcf files are located
         :param input_vcf: vcf.gz file to trim
         :return: _trimmed.vcf.gz files to merge with marker file before running ADMIXTURE
         '''
@@ -134,25 +133,29 @@ class run_admix(object):
                         vcf=input_vcf, verify=run_admix.vcf_verify, out=self.filtered_out, vcf_out=vcf_out)
         self.subprocess_cmd(snp_verify_cmd, self.filtered_out)
 
+
+    def vcf_to_bed(self, input_vcf):
+        '''
+        convert stripped vcf to bed/bim/fam with plink 1.9
+        :param input_vcf: vcf file to process
+        :return: stripped, verified vcf files converted to plink binary (bed) format
+        '''
+        bed_out = "{}.bed".format(self.get_file_base(input_vcf, 2))
+        vcf2plink_cmd = "nohup {plink} --vcf {filtered_dir}/{file} --double-id --biallelic-only strict --memory 300000 --geno 0.1 \
+            --allow-no-sex --set-missing-var-ids @:#[b37]\$1,\$2 --make-bed --out {filtered_dir}/{bed}".format(plink=self.plink_path, filtered_dir=self.filtered_out,\
+                                                                                                file=input_vcf, bed=bed_out)
+        print ("Converting {} from vcf to bed/bim/fam").format(input_vcf)
+        self.subprocess_cmd(vcf2plink_cmd, self.filtered_out)
+
+
     def process_vcf(self, filtered_out):
         for file in os.listdir(filtered_out):
-            if file.endswith('.vcf.gz'):
-                self.trim_vcf(file)
+            # if file.endswith('.vcf.gz'):
+            #     self.trim_vcf(file)
+            if file.endswith('_trimmed.vcf.gz'):
+                self.vcf_to_bed(file)
 
-#
-# def vcf_to_bed(input_dir, input_vcf):
-#     '''
-#     convert stripped vcf to bed/bim/fam with plink 1.9
-#     :param input_dir: directory containing _verified.vcf.gz created from strip_vcf()
-#     :param input_vcf: vcf file to process
-#     :return: stripped, verified vcf files converted to plink binary (bed) format
-#     '''
-#     out_dir = get_outdir(input_dir)
-#     bed_out = get_gzVCF_base(input_vcf)
-#     vcf2plink_cmd = "nohup {} --vcf {}/{} --double-id --biallelic-only strict --memory 300000 --geno 0.1 --allow-no-sex --set-missing-var-ids @:#[b37]\$1,\$2 --make-bed --out {}/{}".format(plink_path, out_dir, input_vcf, out_dir, bed_out)
-#     print ("Converting {} from vcf to bed/bim/fam").format(input_vcf)
-#     subprocess_cmd(vcf2plink_cmd, out_dir)
-#
+
 # # subset vcf for maker regions while converting to plink binary format
 # def subset_bed(input_dir, input_vcf, ref_snps):
 #     '''
