@@ -140,7 +140,7 @@ class run_admix(object):
         :param input_vcf: vcf file to process
         :return: stripped, verified vcf files converted to plink binary (bed) format
         '''
-        bed_out = "{}.bed".format(self.get_file_base(input_vcf, 2))
+        bed_out = self.get_file_base(input_vcf, 2)
         vcf2plink_cmd = "nohup {plink} --vcf {filtered_dir}/{file} --double-id --biallelic-only strict --memory 300000 --geno 0.1 \
             --allow-no-sex --set-missing-var-ids @:#[b37]\$1,\$2 --make-bed --out {filtered_dir}/{bed}".format(plink=self.plink_path, filtered_dir=self.filtered_out,\
                                                                                                 file=input_vcf, bed=bed_out)
@@ -150,10 +150,12 @@ class run_admix(object):
 
     def process_vcf(self, filtered_out):
         for file in os.listdir(filtered_out):
-            # if file.endswith('.vcf.gz'):
+            if file.endswith('.vcf.gz') and not (file.endswith('_trimmed.vcf.gz')):
+                print "It's a vcf file {}".format(file)
             #     self.trim_vcf(file)
             if file.endswith('_trimmed.vcf.gz'):
-                self.vcf_to_bed(file)
+                # self.vcf_to_bed(file)
+                print "It's a trimmed vcf file {}".format(file)
 
 
 # # subset vcf for maker regions while converting to plink binary format
