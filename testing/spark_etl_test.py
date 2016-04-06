@@ -3,11 +3,13 @@
 import os
 import sys
 import subprocess as sp
+import findspark
+findspark.init()
 
-# Path for spark source folder
-os.environ['SPARK_HOME']="/opt/cloudera/parcels/CDH/lib/spark"
-# Append pyspark  to Python Path
-sys.path.append("/opt/cloudera/parcels/CDH/lib/spark/python")
+# # Path for spark source folder
+# os.environ['SPARK_HOME']="/opt/cloudera/parcels/CDH/lib/spark"
+# # Append pyspark  to Python Path
+# sys.path.append("/opt/cloudera/parcels/CDH/lib/spark/python")
 
 from pyspark import SparkContext, SparkConf
 
@@ -57,7 +59,7 @@ class spark(object):
 ###############
 if __name__ == '__main__':
 
-    spark_con = spark(os.getcwd(), '/user/selasady/testing3/', "local", "spark_test", 2)
+    spark_con = spark(os.getcwd(), '/user/selasady/testing3/', "local", "etl_test", 2)
 
     local_file = '/users/selasady/my_titan_itmi/impala_scripts/testing/test/tale_of_two_cities.txt'
 
@@ -65,18 +67,9 @@ if __name__ == '__main__':
     #spark_con.hdfs_put(local_file)
  
     # read in a file from hdfs
-    lines = spark_con.hdfs_read(spark_con.hdfs_dir)
+    print spark_con.hdfs_read(spark_con.hdfs_dir)
 
 
-    ## Examples ##
-    # filter out empty lines
-    non_empty_lines = lines.filter( lambda x: len(x) > 0)
-    # count non-empty lines
-    print (non_empty_lines.count())
-    # word count map/reduce example
-    words = non_empty_lines.flatMap(lambda x: x.split())
-    wordcounts = words.map(lambda x: (x, 1)).reduceByKey(lambda x,y:x+y).map(lambda x:(x[1], x[0])).sortByKey(False)
-    print (wordcounts.take(10))
 
     # close connection
     spark_con.sc.stop()

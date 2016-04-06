@@ -142,20 +142,48 @@ class run_admix(object):
         '''
         bed_out = self.get_file_base(input_vcf, 2)
         vcf2plink_cmd = "nohup {plink} --vcf {filtered_dir}/{file} --double-id --biallelic-only strict --memory 300000 --geno 0.1 \
-            --allow-no-sex --set-missing-var-ids @:#[b37]\$1,\$2 --make-bed --out {filtered_dir}/{bed}".format(plink=self.plink_path, filtered_dir=self.filtered_out,\
-                                                                                                file=input_vcf, bed=bed_out)
+            --allow-no-sex --set-missing-var-ids @:#[b37]\$1,\$2 --make-bed --out {filtered_dir}/{bed}".format(plink=self.plink_path, filtered_dir=self.filtered_out, file=input_vcf, bed=bed_out)
         print ("Converting {} from vcf to bed/bim/fam").format(input_vcf)
         self.subprocess_cmd(vcf2plink_cmd, self.filtered_out)
 
+    def check_bed(self, input_dir):
 
-    def process_vcf(self, filtered_out):
-        for file in os.listdir(filtered_out):
-            if file.endswith('.vcf.gz') and not (file.endswith('_trimmed.vcf.gz')):
-                print "It's a vcf file {}".format(file)
-            #     self.trim_vcf(file)
+        '''
+        Locate bed files in a dir and ensure they have matching bim/fam
+        :param input_dir: dir where bed files to merge are located
+        :param input_file: file to merge with marker file
+        :param ped_base: basename of reference marker file to merge with vcf
+        :return: list of bed files to merge
+        '''
+        bedList = []
+        for file in os.listdir(input_dir):
             if file.endswith('_trimmed.vcf.gz'):
+                base_name = "{}.bed".format(self.get_file_base(file, 2))
+                bedList.append(base_name)
+                bedList.sort()
+        plinkList = []
+        for bed in bedList:
+            (stem, ext) = os.path.splitext(bed)
+            plinkList.append(stem)
+            for suffix in (".bim", ".fam"):
+                myFile = stem+suffix
+                if not os.path.exists(input_dir + '/' + myFile):
+                    print ("Missing Plink data file "+myFile)
+        print plinkList
+
+
+
+
+    # def process_vcf(self, filtered_out):
+    #     for file in os.listdir(filtered_out):
+    #         if file.endswith('.vcf.gz') and not (file.endswith('_trimmed.vcf.gz')):
+    #             # print "It's a vcf file {}".format(file)
+    #         #     self.trim_vcf(file)
+    #         if file.endswith('_trimmed.vcf.gz'):
                 # self.vcf_to_bed(file)
-                print "It's a trimmed vcf file {}".format(file)
+                # print "It's a trimmed vcf file {}".format(file)
+
+
 
 
 # # subset vcf for maker regions while converting to plink binary format
@@ -379,7 +407,10 @@ if __name__ == '__main__':
 
     # run stuff
     # admix.process_reference(admix.ref_dir)
-    admix.process_vcf(admix.filtered_out)
+    # admix.process_vcf(admix.filtered_out)
+
+    admix.check_bed(admix.filtered_out)
+
 
     # # mark true if reference marker needs to be created, else False
     # create_marker = 'False'
