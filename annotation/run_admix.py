@@ -1,10 +1,10 @@
-'''
+"""
 Run ADMIXTURE
 - create reference marker file
 - convert VCF of interest to plink bed format
 - run admixture
 - output results to impala table
-'''
+"""
 
 ####################
 ### Script Setup ###
@@ -119,7 +119,7 @@ class run_admix(object):
     ###############################
     ### Pre-process VCF file(s) ###
     ###############################
-
+    # TODO add step to trim script to remove M,X,Y chroms
     def trim_vcf(self, input_vcf):
         '''
         process all vcf.gz files to retain only chrom, pos, ref, alt and gt
@@ -133,6 +133,9 @@ class run_admix(object):
                         vcf=input_vcf, verify=run_admix.vcf_verify, out=self.filtered_out, vcf_out=vcf_out)
         self.subprocess_cmd(snp_verify_cmd, self.filtered_out)
 
+    def get_ref_snps(self, input_dir):
+        snp_list = ''.join([f for f in os.listdir(input_dir) if f.endswith('.snplist')])
+        return snp_list
 
     def vcf_to_bed(self, input_vcf):
         '''
@@ -141,11 +144,15 @@ class run_admix(object):
         :return: stripped, verified vcf files converted to plink binary (bed) format
         '''
         bed_out = self.get_file_base(input_vcf, 2)
-        vcf2plink_cmd = "nohup {plink} --vcf {filtered_dir}/{file} --double-id --biallelic-only strict --memory 300000 --geno 0.1 \
-            --allow-no-sex --set-missing-var-ids @:#[b37]\$1,\$2 --make-bed --out {filtered_dir}/{bed}".format(plink=self.plink_path, filtered_dir=self.filtered_out, file=input_vcf, bed=bed_out)
+        snps = self.get_ref_snps(self.ref_dir)
+        vcf2plink_cmd = "nohup {plink} --vcf {filtered_dir}/{file} --double-id --biallelic-only strict --geno 0.1 \
+            --allow-no-sex --set-missing-var-ids @:#[b37]\$1,\$2  --make-bed --extract {ref}/{snp} --out {filtered_dir}/{bed}".format(plink=self.plink_path, \
+                                        ref=self.ref_dir, snp=snps, filtered_dir=self.filtered_out, file=input_vcf, bed=bed_out)
         print ("Converting {} from vcf to bed/bim/fam").format(input_vcf)
         self.subprocess_cmd(vcf2plink_cmd, self.filtered_out)
 
+
+    # TODO deal with out of memory errors here
     def check_bed(self, input_dir):
 
         '''
@@ -173,218 +180,29 @@ class run_admix(object):
 
 
 
+    # subset vcf for maker regions while converting to plink binary format
+    # def subset_bed(self, input_vcf):
+    #     '''
+    #     subset vcf file using plink output snps from marker set
+    #     :param input_vcf: vcf file to subset. assumes .vcf.gz
+    #     :return: metadata subset dataframe containing vcf file info to feed to update_meta_path()
+    #     '''
+    #
+    #     vcf_base = self.get_file_base(input_vcf, 2)
+    #     subset_bed_cmd = "nohup {} --bfile {}  --make-bed --out {}/{}_final".format(self.plink_path,input_vcf, snps, self.filtered_out, vcf_base)
+    #     print subset_bed_cmd
+        # self.subprocess_cmd(subset_bed_cmd, self.filtered_out)
 
-    # def process_vcf(self, filtered_out):
-    #     for file in os.listdir(filtered_out):
-    #         if file.endswith('.vcf.gz') and not (file.endswith('_trimmed.vcf.gz')):
-    #             # print "It's a vcf file {}".format(file)
-    #         #     self.trim_vcf(file)
-    #         if file.endswith('_trimmed.vcf.gz'):
-                # self.vcf_to_bed(file)
-                # print "It's a trimmed vcf file {}".format(file)
-
-
-
-
-# # subset vcf for maker regions while converting to plink binary format
-# def subset_bed(input_dir, input_vcf, ref_snps):
-#     '''
-#     subset vcf file using plink output snps from marker set
-#     :param input_vcf: vcf file to subset. assumes .vcf.gz
-#     :param ref_snps: plink output of snp list from marker file using make_marker.ref_snps command
-#     :return: metadata subset dataframe containing vcf file info to feed to update_meta_path()
-#     '''
-#     vcf_basename = get_gzVCF_base(input_dir)
-#     out_dir = get_outdir(input_dir)
-#     subset_bed_cmd = "nohup {} --bfile {} --extract {} --make-bed --out {}/{}".format(plink_path,input_vcf,ref_snps, out_dir,vcf_basename)
-#     print subset_bed_cmd
-#     # subprocess_cmd(subset_bed_cmd, input_dir)
-#
-# def get_ref_snps(ref_dir):
-#     snp_list = ''.join([f for f in os.listdir(ref_dir) if f.endswith('.snplist')])
-#     return snp_list
-#
-#
-#
-#
-#
-# #########################
-# ### merge bed files  ####
-# #########################
-#
-# # define function to copy marker file to current wd
-# def copy_marker(ref_dir, ped_base, output_dir):
-#     '''
-#     copy 1000g bed/bim/fam marker files to same dir as vcf files to merge
-#     :param marker_no_extension: name of marker file without file extension
-#     :param current_path: vcf_dir to copy marker file to
-#     :return: copies marker bed/bim/fam file to directory where vcf files are located
-#     '''
-#     print "Copying markfer file to {}".format(output_dir)
-#     copy_marker_cmd = "cp {}/{}.* {}".format(ref_dir, ped_base, output_dir)
-#     subprocess_cmd(copy_marker_cmd, output_dir)
-#
-# # add time stamp to output file name
-# def timeStamped(fname, fmt='%Y-%m-%d{fname}'):
-#     '''
-#     add a time stamp to output files
-#     :param fname: file name to stamp
-#     :param fmt: time stamp format
-#     :return: file named with todays date
-#     '''
-#     return datetime.datetime.now().strftime(fmt).format(fname=fname)
-#
-# # function locate bed files to merge
-# def findBedStems(input_dir, input_file, ped_base):
-#     '''
-#     Locate bed files in a dir and ensure they have matching bim/fam
-#     :param input_dir: dir where bed files to merge are located
-#     :param input_file: file to merge with marker file
-#     :param ped_base: basename of reference marker file to merge with vcf
-#     :return: list of bed files to merge
-#     '''
-#     bedList = []
-#     ref_bed = "{}.bed".format(ped_base)
-#     for file in os.listdir(input_dir):
-#         if file == ref_bed:
-#              bedList.append(file)
-#     bedList.append(input_file)
-#     bedList.sort()
-#     plinkList = []
-#     for bed in bedList:
-#         (stem, ext) = os.path.splitext(bed)
-#         plinkList.append(stem)
-#         for suffix in (".bim", ".fam"):
-#             myFile = stem+suffix
-#             if not os.path.exists(input_dir + '/' + myFile):
-#                 print ("Missing Plink data file "+myFile)
-#     return plinkList
-#
-# def create_merge_text(input_vcf, merge_list, vcf_dir):
-#     '''
-#     create a three column text file of bed/bim/fam files to merge based
-#     on list from findBedStems
-#     :param input_vcf: vcf file to merge with marker file
-#     :param merge_list: list generated with findBedStems()
-#     :return: tsv file of each bed bim fam file to  merge for input to plink merge
-#     '''
-#     print ("Creating merge file for {}".format(input_vcf))
-#     file_list = []
-#     for item in merge_list:
-#         bed_out = str(item + '.bed')
-#         bim_out = str(item + '.bim')
-#         fam_out = str(item + '.fam')
-#         t = [bed_out, bim_out, fam_out]
-#         file_list.append(t)
-#     vcf_base = str('.'.join(input_vcf.split('.')[:-2]) if '.' in input_vcf else input_vcf)
-#     out_file = "{}/{}".format(vcf_dir, timeStamped('_{}_merge.txt'.format(vcf_base)))
-#     with open(out_file,'wb') as outf:
-#         writer = csv.writer(outf, delimiter='\t')
-#         writer.writerows(file_list)
-#
-# def plink2_merge(input_vcf, vcf_dir):
-#     '''
-#     Generate command to merge bed files using plink then run with subprocess
-#     :param plink_path: path to plink exe
-#     :param marker_no_extension: location of marker file with no extension
-#     :param merge_file: path to merge text file create with create_merge_text()
-#     :param out_file: desired file name for output merged file
-#     :return: merged bed/bim/fam file of 1000g marker plus input bed files
-#     '''
-#     print ("Attempting to merge bed file with marker file.")
-#     vcf_base = str('.'.join(input_vcf.split('.')[:-2]) if '.' in input_vcf else input_vcf)
-#     merge_file = "{}/{}".format(vcf_dir, timeStamped('_{}_merge.txt'.format(vcf_base)))
-#     out_file = "{}/{}".format(vcf_dir, timeStamped('_{}_merged'.format(vcf_base)))
-#     merge_cmd = "{} --merge-list {} --make-bed --memory 40000 --out {}".format(plink_path, merge_file, out_file)
-#     #subprocess_cmd(merge_cmd, vcf_dir)
-#     print merge_cmd
-#
-# def merge_vcf(vcf_dir, ref_dir, ped_base):
-#     '''
-#     run pipeline to merge bed files with marker set
-#     :param vcf_dir: directory path to vcf files to merge
-#     :return: merged bed/bim/fam file to run through ADMIXTURE program
-#     '''
-#     # copy marker file to vcf_dir
-#     copy_marker(ref_dir, ped_base, vcf_dir)
-#     for file in os.listdir(vcf_dir):
-#         if file.endswith('_verified.bed'):
-#             #merged_file = findBedStems(vcf_dir, file, ped_base)
-#             #create_merge_text(file, merged_file, vcf_dir)
-#             plink2_merge(file, vcf_dir)
-#
-# #######################
-# ###  run admixture  ###
-# #######################
-#
-# def make_pop(ref_dir, out_dir, merged_fam, kval):
-#     '''
-#     Create .pop file with 5 known major populations from 1000g and '-' for unknown from vcf files
-#     Assumes ref_dir contains tsv files in format subject_id | pop named super_pop.txt and sub_pop.txt
-#     :param out_dir path to directory containing merged fam files
-#     :param ref_dir: path to location of reference files used to create marker set
-#     :param merged_fam: path to merged fam file to create pop file for
-#     :param kval: specify 5 for super population and 26 for subpopulations
-#     :return .pop file for merged bed/bim/fam set as input for supervised admixture
-#     '''
-#     # read in _merged.fam file
-#     in_fam = "{}/{}".format(out_dir, merged_fam)
-#     merged_df = pd.read_csv(in_fam, sep=' ', usecols=[1], names=['sample'])
-#     fam_basename = str('.'.join(merged_fam.split('.')[:-1]) if '.' in merged_fam else merged_fam)
-#     if kval == 5:
-#         # pull population from the 1000g map file
-#         in_file = "{}/super_pop.txt".format(ref_dir)
-#         ref_map = pd.read_csv(in_file, sep='\t', header=0)
-#         out_df = pd.merge(merged_df, ref_map, how='left', on = 'sample')
-#         out_df = out_df['super_pop']
-#         out_file = "{}/{}.pop".format(out_dir, fam_basename)
-#         print ("Saving pop file as {}".format(out_file))
-#         out_df.to_csv(out_file, sep='\t', na_rep='-', header=False, index=False)
-#     elif kval == 26:
-#         # pull population from the 1000g map file
-#         in_file = "{}/sub_pop.txt".format(ref_dir)
-#         ref_map = pd.read_csv(in_file, sep='\t', header=0)
-#         out_df = pd.merge(merged_df, ref_map, how='left', left_on= 'Individual ID', right_on= 'sample')
-#         out_df = out_df['pop']
-#         out_file = "{}/{}.pop".format(out_dir, fam_basename)
-#         print ("Saving pop file as {}".format(out_file))
-#         out_df.to_csv(out_file, sep='\t', na_rep='-', header=False, index=False)
-#
-# def admix_cmd(admix_path, num_cores, merged_bed, out_dir, kval):
-#     '''
-#     run admixture on input merged bed files
-#     :param admix_path: path to admixture program
-#     :param num_cores: number of cores to use for running admixture
-#     :param merged_bed: bed file of merged marker plus unknown
-#     :param out_dir: path to bed file directory
-#     :param kval: choose either 5 or 26 to run admix with super or sub populations
-#     :return: P and Q files with admixture results
-#     '''
-#     admix_cmd = "nohup {} -j{} {} --supervised {}".format(admixture_path, int(num_cores), merged_bed, kval)
-#     subprocess_cmd(admix_cmd, out_dir)
-#
-# def run_pop(ref_dir, out_dir, kval):
-#     for file in os.listdir(out_dir):
-#         if file.endswith('_merged.fam'):
-#             make_pop(ref_dir, out_dir, file, kval)
-#
-# def run_admix(admix_path, num_cores, out_dir, kval):
-#     for file in os.listdir(out_dir):
-#         if file.endswith('_merged.bed'):
-#             admix_cmd(admix_path, num_cores, file, out_dir, kval)
-
-#######################
-### Process Results ###
-#######################
-
-
-
-
+    def process_vcf(self, filtered_out):
+        for file in os.listdir(filtered_out):
+            # if file.endswith('.vcf.gz') and not (file.endswith('_trimmed.vcf.gz')):
+            #     self.trim_vcf(file)
+            if file.endswith('_trimmed.vcf.gz'):
+                self.vcf_to_bed(file)
 
 ########################################################
 
 if __name__ == '__main__':
-
     ### File paths ###
 
     # path to input vcf files
@@ -398,18 +216,172 @@ if __name__ == '__main__':
     # number of cores to run admixture
     admix_cores = 20
 
+##########  testing   ############
 
-    ##########  testing   ############
+admix = run_admix(vcf_file_dir, ref_file_dir, ped_base_name, pop_kval, admix_cores)
+
+# run stuff
+# admix.process_reference(admix.ref_dir)
+admix.process_vcf(admix.filtered_out)
 
 
-    admix = run_admix(vcf_file_dir, ref_file_dir, ped_base_name, pop_kval, admix_cores)
 
 
-    # run stuff
-    # admix.process_reference(admix.ref_dir)
-    # admix.process_vcf(admix.filtered_out)
 
-    admix.check_bed(admix.filtered_out)
+
+
+
+
+
+    # #########################
+    # ### merge bed files  ####
+    # #########################
+    #
+    # # define function to copy marker file to current wd
+    # def copy_marker(ref_dir, ped_base, output_dir):
+    #     '''
+    #     copy 1000g bed/bim/fam marker files to same dir as vcf files to merge
+    #     :param marker_no_extension: name of marker file without file extension
+    #     :param current_path: vcf_dir to copy marker file to
+    #     :return: copies marker bed/bim/fam file to directory where vcf files are located
+    #     '''
+    #     print "Copying markfer file to {}".format(output_dir)
+    #     copy_marker_cmd = "cp {}/{}.* {}".format(ref_dir, ped_base, output_dir)
+    #     subprocess_cmd(copy_marker_cmd, output_dir)
+    #
+    # # add time stamp to output file name
+    # def timeStamped(fname, fmt='%Y-%m-%d{fname}'):
+    #     '''
+    #     add a time stamp to output files
+    #     :param fname: file name to stamp
+    #     :param fmt: time stamp format
+    #     :return: file named with todays date
+    #     '''
+    #     return datetime.datetime.now().strftime(fmt).format(fname=fname)
+    #
+    #
+    # def create_merge_text(input_vcf, merge_list, vcf_dir):
+    #     '''
+    #     create a three column text file of bed/bim/fam files to merge based
+    #     on list from findBedStems
+    #     :param input_vcf: vcf file to merge with marker file
+    #     :param merge_list: list generated with findBedStems()
+    #     :return: tsv file of each bed bim fam file to  merge for input to plink merge
+    #     '''
+    #     print ("Creating merge file for {}".format(input_vcf))
+    #     file_list = []
+    #     for item in merge_list:
+    #         bed_out = str(item + '.bed')
+    #         bim_out = str(item + '.bim')
+    #         fam_out = str(item + '.fam')
+    #         t = [bed_out, bim_out, fam_out]
+    #         file_list.append(t)
+    #     vcf_base = str('.'.join(input_vcf.split('.')[:-2]) if '.' in input_vcf else input_vcf)
+    #     out_file = "{}/{}".format(vcf_dir, timeStamped('_{}_merge.txt'.format(vcf_base)))
+    #     with open(out_file,'wb') as outf:
+    #         writer = csv.writer(outf, delimiter='\t')
+    #         writer.writerows(file_list)
+    #
+    # def plink2_merge(input_vcf, vcf_dir):
+    #     '''
+    #     Generate command to merge bed files using plink then run with subprocess
+    #     :param plink_path: path to plink exe
+    #     :param marker_no_extension: location of marker file with no extension
+    #     :param merge_file: path to merge text file create with create_merge_text()
+    #     :param out_file: desired file name for output merged file
+    #     :return: merged bed/bim/fam file of 1000g marker plus input bed files
+    #     '''
+    #     print ("Attempting to merge bed file with marker file.")
+    #     vcf_base = str('.'.join(input_vcf.split('.')[:-2]) if '.' in input_vcf else input_vcf)
+    #     merge_file = "{}/{}".format(vcf_dir, timeStamped('_{}_merge.txt'.format(vcf_base)))
+    #     out_file = "{}/{}".format(vcf_dir, timeStamped('_{}_merged'.format(vcf_base)))
+    #     merge_cmd = "{} --merge-list {} --make-bed --memory 40000 --out {}".format(plink_path, merge_file, out_file)
+    #     #subprocess_cmd(merge_cmd, vcf_dir)
+    #     print merge_cmd
+    #
+    # def merge_vcf(vcf_dir, ref_dir, ped_base):
+    #     '''
+    #     run pipeline to merge bed files with marker set
+    #     :param vcf_dir: directory path to vcf files to merge
+    #     :return: merged bed/bim/fam file to run through ADMIXTURE program
+    #     '''
+    #     # copy marker file to vcf_dir
+    #     copy_marker(ref_dir, ped_base, vcf_dir)
+    #     for file in os.listdir(vcf_dir):
+    #         if file.endswith('_verified.bed'):
+    #             #merged_file = findBedStems(vcf_dir, file, ped_base)
+    #             #create_merge_text(file, merged_file, vcf_dir)
+    #             plink2_merge(file, vcf_dir)
+    #
+    # #######################
+    # ###  run admixture  ###
+    # #######################
+    #
+    # def make_pop(ref_dir, out_dir, merged_fam, kval):
+    #     '''
+    #     Create .pop file with 5 known major populations from 1000g and '-' for unknown from vcf files
+    #     Assumes ref_dir contains tsv files in format subject_id | pop named super_pop.txt and sub_pop.txt
+    #     :param out_dir path to directory containing merged fam files
+    #     :param ref_dir: path to location of reference files used to create marker set
+    #     :param merged_fam: path to merged fam file to create pop file for
+    #     :param kval: specify 5 for super population and 26 for subpopulations
+    #     :return .pop file for merged bed/bim/fam set as input for supervised admixture
+    #     '''
+    #     # read in _merged.fam file
+    #     in_fam = "{}/{}".format(out_dir, merged_fam)
+    #     merged_df = pd.read_csv(in_fam, sep=' ', usecols=[1], names=['sample'])
+    #     fam_basename = str('.'.join(merged_fam.split('.')[:-1]) if '.' in merged_fam else merged_fam)
+    #     if kval == 5:
+    #         # pull population from the 1000g map file
+    #         in_file = "{}/super_pop.txt".format(ref_dir)
+    #         ref_map = pd.read_csv(in_file, sep='\t', header=0)
+    #         out_df = pd.merge(merged_df, ref_map, how='left', on = 'sample')
+    #         out_df = out_df['super_pop']
+    #         out_file = "{}/{}.pop".format(out_dir, fam_basename)
+    #         print ("Saving pop file as {}".format(out_file))
+    #         out_df.to_csv(out_file, sep='\t', na_rep='-', header=False, index=False)
+    #     elif kval == 26:
+    #         # pull population from the 1000g map file
+    #         in_file = "{}/sub_pop.txt".format(ref_dir)
+    #         ref_map = pd.read_csv(in_file, sep='\t', header=0)
+    #         out_df = pd.merge(merged_df, ref_map, how='left', left_on= 'Individual ID', right_on= 'sample')
+    #         out_df = out_df['pop']
+    #         out_file = "{}/{}.pop".format(out_dir, fam_basename)
+    #         print ("Saving pop file as {}".format(out_file))
+    #         out_df.to_csv(out_file, sep='\t', na_rep='-', header=False, index=False)
+    #
+    # def admix_cmd(admix_path, num_cores, merged_bed, out_dir, kval):
+    #     '''
+    #     run admixture on input merged bed files
+    #     :param admix_path: path to admixture program
+    #     :param num_cores: number of cores to use for running admixture
+    #     :param merged_bed: bed file of merged marker plus unknown
+    #     :param out_dir: path to bed file directory
+    #     :param kval: choose either 5 or 26 to run admix with super or sub populations
+    #     :return: P and Q files with admixture results
+    #     '''
+    #     admix_cmd = "nohup {} -j{} {} --supervised {}".format(admixture_path, int(num_cores), merged_bed, kval)
+    #     subprocess_cmd(admix_cmd, out_dir)
+    #
+    # def run_pop(ref_dir, out_dir, kval):
+    #     for file in os.listdir(out_dir):
+    #         if file.endswith('_merged.fam'):
+    #             make_pop(ref_dir, out_dir, file, kval)
+    #
+    # def run_admix(admix_path, num_cores, out_dir, kval):
+    #     for file in os.listdir(out_dir):
+    #         if file.endswith('_merged.bed'):
+    #             admix_cmd(admix_path, num_cores, file, out_dir, kval)
+
+    #######################
+    ### Process Results ###
+    #######################
+
+
+
+
+
+
 
 
     # # mark true if reference marker needs to be created, else False
@@ -449,65 +421,59 @@ if __name__ == '__main__':
 
 
 
-# TODO add program path as arg to each function
-# TODO consistent variable names as input args to functions
-# TODO global var with vcf base name and pass to functions
-# TODO all required files in ref_dir and automatically look for file name in func
+    ##### unused code snippets ###
 
-
-##### unused code snippets ###
-
-# # # convert the binary bed file to a readable map file to get genomic locations for extracting vcf regions
-# # map_pos_cmd = "{} --noweb --bfile {}/{} --recode 12 --out {}/{}_map".format(plink_path, ref_dir, ped_base, ref_dir, ped_base)
-# # convert bed file to vcf
-# bed_to_vcf_cmd = "{} --file {}  --recode vcf --out {}".format(plink_path, ped_base, ped_base)
-# # extract chrom pos ref from marker vcf
-# make_region = r'''cat {}.vcf  | grep -v '^#' | awk '{{OFS="\t";print "chr"$1, $2, $4}}' | gzip > {}_markers.gz'''.format(ped_base, ped_base)
+    # # # convert the binary bed file to a readable map file to get genomic locations for extracting vcf regions
+    # # map_pos_cmd = "{} --noweb --bfile {}/{} --recode 12 --out {}/{}_map".format(plink_path, ref_dir, ped_base, ref_dir, ped_base)
+    # # convert bed file to vcf
+    # bed_to_vcf_cmd = "{} --file {}  --recode vcf --out {}".format(plink_path, ped_base, ped_base)
+    # # extract chrom pos ref from marker vcf
+    # make_region = r'''cat {}.vcf  | grep -v '^#' | awk '{{OFS="\t";print "chr"$1, $2, $4}}' | gzip > {}_markers.gz'''.format(ped_base, ped_base)
 
 
 
 
 
-# def update_meta_path(vcf_subset, input_dir, input_vcf, out_dir):
-#     '''
-#     Update vcf file path for subset metadata file for current vcf location
-#     :param vcf_subset: dataframe subset of platform metadata file created from subset_metadata()
-#     :param input_dir: directory containing vcf file
-#     :param input_vcf: vcf file to subset metadata for and update the file path to location of this vcf
-#     :param out_dir: directory to store output metadata text
-#     :return: subset metadata file containing information for input_vcf as tsv
-#     '''
-#     vcf_path = os.path.abspath(os.path.join(input_dir, input_vcf))
-#     print ("\n Creating metadata file for {}".format(vcf_path))
-#     vcf_subset['VCF'] = vcf_path
-#     vcf_basename = str('.'.join(input_vcf.split('.')[:1]) if '.' in input_vcf else input_vcf)
-#     out_file = "{}/{}_metadata.txt".format(out_dir, vcf_basename)
-#     vcf_subset.to_csv(out_file, sep='\t', index=False, na_rep="NA")
-#
-# # extract regions from vcf file that match marker regions
-# def extract_variants(input_vcf, ped_base, ref_dir, out_dir):
-#     '''
-#     Runs extract_regions_stream_job.pl written by Denise Maulden to extract regions from input vcf files
-#      that match regions in the marker file to save computational time
-#     :param input_vcf: path to vcf file to extract regions from
-#     :param ped_base: base name of input ped file used to create marker file
-#     :param ref_dir: dictory path to reference marker file
-#     :param metadata_file: file with metadata and location of input vcf files made from create_metadata_file()
-#     :param out_dir: directory to write output vcf's
-#     :return: *_filtered.vcf.gz files retaining only regions that match the maker file regions
-#     '''
-#     print ("Extracting marker regions from vcf files... \n")
-#     vcf_basename = str('.'.join(input_vcf.split('.')[:1]) if '.' in input_vcf else input_vcf)
-#     region_file = "{}/{}_markers.gz".format(ref_dir, ped_base)
-#     metadata_file = "{}{}_metadata.txt".format(out_dir, vcf_basename)
-#     extract_cmd = "/tools/bin/perl {} --regionFile {} --metadata {} --outDir {}  --compressionType bzip2".format(extract_script, region_file, metadata_file, out_dir)
-#     subprocess_cmd(extract_cmd, vcf_dir)
+    # def update_meta_path(vcf_subset, input_dir, input_vcf, out_dir):
+    #     '''
+    #     Update vcf file path for subset metadata file for current vcf location
+    #     :param vcf_subset: dataframe subset of platform metadata file created from subset_metadata()
+    #     :param input_dir: directory containing vcf file
+    #     :param input_vcf: vcf file to subset metadata for and update the file path to location of this vcf
+    #     :param out_dir: directory to store output metadata text
+    #     :return: subset metadata file containing information for input_vcf as tsv
+    #     '''
+    #     vcf_path = os.path.abspath(os.path.join(input_dir, input_vcf))
+    #     print ("\n Creating metadata file for {}".format(vcf_path))
+    #     vcf_subset['VCF'] = vcf_path
+    #     vcf_basename = str('.'.join(input_vcf.split('.')[:1]) if '.' in input_vcf else input_vcf)
+    #     out_file = "{}/{}_metadata.txt".format(out_dir, vcf_basename)
+    #     vcf_subset.to_csv(out_file, sep='\t', index=False, na_rep="NA")
+    #
+    # # extract regions from vcf file that match marker regions
+    # def extract_variants(input_vcf, ped_base, ref_dir, out_dir):
+    #     '''
+    #     Runs extract_regions_stream_job.pl written by Denise Maulden to extract regions from input vcf files
+    #      that match regions in the marker file to save computational time
+    #     :param input_vcf: path to vcf file to extract regions from
+    #     :param ped_base: base name of input ped file used to create marker file
+    #     :param ref_dir: dictory path to reference marker file
+    #     :param metadata_file: file with metadata and location of input vcf files made from create_metadata_file()
+    #     :param out_dir: directory to write output vcf's
+    #     :return: *_filtered.vcf.gz files retaining only regions that match the maker file regions
+    #     '''
+    #     print ("Extracting marker regions from vcf files... \n")
+    #     vcf_basename = str('.'.join(input_vcf.split('.')[:1]) if '.' in input_vcf else input_vcf)
+    #     region_file = "{}/{}_markers.gz".format(ref_dir, ped_base)
+    #     metadata_file = "{}{}_metadata.txt".format(out_dir, vcf_basename)
+    #     extract_cmd = "/tools/bin/perl {} --regionFile {} --metadata {} --outDir {}  --compressionType bzip2".format(extract_script, region_file, metadata_file, out_dir)
+    #     subprocess_cmd(extract_cmd, vcf_dir)
 
 
-#meta_names = ['Vendor',  'Bucket',  'Study',   'Family',  'Genome',  'Subject', 'Sample',  'Assembly', 'Gestalt ID', 'Gender',  'Term'
-                  # 'Country of Birth', 'Member',  'VCF', 'PATH', 'S3','BIGDATA', 'GESTALT',  'ITMI_MAPPINGS', 'COUNT', 'S3URL', 'BigdataURL',      'GestaltURL', 'MappingsURL']
-    # read in metadata file
-# meta_file = pd.read_csv(metadata_file, sep='\t', header=0)
-# # subset metadata file and update vcf file paths
-# vcf_subset = meta_file[(meta_file['Genome'].str.contains(vcf_basename))]
-# return vcf_subset
+    #meta_names = ['Vendor',  'Bucket',  'Study',   'Family',  'Genome',  'Subject', 'Sample',  'Assembly', 'Gestalt ID', 'Gender',  'Term'
+                      # 'Country of Birth', 'Member',  'VCF', 'PATH', 'S3','BIGDATA', 'GESTALT',  'ITMI_MAPPINGS', 'COUNT', 'S3URL', 'BigdataURL',      'GestaltURL', 'MappingsURL']
+        # read in metadata file
+    # meta_file = pd.read_csv(metadata_file, sep='\t', header=0)
+    # # subset metadata file and update vcf file paths
+    # vcf_subset = meta_file[(meta_file['Genome'].str.contains(vcf_basename))]
+    # return vcf_subset
