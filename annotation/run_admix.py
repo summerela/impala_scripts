@@ -27,7 +27,8 @@ class run_admix(object):
     gatk_path = "{}GenomeAnalysisTK.jar".format(tool_path)
     admixture_path = "{}admixture_linux-1.3.0/admixture".format(tool_path)
     vcf_verify = "{}snpEff/scripts/vcfBareBones.pl".format(tool_path)
-    bcftools = "{}bcftools.bcftools".format(tool_path)
+    bcftools = "{}bcftools/bcftools".format(tool_path)
+    vcftools = "{}vcftools_0.1.13/bin/vcftools".format(tool_path)
 
     def __init__(self, vcf_dir, ref_dir, ped_base, kval=5, num_cores=15):
         """Returns an admix object with related parameters and files."""
@@ -47,6 +48,7 @@ class run_admix(object):
             --out {ref}/{ped}'.format(plink=run_admix.plink_path, ref=self.ref_dir, ped=self.ped_base, pruned=self.pruned_file)
         # create list of snps from marker file to extract from input vcf files
         self.ref_snps = "{plink} --bfile {ped} --write-snplist --out {ped}_snps".format(plink=run_admix.plink_path, ped=self.ped_base)
+        self.snp_file = "{}/snplist.txt".format(self.ref_dir)
         self.filtered_out = "{}/filtered/".format(vcf_dir)
 
     @staticmethod
@@ -119,23 +121,18 @@ class run_admix(object):
     ###############################
     ### Pre-process VCF file(s) ###
     ###############################
-    # TODO add step to trim script to remove M,X,Y chroms
-    def trim_vcf(self, input_vcf):
-        '''
-        process all vcf.gz files to retain only chrom, pos, ref, alt and gt
-        :param input_vcf: vcf.gz file to trim
-        :return: _trimmed.vcf.gz files to merge with marker file before running ADMIXTURE
-        '''
-        print ("\n Trimming VCF file {}... \n".format(input_vcf))
-        vcf_base = run_admix.get_file_base(input_vcf, 2)
-        vcf_out = "{}_trimmed.vcf.gz".format(vcf_base)
-        snp_verify_cmd = 'nohup zcat {input_dir}/{vcf} | {verify} | gzip > {out}/{vcf_out} '.format(input_dir=self.filtered_out, \
-                        vcf=input_vcf, verify=run_admix.vcf_verify, out=self.filtered_out, vcf_out=vcf_out)
-        self.subprocess_cmd(snp_verify_cmd, self.filtered_out)
 
-    def get_ref_snps(self, input_dir):
-        snp_list = ''.join([f for f in os.listdir(input_dir) if f.endswith('.snplist')])
-        return snp_list
+    def make_ref_snps(self, input_dir):
+        snp_list = "{}/{}".format(input_dir, ''.join([f for f in os.listdir(input_dir) if f.endswith('.snplist')]))
+        snps = pd.read_csv(snp_list, names=['chrom'])
+        snp_out = pd.DataFrame(snps['chrom'].apply(lambda x: x.split(':')).values.tolist()).astype(int)
+        snp_out.columns = ['chrom', 'pos']
+        snp_out['chrom']= "chr{}".format(snp_out['chrom'][1])
+        snp_out.to_csv(self.snp_file, header=None, index=False, sep='\t')
+
+    def subset_vcf(self, input_vcf):
+        subset_cmd = r'''nohup {vcftools} --gzvcf {vcfdir}/{vcf} --positions {snps} --recode --stdout | awk ' BEGIN {{OFS = "\t"}}  /^##/ {{next}} /!^#CHROM/ {{sub(/^#/,"",$1)}} {{$1=$1; print}} ' - | awk 'NR > 0 {{$6=".";$7=".";$8=".";$9="GT";print}}' | cut -f10 | cut -d ":" -f 1 | column -t | gzip > {out_dir}/{out_file}_trimmed.vcf.gz'''.format(vcftools=self.vcftools,vcfdir=self.vcf_dir, vcf=input_vcf, snps=self.snp_file, out_dir=self.filtered_out, out_file=self.ped_base)
+        self.subprocess_cmd(subset_cmd, self.vcf_dir)
 
     def vcf_to_bed(self, input_vcf):
         '''
@@ -144,17 +141,15 @@ class run_admix(object):
         :return: stripped, verified vcf files converted to plink binary (bed) format
         '''
         bed_out = self.get_file_base(input_vcf, 2)
-        snps = self.get_ref_snps(self.ref_dir)
         vcf2plink_cmd = "nohup {plink} --vcf {filtered_dir}/{file} --double-id --biallelic-only strict --geno 0.1 \
             --allow-no-sex --set-missing-var-ids @:#[b37]\$1,\$2  --make-bed --extract {ref}/{snp} --out {filtered_dir}/{bed}".format(plink=self.plink_path, \
-                                        ref=self.ref_dir, snp=snps, filtered_dir=self.filtered_out, file=input_vcf, bed=bed_out)
+                                        ref=self.ref_dir, snp=self.snp_file, filtered_dir=self.filtered_out, file=input_vcf, bed=bed_out)
         print ("Converting {} from vcf to bed/bim/fam").format(input_vcf)
         self.subprocess_cmd(vcf2plink_cmd, self.filtered_out)
 
 
     # TODO deal with out of memory errors here
     def check_bed(self, input_dir):
-
         '''
         Locate bed files in a dir and ensure they have matching bim/fam
         :param input_dir: dir where bed files to merge are located
@@ -179,26 +174,12 @@ class run_admix(object):
         print plinkList
 
 
-
-    # subset vcf for maker regions while converting to plink binary format
-    # def subset_bed(self, input_vcf):
-    #     '''
-    #     subset vcf file using plink output snps from marker set
-    #     :param input_vcf: vcf file to subset. assumes .vcf.gz
-    #     :return: metadata subset dataframe containing vcf file info to feed to update_meta_path()
-    #     '''
-    #
-    #     vcf_base = self.get_file_base(input_vcf, 2)
-    #     subset_bed_cmd = "nohup {} --bfile {}  --make-bed --out {}/{}_final".format(self.plink_path,input_vcf, snps, self.filtered_out, vcf_base)
-    #     print subset_bed_cmd
-        # self.subprocess_cmd(subset_bed_cmd, self.filtered_out)
-
-    def process_vcf(self, filtered_out):
-        for file in os.listdir(filtered_out):
-            # if file.endswith('.vcf.gz') and not (file.endswith('_trimmed.vcf.gz')):
-            #     self.trim_vcf(file)
-            if file.endswith('_trimmed.vcf.gz'):
-                self.vcf_to_bed(file)
+    def process_vcf(self, vcf_dir):
+        for file in os.listdir(vcf_dir):
+            if file.endswith('.vcf.gz') and not (file.endswith('_trimmed.vcf.gz')):
+                self.subset_vcf(file)
+            # if file.endswith('_trimmed.vcf.gz'):
+            #     self.vcf_to_bed(file)
 
 ########################################################
 
@@ -222,7 +203,9 @@ admix = run_admix(vcf_file_dir, ref_file_dir, ped_base_name, pop_kval, admix_cor
 
 # run stuff
 # admix.process_reference(admix.ref_dir)
-admix.process_vcf(admix.filtered_out)
+admix.process_vcf(admix.vcf_dir)
+
+# admix.make_ref_snps(admix.ref_dir)
 
 
 
@@ -477,3 +460,31 @@ admix.process_vcf(admix.filtered_out)
     # # subset metadata file and update vcf file paths
     # vcf_subset = meta_file[(meta_file['Genome'].str.contains(vcf_basename))]
     # return vcf_subset
+
+
+     # def trim_vcf(self, input_vcf):
+    #     '''
+    #     process all vcf.gz files to retain only chrom, pos, ref, alt and gt
+    #     :param input_vcf: vcf.gz file to trim
+    #     :return: _trimmed.vcf.gz files to merge with marker file before running ADMIXTURE
+    #     '''
+    #     print ("\n Trimming VCF file {}... \n".format(input_vcf))
+    #     vcf_base = run_admix.get_file_base(input_vcf, 2)
+    #     vcf_out = "{}_trimmed.vcf.gz".format(vcf_base)
+    #     snp_verify_cmd = 'nohup zcat {input_dir}/{vcf} | {verify} | gzip > {out}/{vcf_out} '.format(input_dir=self.filtered_out, \
+    #                     vcf=input_vcf, verify=run_admix.vcf_verify, out=self.filtered_out, vcf_out=vcf_out)
+    #     self.subprocess_cmd(snp_verify_cmd, self.filtered_out)
+
+
+     # subset vcf for maker regions while converting to plink binary format
+    # def subset_bed(self, input_vcf):
+    #     '''
+    #     subset vcf file using plink output snps from marker set
+    #     :param input_vcf: vcf file to subset. assumes .vcf.gz
+    #     :return: metadata subset dataframe containing vcf file info to feed to update_meta_path()
+    #     '''
+    #
+    #     vcf_base = self.get_file_base(input_vcf, 2)
+    #     subset_bed_cmd = "nohup {} --bfile {}  --make-bed --out {}/{}_final".format(self.plink_path,input_vcf, snps, self.filtered_out, vcf_base)
+    #     print subset_bed_cmd
+        # self.subprocess_cmd(subset_bed_cmd, self.filtered_out)
