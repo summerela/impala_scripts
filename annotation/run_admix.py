@@ -131,7 +131,8 @@ class run_admix(object):
         snp_out.to_csv(self.snp_file, header=None, index=False, sep='\t')
 
     def subset_vcf(self, input_vcf):
-        subset_cmd = r'''nohup {vcftools} --gzvcf {vcfdir}/{vcf} --positions {snps} --recode --stdout | awk ' BEGIN {{OFS = "\t"}}  /^##/ {{next}} /!^#CHROM/ {{sub(/^#/,"",$1)}} {{$1=$1; print}} ' - | awk 'NR > 0 {{$6=".";$7=".";$8=".";$9="GT";print}}' | cut -f10 | cut -d ":" -f 1 | column -t | gzip > {out_dir}/{out_file}_trimmed.vcf.gz'''.format(vcftools=self.vcftools,vcfdir=self.vcf_dir, vcf=input_vcf, snps=self.snp_file, out_dir=self.filtered_out, out_file=self.ped_base)
+        subset_cmd = r'''nohup {vcftools} --gzvcf {vcfdir}/{vcf} --positions {snps} --recode --stdout | awk ' BEGIN {{OFS = "\t"}}  /^##/ {{next}} /!^#CHROM/ {{sub(/^#/,"",$1)}} {{$1=$1; print}} ' - | awk 'NR > 0 {{$6=".";$7=".";$8=".";$9="GT";print}}' | cut -f10 | cut -d ":" -f 1 | column -t | gzip > {out_dir}/{out_file}_trimmed.vcf.gz'''.format\
+            (vcftools=self.vcftools,vcfdir=self.vcf_dir, vcf=input_vcf, snps=self.snp_file, out_dir=self.filtered_out, out_file=self.ped_base)
         self.subprocess_cmd(subset_cmd, self.vcf_dir)
 
     def vcf_to_bed(self, input_vcf):
@@ -145,7 +146,8 @@ class run_admix(object):
             --allow-no-sex --set-missing-var-ids @:#[b37]\$1,\$2  --make-bed --extract {ref}/{snp} --out {filtered_dir}/{bed}".format(plink=self.plink_path, \
                                         ref=self.ref_dir, snp=self.snp_file, filtered_dir=self.filtered_out, file=input_vcf, bed=bed_out)
         print ("Converting {} from vcf to bed/bim/fam").format(input_vcf)
-        self.subprocess_cmd(vcf2plink_cmd, self.filtered_out)
+        # self.subprocess_cmd(vcf2plink_cmd, self.filtered_out)
+        print vcf2plink_cmd
 
 
     # TODO deal with out of memory errors here
@@ -174,12 +176,14 @@ class run_admix(object):
         print plinkList
 
 
-    def process_vcf(self, vcf_dir):
+    def filter_vcf(self, vcf_dir):
         for file in os.listdir(vcf_dir):
             if file.endswith('.vcf.gz') and not (file.endswith('_trimmed.vcf.gz')):
                 self.subset_vcf(file)
-            # if file.endswith('_trimmed.vcf.gz'):
-            #     self.vcf_to_bed(file)
+
+    def convert_vcf(self, filtered_dir):
+            if file.endswith('_filtered.vcf.gz'):
+                self.vcf_to_bed(file)
 
 ########################################################
 
@@ -203,8 +207,8 @@ admix = run_admix(vcf_file_dir, ref_file_dir, ped_base_name, pop_kval, admix_cor
 
 # run stuff
 # admix.process_reference(admix.ref_dir)
-admix.process_vcf(admix.vcf_dir)
-
+# admix.filter_vcf(admix.vcf_dir)
+admix.convert_vcf(admix.filtered_out)
 # admix.make_ref_snps(admix.ref_dir)
 
 
