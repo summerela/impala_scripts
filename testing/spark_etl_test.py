@@ -3,21 +3,20 @@
 import os
 import sys
 import subprocess as sp
-import findspark
-findspark.init()
 
-# # Path for spark source folder
-# os.environ['SPARK_HOME']="/opt/cloudera/parcels/CDH/lib/spark"
-# # Append pyspark  to Python Path
-# sys.path.append("/opt/cloudera/parcels/CDH/lib/spark/python")
+
+# Path for spark source folder
+os.environ['SPARK_HOME']="/opt/cloudera/parcels/CDH/lib/spark"
+# Append pyspark  to Python Path
+sys.path.append("/opt/cloudera/parcels/CDH/lib/spark/python")
 
 from pyspark import SparkContext, SparkConf
 
-########################
-### Connect to spark ###
-########################
+############################
+### Unit Test with Spark ###
+############################
 
-class spark(object):
+class etl_test(unittest2.TestCase):
 
     def __init__(self, local_dir='./', hdfs_dir='/users/selasady/', master='master', appname='spark_job', spark_mem=2):
         self.local_dir = local_dir
@@ -29,48 +28,33 @@ class spark(object):
                .setMaster(self.master)
                .setAppName(self.appname)
                .set("spark.executor.memory", self.spark_mem))
+
+    def set_up(self):
         # for dependencies, add pyFiles=['file1.py','file2'] argument
         self.sc = SparkContext(conf=self.conf)
 
-    def subprocess_cmd(self, command, local_dir):
-        '''
-        Run programs in bash via subprocess
-        :param command: command string as would be run on the command line
-        :param local_dir: optional directory to run command in, default cwd
-        :return: runs bash command
-        '''
-        print ("Running \n {}".format(command))
-        ps = sp.Popen(command, shell=True,stdout=sp.PIPE,stderr=sp.PIPE, cwd=local_dir)
-        try:
-           print ps.communicate()
-        except sp.CalledProcessError as e:
-             print e
+    def tear_down(self):
+        # close connection
+        self.sc.stop()
 
-    def hdfs_put(self, input_file):
-        hdfs_mkdir_cmd = "hdfs dfs -mkdir {}".format(self.hdfs_dir)
-        hdfs_put_cmd = "hdfs dfs -put {} {}".format(input_file, self.hdfs_dir)
-        self.subprocess_cmd(hdfs_mkdir_cmd, os.getcwd())
-        self.subprocess_cmd(hdfs_put_cmd, os.getcwd())
+    #### tests for variant tables ###
+    # chrom set contains at least [1-22,X,Y,MT]
+    # chrom column vals not empty
+    # chrom cols contain at least one A T G C
+    # gt contains at least one of 0/1, 1/1, 1/2
+    # if gt = 0/0 at this chrom/pos allele_idx = (etc) ?
+    # zygosity column is not all null
 
-    def hdfs_read(self, input_dir):
-        lines = self.sc.textFile(input_dir)
-        return lines
+
 
 ###############
 if __name__ == '__main__':
 
-    spark_con = spark(os.getcwd(), '/user/selasady/testing3/', "local", "etl_test", 2)
-
-    local_file = '/users/selasady/my_titan_itmi/impala_scripts/testing/test/tale_of_two_cities.txt'
-
-    # write file to hdfs using sys call to hdfs put
-    #spark_con.hdfs_put(local_file)
- 
-    # read in a file from hdfs
-    print spark_con.hdfs_read(spark_con.hdfs_dir)
+    spark = etl_test(os.getcwd(), '/user/selasady/testing3/', "local", "etl_test", 2)
 
 
 
-    # close connection
-    spark_con.sc.stop()
+
+
+
     
