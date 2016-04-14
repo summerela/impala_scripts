@@ -44,6 +44,10 @@ class etl_test(unittest2.TestCase):
     # gt contains at least one of 0/1, 1/1, 1/2
     # if gt = 0/0 at this chrom/pos allele_idx = (etc) ?
     # zygosity column is not all null
+    # check that chr prefix has been removed
+    # check that MT = M
+    # if filter = pass, gt should never = '.'
+    #
 
 
 
