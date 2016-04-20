@@ -1,14 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env pyspark
 
 import os
 import sys
 import subprocess as sp
-
-# Path for spark source folder
-os.environ['SPARK_HOME']="/opt/cloudera/parcels/CDH/lib/spark"
-# Append pyspark  to Python Path
-sys.path.append("/opt/cloudera/parcels/CDH/lib/spark/python")
-
 from pyspark import SparkContext, SparkConf
 
 ########################
@@ -17,7 +11,7 @@ from pyspark import SparkContext, SparkConf
 
 class spark(object):
 
-    def __init__(self, local_dir='./', hdfs_dir='/users/selasady/', master='master', appname='spark_job', spark_mem=2):
+    def __init__(self, local_dir='./', hdfs_dir='/users/selasady/', master='local', appname='spark_job', spark_mem=2):
         self.local_dir = local_dir
         self.hdfs_dir = hdfs_dir
         self.master = master
