@@ -4,8 +4,9 @@ import os
 import unittest
 import pandas as pd
 
-from pyspark import SparkContext, SparkConf, SQLContext
-from pyspark.sql import Row
+from pyspark import SparkContext, SparkConf, SQLContext,
+import pyspark.sql.functions import fxn
+
 
 ############################
 ### Unit Test with Spark ###
@@ -13,7 +14,7 @@ from pyspark.sql import Row
 
 class etl_test():
 
-    def __init__(self, local_dir='./', hdfs_dir='/users/selasady/', master='local', appname='spark_app', spark_mem=2):
+    def __init__(self, local_dir='./', hdfs_dir='/titan/ITMI1/workspaces/users/', master='local', appname='spark_app', spark_mem=2):
         self.local_dir = local_dir
         self.hdfs_dir = hdfs_dir
         self.master = master
@@ -27,23 +28,18 @@ class etl_test():
         self.somatic_chr = map( str, range(1,23) )
         self.sqlContext = SQLContext(self.sc)
 
+        
     def tsv_to_df(self, input_file):
-        lines = self.sc.textFile(input_file)
-        parts = lines.map(lambda line: line.split('\t'))
-        header = lines.first().split()
-        header_map = ','.join(["p[{}]".format(header.index(s)) for s in header])
-        stuff = parts.map(lambda p :(header_map).strip())
-        # fields = [self.sqlContext.StructField(field_name, StringType(), True) for field_name in header.split()]
-        # schema = self.sqlContext.StructField(fields)
-        print stuff
-        # schema = ','.join(["{} = line[ {} ]".format(s, header.index(s)) for s in header])
+        # import file as dataframe, all cols will be imported as strings
+        df = self.sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("delimiter", "\t").option("inferSchema", "true").load(input_file)
+        # cache df object to avoid rebuilding each time
+        df.cache()
+        return df
 
 
-    def check_chrom(self, input_file):
-        input_df = self.tsv_to_df(input_file)
-        rdd_df = self.sqlContext.read(input_df)
-        rdd_df.printSchema()
-
+    def check_chrom(self, input_df):
+        chrom_cols = input_df.agg(self.sqlContext.(input_df.chrom)).collect()
+        print chrom_cols
 
     def tear_down(self):
         # close connection
@@ -70,7 +66,8 @@ if __name__ == '__main__':
 
     spark = etl_test(os.getcwd(), '/user/selasady/etl_test/', "local", "etl_test", 2)
 
-    spark.tsv_to_df('/user/selasady/etl_test/test_query.txt')
+    file_df = spark.tsv_to_df('/user/selasady/etl_test/test_query.txt')
+    spark.check_chrom(file_df)
 
 
 
