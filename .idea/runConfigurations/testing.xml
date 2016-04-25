@@ -1,25 +1,18 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="run_admix" type="PythonConfigurationType" factoryName="Python">
+  <configuration default="false" name="testing" type="PythonConfigurationType" factoryName="Python">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
       <env name="PYTHONUNBUFFERED" value="1" />
     </envs>
-    <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/annotation" />
-    <option name="IS_MODULE_SDK" value="true" />
+    <option name="SDK_HOME" value="/usr/local/Cellar/python/2.7.10_2/Frameworks/Python.framework/Versions/2.7/bin/python2.7" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/testing" />
+    <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <module name="impala_scripts" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-    <PathMappingSettings>
-      <option name="pathMappings">
-        <list>
-          <mapping local-root="$PROJECT_DIR$" remote-root="/titan/ITMI1/workspaces/users/selasady/impala_scripts" />
-        </list>
-      </option>
-    </PathMappingSettings>
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/annotation/run_admix.py" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/testing/test.py" />
     <option name="PARAMETERS" value="" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <method />

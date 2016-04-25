@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="a19dcebf-c5c5-4786-972f-11445c86e3ac" name="glados14" url="http://glados14">
+        <fileTransfer host="glados14" port="22" rootFolder="/users/selasady" accessType="SFTP" password="dfe7dfcbdfd9dfdedfcfdfd8dfcedfc7df9edf9a" username="selasady">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
