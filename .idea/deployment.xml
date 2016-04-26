@@ -2,17 +2,17 @@
 <project version="4">
   <component name="PublishConfigData" autoUpload="On explicit save action" serverName="glados14" promptOnLocalOverwrite="false">
     <serverData>
-      <paths name="Copy of project-level server 'glados14'">
+      <paths name="glados14">
         <serverdata>
           <mappings>
             <mapping deploy="/titan/ITMI1/workspaces/users/selasady/impala_scripts" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
-      <paths name="glados14">
+      <paths name="glados17">
         <serverdata>
           <mappings>
-            <mapping deploy="/titan/ITMI1/workspaces/users/selasady/impala_scripts" local="$PROJECT_DIR$" web="/" />
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

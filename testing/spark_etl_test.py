@@ -35,17 +35,43 @@ class etl_test(unittest.TestCase):
         df.cache()
         return df
 
+    def sparkDf_to_pandasDf(self, input_df):
+        pandas_df = input_df.toPandas()
+        return pandas_df
 
     def check_chrom_set(self, input_df):
         chrom_cols = input_df.select('chrom').distinct().collect()
         print ("The following chromosomes are loaded: {} \n").format(str(chrom_cols))
-        self.assertItemsEqual(self.somatic_chr, chrom_cols, "Not all somatic chromosomes are loaded.")
+        assertItemsEqual(self.somatic_chr, chrom_cols, "Not all somatic chromosomes are loaded.")
 
     def check_chrom_empty(self, input_df):
         assert input_df.where(input_df.chrom.isNull()).count() == 0, "Null values found in chrom column."
 
+    def check_ref_empty(self, input_df):
+        assert input_df.where(input_df.ref.isNull()).count() == 0, "Null values found in ref column."
+
+    def check_subject_empty(self, input_df):
+        assert input_df.where(input_df.subject_id.isNull()).count() == 0, "Null values found in subject id column."
+
     def check_chrom_count(self, input_df):
-        print input_df.groupBy('chrom').count().show()
+        for name, group in pd_df['chrom'].groupby(pd_df['chrom']):
+            self.assertGreater(group.count(), 999, "Chrom {} only has {} rows.".format(name, group.count()))
+
+    def check_chrom_prefix(self, input_df):
+        chroms = input_df['chrom'].unique()
+        chrom_string = ''.join(str(e) for e in chroms)
+        self.assertNotIn(chrom_string, 'chr')
+
+    def check_chrom_mt(self, input_df):
+        chroms = input_df['chrom'].unique()
+        chrom_string = ''.join(str(e) for e in chroms)
+        self.assertNotIn(chrom_string, 'mt')
+
+    def ref_check(self, input_df):
+        ref_col = input_df['ref'].unique()
+        ref_set = set(''.join(sorted(ref_col)))
+        result = [s for s in ref_set if s.strip('ATGCN')]
+        assert len(result) == 0, "The following values were found in the ref field: {}".format(result)
 
     def tear_down(self):
         # close connection
@@ -55,12 +81,8 @@ class etl_test(unittest.TestCase):
 
     #### tests for variant tables ###
     #
-    # chrom, pos, sample_id column vals not empty
-    # chrom cols contain at least one A T G C
-    # gt contains at least one of 0/1, 1/1, 1/2
-    # if gt = 0/0 at this chrom/pos allele_idx = (etc) ?
-    # zygosity column is not all null
-    # check that chr prefix has been removed
+
+
     # check that MT = M
     # if filter = pass, gt should never = '.'
     #
@@ -73,10 +95,25 @@ if __name__ == '__main__':
     spark = etl_test(os.getcwd(), '/user/selasady/', "local", "etl_test", 2)
 
     file_df = spark.tsv_to_df('/user/selasady/etl_test/test_query.txt', 'True', '\t')
+    pd_df = spark.sparkDf_to_pandasDf(file_df)
 
-    # spark.check_chrom_set(file_df)
+    ### chrom, pos, sample_id column vals not empty ###
     # spark.check_chrom_empty(file_df)
-    spark.check_chrom_count(file_df)
+    # spark.check_ref_empty(file_df)
+    # spark.check_subject_empty(file_df)
+
+    ### check that all somatic chroms loaded ###
+    # spark.check_chrom_set(file_df)
+
+    ### check that each chrom contains at least 1000 rows
+    # spark.check_chrom_count(pd_df)
+
+    ### check that 'chr' prefix has been removed from chromosome
+    spark.check_chrom_prefix(pd_df)
+
+    ### ref cols contains expected values A T G C N and are uppercase ###
+    # spark.ref_check(pd_df)
+
 
 
 
