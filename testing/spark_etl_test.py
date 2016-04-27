@@ -2,7 +2,7 @@
 
 import os
 import unittest
-import pandas as pd
+import urllib, json
 
 from pyspark import SparkContext, SparkConf, SQLContext
 
@@ -33,6 +33,8 @@ class etl_test(unittest.TestCase):
         df = self.sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("delimiter", "\t").option("inferSchema", "true").load(input_file)
         # # cache df object to avoid rebuilding each time
         df.cache()
+        # register as temp table for querying
+        df.registerTempTable("spark_df")
         return df
 
     def sparkDf_to_pandasDf(self, input_df):
@@ -42,7 +44,7 @@ class etl_test(unittest.TestCase):
     def check_chrom_set(self, input_df):
         chrom_cols = input_df.select('chrom').distinct().collect()
         print ("The following chromosomes are loaded: {} \n").format(str(chrom_cols))
-        assertItemsEqual(self.somatic_chr, chrom_cols, "Not all somatic chromosomes are loaded.")
+        self.assertItemsEqual(self.somatic_chr, chrom_cols, "Not all somatic chromosomes are loaded.")
 
     def check_chrom_empty(self, input_df):
         assert input_df.where(input_df.chrom.isNull()).count() == 0, "Null values found in chrom column."
@@ -54,7 +56,7 @@ class etl_test(unittest.TestCase):
         assert input_df.where(input_df.subject_id.isNull()).count() == 0, "Null values found in subject id column."
 
     def check_chrom_count(self, input_df):
-        for name, group in pd_df['chrom'].groupby(pd_df['chrom']):
+        for name, group in input_df['chrom'].groupby(input_df['chrom']):
             self.assertGreater(group.count(), 999, "Chrom {} only has {} rows.".format(name, group.count()))
 
     def check_chrom_prefix(self, input_df):
@@ -73,6 +75,39 @@ class etl_test(unittest.TestCase):
         result = [s for s in ref_set if s.strip('ATGCN')]
         assert len(result) == 0, "The following values were found in the ref field: {}".format(result)
 
+    def test_alleles(self, input_df):
+        pos_group = input_df.groupby(['subject_id', 'chrom', 'pos', 'ref'])
+        problems = pos_group.filter(lambda x: len(x) > 2)
+        assert len(problems) == 0, "Found more than two alleles for the following subject/position: \n {}".format(problems)
+
+    def test_ref(self, input_df):
+        ref_set = input_df[['chrom', 'pos', 'ref']]
+        ref_group = ref_set.groupby(['chrom', 'pos'])
+        for name, group in ref_group:
+            assert len(set(group['ref'])) < 2, "Different reference alleles were found at {}".format(name)
+
+    # def check_one_based(self, input_df, input_rsid, input_chrom, input_pos):
+    def check_one_based(self, input_df):
+        random_snp = input_df[['chrom', 'pos', 'ref', 'alt']].sample(1)
+        query_string = "chr{}:{}".format(random_snp.iloc[0]['chrom'], random_snp.iloc[0]['pos'])
+        test_url = 'http://myvariant.info/v1/query?q={}'.format(query_string)
+        response = urllib.urlopen(test_url)
+        data = json.loads(response.read())
+        ref_pos = data["hits"][0]["vcf"]["position"]
+        ref_ref = data["hits"][0]["vcf"]["ref"]
+        ref_alt = data["hits"][0]["vcf"]["alt"]
+        ref_chrom = str(data["hits"][0]["dbsnp"]["chrom"])
+        ref_variant = "{}:{}:{}:{}".format(ref_chrom, ref_pos, ref_ref, ref_alt)
+        test_query = "SELECT chrom, pos, ref, alt FROM spark_df WHERE chrom = {} and pos = {}".format(ref_chrom, ref_pos)
+        query_result = self.sqlContext.sql(test_query)
+        if query_result.size() > 0:
+            query_result.show()
+        else:
+            print("Try a different rs_id.")
+
+
+
+
     def tear_down(self):
         # close connection
         self.sc.stop()
@@ -83,9 +118,7 @@ class etl_test(unittest.TestCase):
     #
 
 
-    # check that MT = M
-    # if filter = pass, gt should never = '.'
-    #
+    # 1-based coords
 
 
 
@@ -109,11 +142,18 @@ if __name__ == '__main__':
     # spark.check_chrom_count(pd_df)
 
     ### check that 'chr' prefix has been removed from chromosome
-    spark.check_chrom_prefix(pd_df)
+    # spark.check_chrom_prefix(pd_df)
 
     ### ref cols contains expected values A T G C N and are uppercase ###
     # spark.ref_check(pd_df)
 
+    # check for no more than two alleles per person at chrom, pos, ref
+    # spark.test_alleles(pd_df)
+
+    # ref allele should be the same at each position
+    # spark.test_ref(pd_df)
+
+    spark.check_one_based(pd_df)
 
 
 
