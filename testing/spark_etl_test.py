@@ -3,6 +3,7 @@
 import os
 import unittest
 import urllib, json
+import time
 
 from pyspark import SparkContext, SparkConf, SQLContext
 
@@ -11,7 +12,7 @@ from pyspark import SparkContext, SparkConf, SQLContext
 ### Unit Test with Spark ###
 ############################
 
-class etl_test(unittest.TestCase):
+class TestETL(unittest.TestCase):
 
     def __init__(self, local_dir='./', hdfs_dir='/titan/ITMI1/workspaces/users/', master='local', appname='spark_app', spark_mem=2):
         self.local_dir = local_dir
@@ -28,7 +29,7 @@ class etl_test(unittest.TestCase):
         self.sqlContext = SQLContext(self.sc)
 
         
-    def tsv_to_df(self, input_file, header_bool, delim_var):
+    def tsv_to_df(self, input_file):
         # import file as dataframe, all cols will be imported as strings
         df = self.sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("delimiter", "\t").option("inferSchema", "true").load(input_file)
         # # cache df object to avoid rebuilding each time
@@ -86,48 +87,47 @@ class etl_test(unittest.TestCase):
         for name, group in ref_group:
             assert len(set(group['ref'])) < 2, "Different reference alleles were found at {}".format(name)
 
-    # def check_one_based(self, input_df, input_rsid, input_chrom, input_pos):
-    def check_one_based(self, input_df):
-        random_snp = input_df[['chrom', 'pos', 'ref', 'alt']].sample(1)
-        query_string = "chr{}:{}".format(random_snp.iloc[0]['chrom'], random_snp.iloc[0]['pos'])
+    def get_ref_snp(self, input_df):
+        random_snp = input_df[['chrom', 'pos', 'ref', 'alt']][input_df['ref'] != '.'].sample(1)
+        return random_snp
+
+    def query_snp(self, input_snp):
+        exclude = ['ins', 'del']
+        query_string = "chr{}:{}".format(input_snp.iloc[0]['chrom'], input_snp.iloc[0]['pos'])
         test_url = 'http://myvariant.info/v1/query?q={}'.format(query_string)
         response = urllib.urlopen(test_url)
         data = json.loads(response.read())
-        ref_pos = data["hits"][0]["vcf"]["position"]
-        ref_ref = data["hits"][0]["vcf"]["ref"]
-        ref_alt = data["hits"][0]["vcf"]["alt"]
-        ref_chrom = str(data["hits"][0]["dbsnp"]["chrom"])
-        ref_variant = "{}:{}:{}:{}".format(ref_chrom, ref_pos, ref_ref, ref_alt)
-        test_query = "SELECT chrom, pos, ref, alt FROM spark_df WHERE chrom = {} and pos = {}".format(ref_chrom, ref_pos)
-        query_result = self.sqlContext.sql(test_query)
-        if query_result.size() > 0:
-            query_result.show()
-        else:
-            print("Try a different rs_id.")
+        ref_var = []
+        while len(ref_var) == 0:
+            for x in range(0,4):
+                try:
+                     ref_hit = data['hits'][0]['_id'] if len(data['hits'][0]['_id']) > 0 else 'null'
+                     if any(x in exclude for x in ref_hit):
+                         pass
+                except:
+                     time.sleep(10)
+            else:
+                ref_var.append(ref_hit)
+                ref_out = ''.join(ref_var)
+                return ref_out
 
-
-
+    def check_one_based(self, input_df):
+        test_snp = self.get_ref_snp(input_df)
+        ref_snp = self.query_snp(test_snp)
+        file_snp =  "chr{}:g.{}{}>{}".format(test_snp.iloc[0]['chrom'], test_snp.iloc[0]['pos'],  test_snp.iloc[0]['ref'],  test_snp.iloc[0]['alt'])
+        self.assertEqual(ref_snp, file_snp, "File variant {} does not match reference {}".format(file_snp, ref_snp))
 
     def tear_down(self):
         # close connection
         self.sc.stop()
 
-
-
-    #### tests for variant tables ###
-    #
-
-
-    # 1-based coords
-
-
-
 ###############
 if __name__ == '__main__':
 
-    spark = etl_test(os.getcwd(), '/user/selasady/', "local", "etl_test", 2)
+    spark = TestETL(os.getcwd(), '/user/selasady/', "local", "etl_test", 2)
+    tsv_infile = '/user/selasady/etl_test/test_query.txt'
 
-    file_df = spark.tsv_to_df('/user/selasady/etl_test/test_query.txt', 'True', '\t')
+    file_df = spark.tsv_to_df(tsv_infile, 'True', '\t')
     pd_df = spark.sparkDf_to_pandasDf(file_df)
 
     ### chrom, pos, sample_id column vals not empty ###
@@ -153,8 +153,8 @@ if __name__ == '__main__':
     # ref allele should be the same at each position
     # spark.test_ref(pd_df)
 
+    # verify 1-based coords
     spark.check_one_based(pd_df)
-
 
 
 
