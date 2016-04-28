@@ -25,7 +25,7 @@ class TestETL(unittest.TestCase):
                .setAppName(self.appname)
                .set("spark.executor.memory", self.spark_mem))
         self.sc = SparkContext(conf=self.conf)
-        self.somatic_chr = map( str, range(1,23) )
+        self.somatic_chr = sorted(map( int, range(1,23) ))
         self.sqlContext = SQLContext(self.sc)
 
         
@@ -42,11 +42,6 @@ class TestETL(unittest.TestCase):
         pandas_df = input_df.toPandas()
         return pandas_df
 
-    def check_chrom_set(self, input_df):
-        chrom_cols = input_df.select('chrom').distinct().collect()
-        print ("The following chromosomes are loaded: {} \n").format(str(chrom_cols))
-        self.assertItemsEqual(self.somatic_chr, chrom_cols, "Not all somatic chromosomes are loaded.")
-
     def check_chrom_empty(self, input_df):
         assert input_df.where(input_df.chrom.isNull()).count() == 0, "Null values found in chrom column."
 
@@ -54,7 +49,19 @@ class TestETL(unittest.TestCase):
         assert input_df.where(input_df.ref.isNull()).count() == 0, "Null values found in ref column."
 
     def check_subject_empty(self, input_df):
-        assert input_df.where(input_df.subject_id.isNull()).count() == 0, "Null values found in subject id column."
+        assert input_df.where(input_df.subject_id.isNull()).count() == 0, "Null values found in subject_id column."
+
+    def check_allele_empty(self, input_df):
+        assert input_df.where(input_df.allele.isNull()).count() == 0, "Null values found in allele column."
+
+    def check_sample_empty(self, input_df):
+        assert input_df.where(input_df.sample_id.isNull()).count() == 0, "Null values found in sample_id column."
+
+    def check_chrom_set(self, input_df):
+        # chrom_cols = sorted(input_df.select('chrom').distinct().collect()[1])
+        chrom_cols = sorted([int(x) for x in input_df['chrom'].unique()])
+        self.assertItemsEqual(self.somatic_chr, sorted(chrom_cols),
+                              "Not all somatic chromosomes are loaded {}.".format(chrom_cols))
 
     def check_chrom_count(self, input_df):
         for name, group in input_df['chrom'].groupby(input_df['chrom']):
@@ -77,12 +84,13 @@ class TestETL(unittest.TestCase):
         assert len(result) == 0, "The following values were found in the ref field: {}".format(result)
 
     def test_alleles(self, input_df):
-        pos_group = input_df.groupby(['subject_id', 'chrom', 'pos', 'ref'])
+        no_indels = input_df[input_df['alt'].str.len() == input_df['ref'].str.len()]
+        pos_group = no_indels.groupby(['subject_id', 'chrom', 'pos', 'ref'])
         problems = pos_group.filter(lambda x: len(x) > 2)
         assert len(problems) == 0, "Found more than two alleles for the following subject/position: \n {}".format(problems)
 
     def test_ref(self, input_df):
-        ref_set = input_df[['chrom', 'pos', 'ref']]
+        ref_set = input_df[['chrom', 'pos', 'ref']][(input_df['ref'] != '.') and (input_df[input_df['alt'].str.len() == input_df['ref'].str.len()])]
         ref_group = ref_set.groupby(['chrom', 'pos'])
         for name, group in ref_group:
             assert len(set(group['ref'])) < 2, "Different reference alleles were found at {}".format(name)
@@ -121,40 +129,63 @@ class TestETL(unittest.TestCase):
         # close connection
         self.sc.stop()
 
+    def run_tests(self, input_df):
+
+        try:
+            os.path.isfile(input_df)
+        except Exception as e:
+            print e
+
+        file_df = self.tsv_to_df(input_df)
+
+        pd_df = self.sparkDf_to_pandasDf(file_df)
+
+        # check chrom, pos, sample_id column vals not empty
+        self.check_chrom_empty(file_df)
+        self.check_ref_empty(file_df)
+        self.check_subject_empty(file_df)
+        self.check_allele_empty(file_df)
+        self.check_sample_empty(file_df)
+
+        # check that all somatic chroms loaded
+        self.check_chrom_set(pd_df)
+
+        # check that each chrom contains at least 1000 rows
+        self.check_chrom_count(pd_df)
+
+        # check that 'chr' prefix has been removed from chromosome
+        self.check_chrom_prefix(pd_df)
+
+        # ref cols contains expected values A T G C N and are uppercase ###
+        self.ref_check(pd_df)
+
+        # check for no more than two alleles per person at chrom, pos, ref
+        self.test_alleles(pd_df)
+
+        # # ref allele should be the same at each position
+        self.test_ref(pd_df)
+
+        # verify 1-based coords
+        # self.check_one_based(pd_df)
+
+        self.tear_down()
+
+
+
+
+
 ###############
 if __name__ == '__main__':
 
-    spark = TestETL(os.getcwd(), '/user/selasady/', "local", "etl_test", 2)
-    tsv_infile = '/user/selasady/etl_test/test_query.txt'
+    # instantiate class with current wd, hdfs dir, spark evn, spark job name, num cores
+    spark = TestETL(os.getcwd(), '/user/selasady/', "local", "etl_test", 10)
 
-    file_df = spark.tsv_to_df(tsv_infile, 'True', '\t')
-    pd_df = spark.sparkDf_to_pandasDf(file_df)
 
-    ### chrom, pos, sample_id column vals not empty ###
-    # spark.check_chrom_empty(file_df)
-    # spark.check_ref_empty(file_df)
-    # spark.check_subject_empty(file_df)
+    # specify input file to process
+    tsv_infile = '/user/selasady/test_set.txt'
 
-    ### check that all somatic chroms loaded ###
-    # spark.check_chrom_set(file_df)
-
-    ### check that each chrom contains at least 1000 rows
-    # spark.check_chrom_count(pd_df)
-
-    ### check that 'chr' prefix has been removed from chromosome
-    # spark.check_chrom_prefix(pd_df)
-
-    ### ref cols contains expected values A T G C N and are uppercase ###
-    # spark.ref_check(pd_df)
-
-    # check for no more than two alleles per person at chrom, pos, ref
-    # spark.test_alleles(pd_df)
-
-    # ref allele should be the same at each position
-    # spark.test_ref(pd_df)
-
-    # verify 1-based coords
-    spark.check_one_based(pd_df)
+    # run tests
+    spark.run_tests(tsv_infile)
 
 
 
