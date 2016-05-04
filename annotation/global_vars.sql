@@ -5,38 +5,6 @@
 
 -- GLOBAL VARIANTS TABLE PIPELINE
 
--- create empty table to store variants
-create table anno_grch37.distinct_vars
-   (pos int,
-   ref string,
-   alt string)
-partitioned by (chrom string, pos_block int);
-
--- insert full join of unique variants from ill_distinct and comgen_distinct tables
-
-#for x in $(seq 1 22) M MT X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
-insert into anno_grch37.distinct_vars partition (chrom, pos_block)
-SELECT distinct CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
-       coalesce(t0.ref, t1.ref) AS ref,
-       coalesce(t0.alt, t1.alt) AS alt,
-       coalesce(t0.chrom, t1.chrom) AS chrom,
-       CAST(coalesce(t0.pos, t1.pos)/1000000 AS int) as pos_block
-FROM anno_grch37.illumina_distinct t0
-FULL OUTER JOIN anno_grch37.comgen_distinct t1
-    ON t0.chrom = t1.chrom
-    AND t0.pos = t1.pos
-    AND t0.ref = t1.ref
-    AND t0.alt = t1.alt
-where t0.chrom = '$x'
-and t0.pos_block = $y;
-# "; done; done
-
--- compute stats on new table
-compute stats anno_grch37.distinct_vars;
-
--- CREATE KAV_VARS (illumina + cgi + kaviar)
--- columns = chrom, pos, ref, alt, kav_freq, kav_source
--- paritition = chrom, pos_block
 
 --- create blank table
 create table anno_grch37.kav_vars
@@ -71,7 +39,7 @@ and t0.pos_block = $y;
 --- compute stats on new table
 compute stats anno_grch37.kav_vars;
 
--- CREATE CLIN_DISTINCT (illumina, cgi, kaviar + clinvar)
+-- CREATE CLIN_KAV_VARS (illumina + kaviar + clinvar)
 create table anno_grch37.clin_vars
    (pos int,
    ref string,
