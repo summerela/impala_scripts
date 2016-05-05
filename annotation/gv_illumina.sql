@@ -3,75 +3,315 @@
 -- GLOBAL VARIANTS TABLE PIPELINE for Illumina variants
 -- mix of bash and sql
 
--- join distinct illumina variants with Kaviar
+-- create table of all variants found by joining distinct illumina variants with distinct reference variants
 
---- create kav_vars empty table
-create table anno_grch37.kav_vars
-   (pos int,
-   ref string,
-   allele string,
-   kav_freq float,
-   kav_source string)
+--- create ilmn_vars empty table
+create table wgs_ilmn.ilmn_vars
+(
+  var_id string,
+  pos int,
+  ref string,
+  allele string)
 partitioned by (chrom string, pos_block int);
 
---- insert variants into anno_grch37.kav_vars and annotate with kaviar frequency and source
+--- insert variants into wgs_ilmn.ilmn_vars
 
 #for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
-insert into anno_grch37.kav_vars partition (chrom, pos_block)
--- coalesce required in case variants are found on only one side of the join, merges common columns
-SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
-       coalesce(t0.ref, t1.ref) AS ref,
-       coalesce(t0.alt, t1.allele) AS allele,
-       t0.kav_freq,
-       t0.kav_source,
-       coalesce(t0.chrom, t1.chrom) AS chrom,
-       CAST(coalesce(t0.pos, t1.pos)/1000000 AS int) as pos_block
-FROM anno_grch37.kav_distinct t0
-FULL OUTER JOIN wgs_ilmn.test_vars t1
-    ON t0.chrom = t1.chrom
-    AND t0.pos = t1.pos
-    AND t0.ref = t1.ref
-    AND t0.alt = t1.allele
-where t0.chrom = '$x'
-and t0.pos_block = $y;
+set compression_codec=snappy;
+insert into wgs_ilmn.ilmn_vars partition (chrom, pos_block)
+SELECT var_id, pos, ref, allele, chrom, blk_pos FROM wgs_ilmn.vcf_distinct WHERE chrom = '$x' AND blk_pos = $y
+UNION
+SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM wgs_ilmn.dbnsfp_distinct WHERE chrom = '$x' AND blk_pos = $y
+UNION
+SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.kaviar_distinct WHERE chrom = '$x' AND blk_pos = $y
+UNION
+SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.clinvar_distinct WHERE chrom = '$x' AND blk_pos = $y
+UNION
+SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.clinvar_distinct WHERE chrom = '$x' AND blk_pos = $y
+UNION
+SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.dbsnp WHERE chrom = '$x' AND blk_pos = $y
+UNION
+SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.hgmd WHERE chrom = '$x' AND blk_pos = $y
 # "; done; done
 
 --- compute stats on new table
-compute stats anno_grch37.kav_vars;
+compute stats wgs_ilmn.ilmn_vars;
 
--- CREATE CLIN_KAV_VARS (illumina + kaviar + clinvar)
-create table anno_grch37.clin_vars
-   (pos int,
-   ref string,
-   alt string,
-   kav_freq float,
-   kav_source string,
-   clin_sig string,
-   clin_dbn string)
+--- ADD ANNOTATIONS
+
+--- rsID
+create table wgs_ilmn.vars_dbsnp
+(
+  var_id string,
+  pos int,
+  ref string,
+  allele string,
+  rs_id string,
+  dbsnp_buildid string
+)
 partitioned by (chrom string, pos_block int);
 
--- insert variants into table
 #for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
-insert into table anno_grch37.clin_vars partition (chrom, pos_block)
-SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
-       coalesce(t0.ref, t1.ref) AS ref,
-       coalesce(t0.allele, t1.alt) AS allele,
-        t0.kav_freq,
-        t0.kav_source,
-        t1.clin_sig,
-        t1.clin_dbn,
-        coalesce(t0.chrom, t1.chrom) AS chrom,
-        coalesce(t0.pos_block, t1.pos_block) as pos_block
-FROM anno_grch37.kav_vars t0
-FULL OUTER JOIN anno_grch37.clin_distinct t1
-    ON t0.chrom = t1.chrom AND
-       t0.pos = t1.pos AND
-       t0.ref = t1.ref AND
-       t0.alt = t1.alt
-WHERE t0.chrom = '$x'
-AND t0.pos_block = $y;
-# "; done
+set compression_codec=snappy;
+insert into wgs_ilmn.vars_dbsnp partition (chrom, pos_block)
+SELECT v.*, d.rs_id, d.dbsnpbuildid as dbsnp_buildid
+FROM wgs_ilmn.ilmn_vars v
+LEFT JOIN anno_grch37.dbsnp d
+  ON v.var_id = d.var_id
+WHERE v.chrom = '$x' and d.chrom = '$x'
+AND v.blk_pos = $y and d.blk_pos = $y
+# "; done; done
 
--- compute stats on new table
-compute stats anno_grch37.clin_vars;
+--- compute stats on new table
+compute stats wgs_ilmn.vars_dbsnp;
+
+--- kaviar
+create table wgs_ilmn.vars_kaviar
+(
+  var_id STRING,
+  pos      INT,
+  ref STRING,
+  allele STRING,
+  rs_id STRING,
+  dbsnp_buildid STRING,
+  kav_freq FLOAT,
+  kav_source STRING
+)
+partitioned by (chrom string, pos_block int);
+
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+set compression_codec=snappy;
+insert into wgs_ilmn.vars_kaviar partition (chrom, pos_block)
+SELECT v.*, k.kav_freq, k.kav_source
+FROM wgs_ilmn.vars_dbsnp v
+LEFT JOIN anno_grch37.kaviar_distinct k
+  ON v.var_id = k.var_id
+WHERE v.chrom = '$x' and k.chrom = '$x'
+AND v.blk_pos = $y and k.blk_pos = $y
+# "; done; done
+
+--- compute stats on new table
+compute stats wgs_ilmn.vars_kaviar;
+
+--- drop temp table from previous step
+drop table wgs_ilmn.vars_dbsnp;
+
+--- clinvar
+create table wgs_ilmn.vars_clinvar
+(
+  var_id string,
+  pos int,
+  ref string,
+  allele string,
+  rs_id string,
+  dbsnp_buildid string,
+  kav_freq float,
+  kav_source string,
+  clin_sig string,
+  clin_dbn string
+)
+partitioned by (chrom string, pos_block int);
+
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+set compression_codec=snappy;
+insert into wgs_ilmn.vars_clinvar partition (chrom, pos_block)
+SELECT v.*, c.clin_sig, c.clin_dbn
+FROM wgs_ilmn.vars_kaviar v
+LEFT JOIN anno_grch37.clinvar_distinct c
+  ON v.var_id = c.var_id
+WHERE v.chrom = '$x' and c.chrom = '$x'
+AND v.blk_pos = $y and c.blk_pos = $y
+# "; done; done
+
+--- compute stats on new table
+compute stats wgs_ilmn.vars_clinvar;
+
+--- drop temp table from previous step
+drop table wgs_ilmn.vars_kaviar;
+
+--- hgmd
+create table wgs_ilmn.vars_hgmd
+(
+  var_id string,
+  pos int,
+  ref string,
+  allele string,
+  rs_id string,
+  dbsnp_buildid string,
+  kav_freq float,
+  kav_source string,
+  clin_sig string,
+  clin_dbn string,
+  hgmd_id string,
+  hgmd_varclass string
+)
+partitioned by (chrom string, pos_block int);
+
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+set compression_codec=snappy;
+insert into wgs_ilmn.vars_hgmd partition (chrom, pos_block)
+SELECT v.*,h.id as hgmd_id, h.var_class as hgmd_varclass
+FROM wgs_ilmn.vars_clinvar v
+LEFT JOIN anno_grch37.hgmd h
+    ON v.var_id = h.var_id
+WHERE v.chrom = '$x' and h.chrom = '$x'
+AND v.blk_pos = $y and h.blk_pos = $y
+# "; done; done
+
+--- compute stats on new table
+compute stats wgs_ilmn.vars_hgmd;
+
+--- drop temp table from previous step
+drop table wgs_ilmn.vars_clinvar;
+
+--- dbnsfp cadd, dann, interpro
+create table wgs_ilmn.vars_dbnsfp
+(
+  var_id string,
+  pos int,
+  ref string,
+  allele string,
+  rs_id string,
+  dbsnp_buildid string,
+  kav_freq float,
+  kav_source string,
+  clin_sig string,
+  clin_dbn string,
+  hgmd_id string,
+  hgmd_varclass string,
+  cadd_raw float,
+  dann_score float,
+  interpro_domain string
+)
+partitioned by (chrom string, pos_block int);
+
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+set compression_codec=snappy;
+insert into wgs_ilmn.vars_dbnsfp partition (chrom, pos_block)
+SELECT v.*, d.cadd_raw, d.dann_score, d.interpro_domain
+FROM wgs_ilmn.vars_hgmd v
+LEFT JOIN anno_grch37.dbnsfp_distinct d  ON v.var_id = d.var_id
+WHERE v.chrom = '$x' and d.chrom = '$x'
+AND v.blk_pos = $y and d.blk_pos = $y
+# "; done; done
+
+--- compute stats on new table
+compute stats wgs_ilmn.vars_dbsnfp;
+
+--- drop temp table from previous step
+drop table wgs_ilmn.vars_hgmd;
+
+--- ensembl gene, tx, exon
+create table wgs_ilmn.vars_ensembl
+(
+  var_id string,
+  pos int,
+  ref string,
+  allele string,
+  rs_id string,
+  dbsnp_buildid string,
+  kav_freq float,
+  kav_source string,
+  clin_sig string,
+  clin_dbn string,
+  hgmd_id string,
+  hgmd_varclass string,
+  cadd_raw float,
+  dann_score float,
+  interpro_domain string,
+  strand string,
+  gene_name string,
+  gene_id string,
+  transcript_name string,
+  transcript_id string,
+  exon_name string,
+  exon_number int
+)
+partitioned by (chrom string, pos_block int);
+
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+set compression_codec=snappy;
+insert into wgs_ilmn.vars_ensembl partition (chrom, pos_block)
+SELECT v.*, e.strand, e.gene_name, e.gene_id, e.transcript_name, e.transcript_id, e.exon_name, e.exon_number
+FROM wgs_ilmn.vars_dbsnfp v
+LEFT JOIN anno_grch37.ensembl_distinct e
+    ON v.chrom = e.chrom
+    AND (v.pos BETWEEN e.pos and e.stop)
+WHERE v.chrom = '$x' and e.chrom = '$x'
+AND v.blk_pos = $y and e.blk_pos = $y
+# "; done; done
+
+--- compute stats on new table
+compute stats wgs_ilmn.vars_ensembl;
+
+--- drop temp table from previous step
+drop table wgs_ilmn.vars_dbsnfp;
+
+--- coding consequences
+create table wgs_ilmn.vars_coding
+(
+  var_id string,
+  pos int,
+  ref string,
+  allele string,
+  rs_id string,
+  dbsnp_buildid string,
+  kav_freq float,
+  kav_source string,
+  clin_sig string,
+  clin_dbn string,
+  hgmd_id string,
+  hgmd_varclass string,
+  cadd_raw float,
+  dann_score float,
+  interpro_domain string,
+  strand string,
+  gene_name string,
+  gene_id string,
+  transcript_name string,
+  transcript_id string,
+  exon_name string,
+  exon_number int,
+  effect string,
+  impact string,
+  feature string,
+  feature_id string,
+  biotype string,
+  rank int,
+  hgvs_c string,
+  hgvs_p string
+)
+partitioned by (chrom string, pos_block int);
+
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
+set compression_codec=snappy;
+insert into wgs_ilmn.vars_coding partition (chrom, pos_block)
+SELECT v.*,c.effect, c.impact, c.feature, c.feature_id, c.biotype, c.rank, c.hgvs_c, c.hgvs_p
+FROM wgs_ilmn.vars_ensembl v
+LEFT JOIN anno_grch37.coding c
+    ON v.chrom = c.chrom
+    AND v.pos = c.pos
+    AND v.ref = c.ref
+    AND v.allele = c.allele
+WHERE v.chrom = '$x' and c.chrom = '$x'
+AND v.blk_pos = $y and c.blk_pos = $y
+# "; done; done
+
+--- compute stats on new table
+compute stats wgs_ilmn.vars_coding;
+
+--- drop temp table from previous step
+drop table wgs_ilmn.vars_ensembl;
+
+
+--- TODO check snappy compression
+--- TODO add PPC annotation
+--- TODO create for cgi variants
+
+
+
+
+
+
+
 
