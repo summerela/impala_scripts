@@ -45,7 +45,8 @@ class etl_test(unittest.TestCase):
         assert input_df.where(input_df.chrom.isNull()).count() == 0, "Null values found in chrom column."
 
     def check_chrom_count(self, input_df):
-        print input_df.groupBy('chrom').count().show()
+        for name, group in input_df.groupBy('chrom'):
+            assert input_df.groupBy('chrom').count() > 1000, "{}".format(input_df.groupBy('chrom').count().show())
 
     def tear_down(self):
         # close connection
