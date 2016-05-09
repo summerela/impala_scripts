@@ -25,20 +25,7 @@ snpeff_oneperline_perl = '/users/selasady/my_titan_itmi/tools/snpEff/scripts/vcf
 snpsift_jar = '/users/selasady/my_titan_itmi/tools/snpEff//SnpSift.jar'
 vcf_verify = '/users/selasady/my_titan_itmi/tools/snpEff/scripts/vcfBareBones.pl'
 
-####################
-## import modules ##
-####################
-import pandas as pd
-from impala.dbapi import connect
-import time
-import csv
-import subprocess
-import numpy as np
-from impala.util import as_pandas
-import os
 
-# disable extraneous pandas warning
-pd.options.mode.chained_assignment = None
 
 ## create connection to impala
 conn=connect(host=impala_host, port=impala_port, timeout=10000, user=impala_user_name)
@@ -46,7 +33,6 @@ cur = conn.cursor()
 
 # create list of chromosomes to process
 chroms = map( str, range(1,22) ) + ['X','Y','M']
-chroms = ['6','7','9','17','19','22','X']
 
 ##########################################
 ## create vcf files for each chromosome ##

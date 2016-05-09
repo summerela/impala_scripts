@@ -1,278 +1,13 @@
 # noinspection SqlNoDataSourceInspectionForFile
 
--- CAVEATS (desribe this better):
--- all mitochondrial chromosomes have been converted to 'M' instead of 'MT' (cgi and illumina MT use diff references)
--- all Kaviar rs_id's with a NULL value in the source column have been converted to 'dbSNP'
--- all reference sources are left-normalized and parsimonious 
+-- TODO: store all tables as parquet
+-- TODO: check which tables need M chrom
 
 -- GLOBAL VARIANTS TABLE PIPELINE
 
--- SUBSET TABLES TO BE JOINED FOR MORE EFFICIENT QUERIES
-
--- CREATE KAV_DISTINCT 
--- columns = chrom, pos, ref, alt, allele_freq as kav_freq, sources as kav_source
--- partitions = chrom, pos_block (pos/1e06)
-
--- 531660844 rows in original kaviar table
--- 531624737 rows with distinct chrom, pos, ref, alt, allele_freq as kav_freq, sources as kav_source
--- 36107 duplicates removed
-
--- create table
-create table p7_product.kav_distinct
-(
-  pos      INT,
-  ref STRING,
-  alt STRING,
-  kav_freq FLOAT,
-  kav_source STRING
-)
-  PARTITIONED BY (chrom string, pos_block int);
-
--- insert kaviar subset into table by chromosome using bash
-#for x in $(seq 1 22) X Y; do echo "$x"; nohup impala-shell -q "\
-insert into table p7_product.kav_distinct partition (chrom, pos_block)
-  select distinct pos, ref, alt, allele_freq as kav_freq,
-    CASE when sources is NULL then 'dbSNP'
-      else sources
-      END as kav_source, chrom, cast(pos/1000000 as INT) as pos_block
-  from p7_ref_grch37.kaviar_isb
-  where chrom = '$x';
-# "; done
-
--- compute stats on new table
-compute stats p7_product.kav_distinct;
-
--- CREATE CLIN_DISTINCT
--- columns = chrom, pos, ref, alt, clin_sig, clin_dbn
--- partitions = chrom, pos_block
-
--- 117299 rows in original clinvar table
--- 117160 distinct rows with distinct chrom, pos, ref, alt, clin_sig, clin_dbn
--- 139 duplicate rows removed
-
--- create empty table
-create table p7_product.clin_distinct
-  (pos int,
-  ref string,
-  alt string,
-  clin_sig string,
-  clin_dbn string
-)
-  partitioned by (chrom string, pos_block int);
-
--- insert distinct subset into table
-insert into table p7_product.clin_distinct partition (chrom, pos_block)
-  select distinct pos, ref, alt, clin_sig, clin_dbn,
-    CASE
-      when chrom = 'MT' then 'M'
-        else chrom
-    END as chrom,
-    cast(pos/1000000 as INT) as pos_block
-  from p7_ref_grch37.clinvar;
-
--- compute stats on new table
-compute stats p7_product.clin_distinct;
-
--- CREATE DBSNP SUBSET
--- columns = chrom, pos, ref, alt, rs_id, dbsnpbuildid as dbsnp_build
--- partitions = chrom, pos_block
-
--- 152848169 rows in original dbsnp table
--- 152848169 rows in distinct chrom, pos, ref, alt, rs_id, dbsnpbuildid
--- no need for distinct clause
-
--- create table
-create table p7_product.dbsnp_distinct
-    (pos int,
-    ref string,
-    alt string,
-    rs_id string,
-    dbsnp_buildid string
-    )
-  partitioned by (chrom string, pos_block int);
-
--- insert subset into table
-insert into p7_product.dbsnp_distinct partition (chrom, pos_block)
-select pos, ref, alt, rs_id, dbsnpbuildid as dbsnp_build
-  CASE
-      when chrom = 'MT' then 'M'
-        else chrom
-    END as chrom,
-  cast(pos/1000000 as INT) as pos_block
-  from p7_ref_grch37.dbsnp;
-
--- compute stats on new table
-compute stats p7_product.dbsnp_distinct;
-
--- CREATE DBNSPF_DISTINCT 
--- chrom, pos, ref, alt, cadd_raw, dann_score, interpro_domain
--- partition = chrom, pos_block
-
-create table p7_product.dbnsfp_distinct
-(
-  pos int,
-  ref string,
-  alt string,
-  cadd_raw float,
-  dann_score FLOAT,
-  interpro_domain string
-)
-PARTITIONED BY (chrom string, pos_block int);
-
--- insert dbnsfp subset into table
-#for x in $(seq 1 22) M MT X Y; do nohup impala-shell -q "\
-INSERT INTO p7_product.dbnsfp_distinct PARTITION (chrom, pos_block)
-    select distinct pos, ref, alt, cadd_raw, dann_score,
-      interpro_domain, chrom, cast(pos/1000000 as int) as pos_block
-    from p7_ref_grch37.dbnsfp_variant
-    where chrom = '$x';
-# " ; done
-
---- compute stats on new table
-compute stats p7_product.dbnsfp_distinct;
-
--- CREATE ILLUMINA_DISTINCT
--- columns = chrom, pos, ref, alt
--- partitions = chrom, pos_block
-
--- 22189000636 rows in original wgs_illumina_variant table
--- 208302707 rows with distinct chrom, pos, ref, alt
--- 21980697929 duplicated rows removed
-
--- create empty table
-create table p7_product.illumina_distinct
-   (pos int,
-   ref string,
-   alt string
-    )
-partitioned by (chrom string, pos_block int)
-
--- insert subset into table, dividing into max(pos)/2 for processing  due to table size
-
---for x in $(seq 1 22) M X Y; do echo "$x"; nohup impala-shell -q "\
-insert into p7_product.illumina_distinct partition (chrom, pos_block)
-select distinct pos, ref, alt, chrom, cast(pos/1000000 as INT) as pos_block
-from p7_platform.wgs_illumina_variant
-where chrom = '$x'
-and pos < 124620308;
-# "; done
-
-#for x in $(seq 1 22) M X Y; do echo "$x"; nohup impala-shell -q "\
-insert into p7_product.illumina_distinct partition (chrom, pos_block)
-select distinct pos, ref, alt, chrom, cast(pos/1000000 as INT) as pos_block
-from p7_platform.wgs_illumina_variant
-where chrom = '$x'
-and pos >= 124620308;
-# "; done
-
--- compute stats on new table
-compute stats p7_product.illumina_distinct;
-
--- number of rows in illumina_distinct =  208302707;  PASS
-
--- CREATE COMGEN_DISTINCT
--- columns = chrom, pos, ref, alt
--- transform = split allele1seq and allele2seq into separate rows for each variant
--- parition = chrom, pos_block
-
--- create table
-create table p7_product.comgen_distinct
-   (pos int,
-   ref string,
-   alt string
-    )
-partitioned by (chrom string, pos_block int)
-
--- 11,066,152,314 total rows in table
---  rows decomposed into separeate rows for allele1seq and allele2seq with chrom, start as pos, ref, alt
--- 248265502 + 17525708 =   265791210  and ref not null, and alt <> ref
-
--- insert allele1seq distinct variants into comgen_distinct table, chunking into max(pos)/2 for processing
-#for x in $(seq 1 22) M X Y; do echo "$x"; nohup impala-shell -q "\
-insert into p7_product.comgen_distinct partition (chrom, pos_block)
-select distinct start as pos, ref, allele1seq as alt, chrom, cast(start/1000000 as INT) as pos_block
-from p7_platform.wgs_comgen_variant
-where chrom = '$x'
-and start < 124619939
-and ref is not null
-and allele1seq <> ref;
-# "; done
-
-#for x in $(seq 1 22) M X Y; do echo "$x"; nohup impala-shell -q "\
-insert into p7_product.comgen_distinct partition (chrom, pos_block)
-select distinct start as pos, ref, allele1seq as alt, chrom, cast(start/1000000 as INT) as pos_block
-from p7_platform.wgs_comgen_variant
-where chrom = '$x'
-and start >= 124619939
-and ref is not null
-and allele1seq <> ref;
-# "; done
-
--- insert allele1seq distinct variants into comgen_distinct table, chunking into max(pos)/2 for processing
-#for x in $(seq 1 22) M X Y; do echo "$x"; nohup impala-shell -q "\
-insert into p7_product.comgen_distinct partition (chrom, pos_block)
-select distinct start as pos, ref, allele2seq as alt, chrom, cast(start/1000000 as INT) as pos_block
-from p7_platform.wgs_comgen_variant
-where chrom = '$x'
-and start < 124619939
-and ref is not null
-and allele2seq <> ref;
-# "; done
-
-#for x in $(seq 1 22) M X Y; do echo "$x"; nohup impala-shell -q "\
-insert into p7_product.comgen_distinct partition (chrom, pos_block)
-select distinct start as pos, ref, allele2seq as alt, chrom, cast(start/1000000 as INT) as pos_block
-from p7_platform.wgs_comgen_variant
-where chrom = '$x'
-and start >= 124619939
-and ref is not null
-and allele2seq <> ref;
-# "; done
-
--- compute stats on new table
-compute stats comgen_distinct;
-
--- Checking to see if any variants were repeated between allele1seq and allele2seq
--- 265791210 rows in comgen_distinct = PASS
-
--- CREATE DISTINCT_VARS (full join of illumina_distinct and comgen_distinct)
--- columns = chrom, pos, ref, alt
--- partition = chrom, pos_block
-
--- create empty table to store variants
-create table p7_product.distinct_vars
-   (pos int,
-   ref string,
-   alt string)
-partitioned by (chrom string, pos_block int);
-
--- insert full join of unique variants from ill_distinct and comgen_distinct tables
-#for x in $(seq 1 22) M MT X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
-insert into p7_product.distinct_vars partition (chrom, pos_block)
-SELECT distinct CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
-       coalesce(t0.ref, t1.ref) AS ref,
-       coalesce(t0.alt, t1.alt) AS alt,
-       coalesce(t0.chrom, t1.chrom) AS chrom,
-       CAST(coalesce(t0.pos, t1.pos)/1000000 AS int) as pos_block
-FROM p7_product.illumina_distinct t0
-FULL OUTER JOIN p7_product.comgen_distinct t1
-    ON t0.chrom = t1.chrom
-    AND t0.pos = t1.pos
-    AND t0.ref = t1.ref
-    AND t0.alt = t1.alt
-where t0.chrom = '$x'
-and t0.pos_block = $y;
-# "; done; done
-
--- compute stats on new table
-compute stats p7_product.distinct_vars;
-
--- CREATE KAV_VARS (illumina + cgi + kaviar)
--- columns = chrom, pos, ref, alt, kav_freq, kav_source
--- paritition = chrom, pos_block
 
 --- create blank table
-create table p7_product.kav_vars
+create table anno_grch37.kav_vars
    (pos int,
    ref string,
    alt string,
@@ -280,10 +15,10 @@ create table p7_product.kav_vars
    kav_source string)
 partitioned by (chrom string, pos_block int);
 
---- insert variants into p7_product.kav_vars and annotate with kaviar frequency and source
+--- insert variants into anno_grch37.kav_vars and annotate with kaviar frequency and source
 
 #for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
-insert into p7_product.kav_vars partition (chrom, pos_block)
+insert into anno_grch37.kav_vars partition (chrom, pos_block)
 SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
        coalesce(t0.ref, t1.ref) AS ref,
        coalesce(t0.alt, t1.alt) AS alt,
@@ -291,8 +26,8 @@ SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
        t0.kav_source,
        coalesce(t0.chrom, t1.chrom) AS chrom,
        CAST(coalesce(t0.pos, t1.pos)/1000000 AS int) as pos_block
-FROM p7_product.kav_distinct t0
-FULL OUTER JOIN p7_product.distinct_vars t1
+FROM anno_grch37.kav_distinct t0
+FULL OUTER JOIN anno_grch37.distinct_vars t1
     ON t0.chrom = t1.chrom
     AND t0.pos = t1.pos
     AND t0.ref = t1.ref
@@ -302,13 +37,10 @@ and t0.pos_block = $y;
 # "; done
 
 --- compute stats on new table
-compute stats p7_product.kav_vars;
+compute stats anno_grch37.kav_vars;
 
--- CREATE CLIN_DISTINCT (illumina, cgi, kaviar + clinvar)
--- columns = chrom, pos, ref, alt, kav_freq, kav_source, clin_sig, clin_dbn
-
---- create blank partitioned table
-create table p7_product.clin_vars
+-- CREATE CLIN_KAV_VARS (illumina + kaviar + clinvar)
+create table anno_grch37.clin_vars
    (pos int,
    ref string,
    alt string,
@@ -320,7 +52,7 @@ partitioned by (chrom string, pos_block int);
 
 -- insert variants into table
 #for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
-insert into table p7_product.clin_vars partition (chrom, pos_block)
+insert into table anno_grch37.clin_vars partition (chrom, pos_block)
 SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
        coalesce(t0.ref, t1.ref) AS ref,
        coalesce(t0.alt, t1.alt) AS alt,
@@ -330,8 +62,8 @@ SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
         t1.clin_dbn,
         coalesce(t0.chrom, t1.chrom) AS chrom,
         coalesce(t0.pos_block, t1.pos_block) as pos_block
-FROM p7_product.kav_vars t0
-FULL OUTER JOIN p7_product.clin_distinct t1
+FROM anno_grch37.kav_vars t0
+FULL OUTER JOIN anno_grch37.clin_distinct t1
     ON t0.chrom = t1.chrom AND
        t0.pos = t1.pos AND
        t0.ref = t1.ref AND
@@ -341,7 +73,7 @@ AND t0.pos_block = $y;
 # "; done
 
 -- compute stats on new table
-compute stats p7_product.clin_vars;
+compute stats anno_grch37.clin_vars;
 
 -- 694405468 rows in table
 
@@ -349,7 +81,7 @@ compute stats p7_product.clin_vars;
 -- columns = chrom, pos, ref, alt, kav_freq, kav_source, clin_sig, clin_dbn, rs_id, dbsnpbuildid as dbnsp_build
 
 -- add rsID and variants from dbsnp to create all_variants table
-create table p7_product.dbsnp_vars
+create table anno_grch37.dbsnp_vars
  (pos int,
     ref string,
     alt string,
@@ -364,7 +96,7 @@ partitioned by (chrom string, pos_block int);
 
 --- insert variants into partitioned table
 #for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
-insert into p7_product.dbsnp_vars partition (chrom, pos_block)
+insert into anno_grch37.dbsnp_vars partition (chrom, pos_block)
 SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
        coalesce(t0.ref, t1.ref) AS ref,
        coalesce(t0.alt, t1.alt) AS alt,
@@ -376,8 +108,8 @@ SELECT CAST(coalesce(t0.pos, t1.pos) AS int) AS pos,
         t1.dbsnp_buildid as dbsnp_build,
         coalesce(t0.chrom, t1.chrom) AS chrom,
         coalesce(t0.pos_block, t1.pos_block) AS pos_block
-FROM p7_product.clin_vars t0
-FULL OUTER JOIN p7_product.dbsnp_distinct t1
+FROM anno_grch37.clin_vars t0
+FULL OUTER JOIN anno_grch37.dbsnp_distinct t1
     ON t0.chrom = t1.chrom AND
        t0.pos = t1.pos AND
        t0.ref = t1.ref AND
@@ -387,14 +119,14 @@ and t0.pos_block = $y;
 # " ; done
 
 --- compute stats on new table
-compute stats p7_product.dbsnp_vars;
+compute stats anno_grch37.dbsnp_vars;
 
 -- 698,889,772 rows in table, all are distinct
 
 -- CREATE ALL_VARS (all_vars + dbnsfp)
 -- partitions = chrom, pos_block
 
-create table p7_product.all_vars
+create table anno_grch37.all_vars
     (pos int,
     ref string,
     alt string,
@@ -418,14 +150,14 @@ create table p7_product.all_vars
     partitioned by (chrom string, pos_block int);
 
 #for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
-insert into table p7_product.all_vars partition (chrom, pos_block)
+insert into table anno_grch37.all_vars partition (chrom, pos_block)
 SELECT DISTINCT COALESCE(ens.pos, d.pos) as pos, COALESCE(ens.ref, d.ref) as ref, COALESCE(ens.alt, d.alt) as alt,
 ens.rs_id, ens.strand, ens.gene_name, ens.gene_id, ens.transcript_name, ens.transcript_id, ens.exon_name, ens.exon_number,
   ens.clin_sig, ens.clin_dbn, ens.kav_freq, ens.kav_source,
   ens.dbsnp_build, d.cadd_raw, d.dann_score, d.interpro_domain,
   COALESCE(ens.chrom,d.chrom) as chrom, ens.pos_block
-from p7_product.ens_vars ens
-full outer join p7_product.dbnsfp_distinct d
+from anno_grch37.ens_vars ens
+full outer join anno_grch37.dbnsfp_distinct d
     on ens.chrom = d.chrom
     and ens.pos = d.pos
     and ens.ref = d.ref
@@ -437,20 +169,13 @@ and d.pos_block = $y;
 # " ; done
 
 -- compute stats on table
-compute stats p7_product.all_vars;
+compute stats anno_grch37.all_vars;
 
 
 -- ANNOTATE ALL_VARIANTS TABLE TO CREATE GLOBAL VARIANTS TABLE
 
 -- create ens_distinct
--- columns = chrom, start, stop, strand, gene_name, gene_id, transcript_name, transcript_id, exon_name, exon_id
--- partitions = chrom, pos_block
-
--- 2244857 rows in the ensembl_genes table
--- 2,243,527 distinct rows in subset
--- using distinct clause to remove 1330 duplicated rows
-
-create table p7_product.ens_distinct
+create table anno_grch37.ens_distinct
 (
   start INT,
   stop INT,
@@ -464,23 +189,23 @@ create table p7_product.ens_distinct
 )
   PARTITIONED BY (chrom string, pos_block int);
 
-INSERT INTO p7_product.ens_distinct partition (chrom, pos_block)
+INSERT INTO anno_grch37.ens_distinct partition (chrom, pos_block)
     select distinct start, stop, strand, gene_name, gene_id,
       transcript_name, transcript_id, exon_id as exon_name, exon_number,
       CASE when chrom = 'MT' then 'M'
         else chrom
           END as chrom,  cast(start/1000000 as int) as pos_block
-    from p7_ref_grch37.ensembl_genes;
+    from anno_grch37.ensembl_genes;
 
 --- compute stats on new table
-compute stats p7_product.ens_distinct;
+compute stats anno_grch37.ens_distinct;
 
 -- 2243527 rows in table: PASS
 
 -- CREATE ENS_VARS (all_vars + ens_distinct)
 -- paritions = chrom, pos_block
 
-create table p7_product.ens_vars
+create table anno_grch37.ens_vars
     (pos int,
     ref string,
     alt string,
@@ -505,13 +230,13 @@ create table p7_product.ens_vars
 
 -- inserted each chromosome into partitioned table as follows
 #for x in $(seq 5 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
-insert into table p7_product.ens_vars partition (chrom, pos_block)
+insert into table anno_grch37.ens_vars partition (chrom, pos_block)
 SELECT t0.pos, t0.ref, t0.alt, t0.rs_id, t1.strand,
   t1.gene_name, t1.gene_id, t1.transcript_name, t1.transcript_id, t1.exon_name, t1.exon_number,
   t0.clin_sig, t0.clin_dbn, t0.kav_freq, t0.kav_source, t0.dbsnp_build,
   t0.cadd_raw, t0.dann_score, t0.interpro_domain, t0.chrom, t0.pos_block
-FROM p7_product.all_vars t0
-LEFT JOIN p7_product.ens_distinct t1
+FROM anno_grch37.all_vars t0
+LEFT JOIN anno_grch37.ens_distinct t1
     ON t0.chrom = t1.chrom
     AND (t0.pos BETWEEN t1.start and t1.stop)
 WHERE t0.chrom = '$x'
@@ -521,7 +246,7 @@ and t1.pos_block = $y;
 # " ; done ; done
 
 -- compute stats on ens_vars
-compute stats p7_product.ens_vars;
+compute stats anno_grch37.ens_vars;
 
 -- check that row counts are as expected by comparing results with all_vars table
 -- 776,862,245 rows in all_vars table
@@ -531,7 +256,7 @@ compute stats p7_product.ens_vars;
 --- ANNOTATE VARIANTS WITH HGMD ANNOTATIONS
 
 -- create HGMD table partitioned by chrom and position
-create table p7_product.hgmd_dist
+create table anno_grch37.hgmd_dist
 (
   pos int,
   hgmd_id string,
@@ -546,17 +271,17 @@ create table p7_product.hgmd_dist
 partitioned by (chrom string, pos_block int);
 
 -- insert subset of hgmd columns into table
-insert into table p7_product.hgmd_dist partition (chrom, pos_block)
+insert into table anno_grch37.hgmd_dist partition (chrom, pos_block)
 select pos, id as hgmd_id, ref, alt, var_class as hgmd_class,
   mut_type as hgmd_mut, dna as hgmd_dna, prot as hgmd_prot, phen as hgmd_phen,
   chrom, cast(pos/1000000 as int) as pos_block
-  from p7_ref_grch37.hgmd;
+  from anno_grch37.hgmd;
 
 -- compute stats on new table
-compute stats p7_product.hgmd_dist;
+compute stats anno_grch37.hgmd_dist;
 
 -- join hgmd with dbsnpf_vars to create hgmd_vars
-create table p7_product.hgmd_vars
+create table anno_grch37.hgmd_vars
 (
     pos int,
     ref string,
@@ -589,13 +314,13 @@ partitioned by (chrom string, pos_block int)
 
 -- left join dbnsfp_vars with hgmd annotations
 #for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
-insert into table p7_product.hgmd_vars partition (chrom, pos_block)
+insert into table anno_grch37.hgmd_vars partition (chrom, pos_block)
 select d.pos, d.ref, d.alt, d.rs_id, d.strand, d.gene_name,d.gene_id, d.transcript_name,
     d.transcript_id, d.exon_name, d.exon_number, d.clin_sig, d.clin_dbn, d.kav_freq,
     d.kav_source, d.dbsnp_build, d.cadd_raw, d.dann_score, d.interpro_domain,
     h.hgmd_id, h.hgmd_class, h.hgmd_mut, h.hgmd_dna, h.hgmd_prot, h.hgmd_phen, d.chrom, d.pos_block
-from p7_product.dbnsfp_vars d
-left join p7_product.hgmd_dist h
+from anno_grch37.dbnsfp_vars d
+left join anno_grch37.hgmd_dist h
     on d.chrom = h.chrom
     and d.pos = h.pos
     and d.ref = h.ref
@@ -607,7 +332,7 @@ and d.pos_block = $y;
 --- ANNOTATE VARIANTS WITH CODING CONSEQUENCES
 
 --- create coding consequence table partitioned by chrom and position
-create table p7_product.coding_partitioned
+create table anno_grch37.coding_partitioned
 (
   pos int,
   id string,
@@ -627,19 +352,19 @@ create table p7_product.coding_partitioned
 partitioned by (chrom string, pos_block int);
 
 #for x in $(seq 1 22) M MT X Y; do nohup impala-shell -q "\
-insert into table p7_product.coding_partitioned partition (chrom, pos_block)
+insert into table anno_grch37.coding_partitioned partition (chrom, pos_block)
   select pos, id, ref, alt, gene as gene_name, gene_id, effect,
     impact, feature, feature_id, biotype, rank, hgvs_c, hgvs_p,
     chrom, cast(pos/1000000 as int) as pos_block
-  from p7_product.all_coding
+  from anno_grch37.all_coding
   where chrom = '$x';
 #" ; done
 
-compute stats p7_product.coding_partitioned;
+compute stats anno_grch37.coding_partitioned;
 --- compared total rows and rows in each chromosome to ensure all rows were retained
 
 --- create the final table in the pipeline, global_vars containing all basic annotations
-CREATE TABLE p7_product.global_vars
+CREATE TABLE anno_grch37.global_vars
    (pos int,
     ref string,
     alt string,
@@ -665,15 +390,15 @@ partitioned by (chrom string, pos_block int, clin_sig string, kav_rank string, i
 COMMENT "Annotated table of all variants from Kaviar_ISB, ClinVar and dbSNP."
 
 #for x in $X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
-insert into table p7_product.global_vars partition (chrom, pos_block, clin_sig, kav_rank, impact)
+insert into table anno_grch37.global_vars partition (chrom, pos_block, clin_sig, kav_rank, impact)
   WITH t1 as (
       SELECT *
-      from p7_product.dbnsfp_vars
+      from anno_grch37.dbnsfp_vars
       where chrom = '$x'
       and pos_block = $y),
   t2 as (
       SELECT *
-      from p7_product.coding_partitioned
+      from anno_grch37.coding_partitioned
       where chrom = '$x'
       and pos_block = $y)
 
@@ -698,7 +423,7 @@ compute stats global_vars;
 
 --- duplications were induced in table due to having to repeat queries to ensure no variants were missed when server crashed
 --- creating new table with distinct variants and transforming MT chromosome to M
-CREATE TABLE p7_product.global_variants
+CREATE TABLE anno_grch37.global_variants
    (pos int,
     ref string,
     alt string,
@@ -724,15 +449,15 @@ partitioned by (chrom string, pos_block int, clin_sig string, kav_rank string, i
 COMMENT "Annotated table of all variants from Kaviar_ISB, ClinVar and dbSNP."
 
 #for x in $(seq 1 22) X Y; do for y in $(seq 0 249); do nohup impala-shell -q "\
-insert into table p7_product.global_variants partition (chrom, pos_block, clin_sig, kav_rank, impact)
-select distinct * from p7_product.global_vars where chrom = '$x' and pos_block = $y
+insert into table anno_grch37.global_variants partition (chrom, pos_block, clin_sig, kav_rank, impact)
+select distinct * from anno_grch37.global_vars where chrom = '$x' and pos_block = $y
 # " ; done ; done
 
 # nohup impala-shell -q "\
-insert into table p7_product.global_variants partition (chrom, pos_block, clin_sig, kav_rank, impact)
+insert into table anno_grch37.global_variants partition (chrom, pos_block, clin_sig, kav_rank, impact)
 select pos, ref, alt, rs_id, strand, gene_name, gene_id, clin_dbn, kav_freq, kav_source, dbsnp_build, cadd_raw, dann_score, interpro_domain,
 EFFECT, FEATURE, FEATUREID, BIOTYPE, RANK, HGVS_C, HGVS_P, 'M' as chrom, pos_block, clin_sig, kav_rank, impact
-  from p7_product.global_vars
+  from anno_grch37.global_vars
   where chrom = 'MT'
 # "
 
