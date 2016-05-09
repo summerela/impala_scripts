@@ -19,13 +19,11 @@ partitioned by (chrom string, pos_block int);"
 for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "
 set compression_codec=snappy;
 insert into wgs_ilmn.ilmn_vars partition (chrom, pos_block)
-SELECT var_id, pos, ref, allele, chrom, blk_pos FROM wgs_ilmn.vcf_distinct WHERE chrom = '$x' AND blk_pos = $y
+SELECT var_id, pos, ref, allele, chrom, blk_pos FROM users_selasady.ill_test WHERE chrom = '$x' AND blk_pos = $y
 UNION
 SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM wgs_ilmn.dbnsfp_distinct WHERE chrom = '$x' AND blk_pos = $y
 UNION
 SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.kaviar_distinct WHERE chrom = '$x' AND blk_pos = $y
-UNION
-SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.clinvar_distinct WHERE chrom = '$x' AND blk_pos = $y
 UNION
 SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.clinvar_distinct WHERE chrom = '$x' AND blk_pos = $y
 UNION
