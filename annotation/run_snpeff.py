@@ -12,10 +12,9 @@ import os
 # disable extraneous pandas warning
 pd.options.mode.chained_assignment = None
 
-class run_snpeff(object):
+class snpeff_pipeline(object):
 
     # set related file paths
-    java = '/tools/java/jdk1.7/bin/java'
     gatk = '/users/selasady/my_titan_itmi/tools/GenomeAnalysisTK.jar'
     ref_fasta = '/users/selasady/my_titan_itmi/tools/human_g1k_v37.fasta'
     snpeff_jar = '/users/selasady/my_titan_itmi/tools/snpEff/snpEff.jar'
@@ -29,7 +28,7 @@ class run_snpeff(object):
         self.impala_port = impala_port
         self.impala_name = impala_user_name
         self.chroms = map(str, range(1, 22)) + ['X', 'Y', 'M']
-        self.conn = connect(host=self.impala_host, port=self.impala_port, timeout=10000, user=self.impala_user)
+        self.conn = connect(host=self.impala_host, port=self.impala_port, timeout=10000, user=self.impala_name)
         self.cur = self.conn.cursor()
 
     @staticmethod
@@ -65,17 +64,77 @@ class run_snpeff(object):
         :return: gzipped, trimmed vcf file file_trimmed.vcf.gz ready to feed to snpeff
         '''
         out_base = self.get_file_base(input_vcf, 2)
-        strip_cmd = r'''{barebones} {} | gzip > {out_dir}/{out_vcf}_trimmed.vcf.gz'''.format(
-            barebones=self.vcf_verify, out_dir=vcf_dir, out_vcf=out_base)
+        strip_cmd = r'''zcat {vcf} | {barebones} | gzip > {out_dir}/{out_vcf}_trimmed.vcf.gz'''.format(
+            vcf=input_vcf, barebones=self.vcf_verify, out_dir=vcf_dir, out_vcf=out_base)
         self.subprocess_cmd(strip_cmd, self.vcf_dir)
 
     def run_filter(self, vcf_dir):
+        '''
+        run filter_vcf() on input directory
+        :param vcf_dir: path to directory of vcf files to parse
+        :return: _trimmed.vcf.gz files to run through snpeff
+        '''
         for file in os.listdir(vcf_dir):
             if file.endswith('.vcf.gz'):
-                self.subset_vcf(file)
+                self.filter_vcf(file)
 
+    ###########################################
+    # run _trimmed vcf files through snpeff  ##
+    ###########################################
 
+    def snpeff(self, input_vcf):
+        '''
+        Runs _trimmed.vcf.gz files created with filter_vcf() function
+        through snpeff with the following options:
+            Xmx16g= use 16g of memory for java
+            t = Use multiple threads
+        :param input_vcf: _trimmed.vcf.gz vcf file created with filter_vcf()
+        :return: snpeff.vcf file with annotated snps
+        '''
+        snp_out = "{}_snpeff.vcf".format(self.get_file_base(input_vcf, 2))
+        snpeff_cmd = r'''java -Xmx16g -jar {snpeff} closest -t GRCh37.75 {vcf} > {vcf_out}'''.format(
+            snpeff = self.snpeff_jar, vcf= input_vcf, vcf_out= snp_out)
+        self.subprocess_cmd(snpeff_cmd, self.vcf_dir)
 
+    def run_snpeff(self, vcf_dir):
+        '''
+        run snpeff on all _trimmed.vcf.gz files in vcf_dir
+        :param vcf_dir: path to _trimmed.vcf.gz files to run through snpeff
+        :return: snpeff annotated vcf files
+        '''
+        for file in os.listdir(vcf_dir):
+            if file.endswith('_trimmed.vcf.gz'):
+                self.snpeff(file)
+
+    ##########################################################
+    ## Output SnpEff effects as tsv file, one effect per line ##
+    ############################################################
+    def parse_snpeff(self, input_vcf):
+        '''
+        Parse snpeff output to contain one allele per row
+        :param input_vcf: snpeff annotation results
+        :return: tsv file for upload to impala table
+        '''
+        out_name = "{}.tsv".format(self.get_file_base(input_vcf, 2))
+        parse_cmd = 'cat {vcf} | {perl} | java -Xmx16g -jar {snpsift} extractFields \
+            - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
+            "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
+            "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {out}'.format(vcf=input_vcf, perl=self.snpeff_oneperline, \
+                                                         snpsift=self.snpsift_jar, out=out_name)
+        self.subprocess_cmd(parse_cmd, self.vcf_dir)
+
+    def run_parse(self, vcf_dir):
+        '''
+        parse snpeff output and create tsv files for
+        upload to impala table
+        :param vcf_dir: path to directory containing snpeff annotated vcf files
+        :return: annotated tsv files for upload to impala
+        '''
+        for file in os.listdir(vcf_dir):
+            if file.endswith('_snpeff.vcf'):
+                self.parse_snpeff(file)
+
+# TODO remove chrom prefix
 
 ##########  Main Routine  ############
 vcf_dir = '/titan/ITMI1/workspaces/users/selasady/impala_scripts/annotation/snpeff'
@@ -83,7 +142,9 @@ impala_host = 'glados14'
 impala_port = 21050
 impala_user_name = 'selasady'
 
-snpeff = run_snpeff(vcf_dir, impala_host, impala_port, impala_user_name)
+snpeff = snpeff_pipeline(vcf_dir, impala_host, impala_port, impala_user_name)
 
-snpeff.run_filter(vcf_dir)
+# snpeff.run_filter(vcf_dir)
+# snpeff.run_snpeff(vcf_dir)
+snpeff.run_parse(vcf_dir)
 
