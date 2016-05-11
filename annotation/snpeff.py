@@ -283,3 +283,29 @@ cur.close()
 #                 subprocess.call(['perl', vcf_basic, file], stdout=out_file)
 #             except subprocess.CalledProcessError as e:
 #                  print e.output
+
+######################################################
+    # strip vcf formatting using snpeff vcfBareBones.pl ##
+    ######################################################
+
+    # def filter_vcf(self, input_vcf):
+    #     '''
+    #     Use SnpEff VCF Bare Bones perl script to strip formatting from VCF file
+    #     to minimize file size and compatibility issues
+    #     :param input_vcf: path of vcf file to process
+    #     :return: gzipped, trimmed vcf file file_trimmed.vcf.gz ready to feed to snpeff
+    #     '''
+    #     out_base = self.get_file_base(input_vcf, 2)
+    #     strip_cmd = r'''zcat {vcf} | {barebones} | gzip > {out_dir}/{out_vcf}_trimmed.vcf.gz'''.format(
+    #         vcf=input_vcf, barebones=self.vcf_verify, out_dir=vcf_dir, out_vcf=out_base)
+    #     self.subprocess_cmd(strip_cmd, self.vcf_dir)
+    #
+    # def run_filter(self, vcf_dir):
+    #     '''
+    #     run filter_vcf() on input directory
+    #     :param vcf_dir: path to directory of vcf files to parse
+    #     :return: _trimmed.vcf.gz files to run through snpeff
+    #     '''
+    #     for file in os.listdir(vcf_dir):
+    #         if file.endswith('.vcf.gz'):
+    #             self.filter_vcf(file)
