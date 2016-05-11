@@ -6,8 +6,6 @@ import datetime
 import subprocess as sp
 from impala.util import as_pandas
 import os
-import sys
-from tempfile import NamedTemporaryFile as nt
 
 # disable extraneous pandas warning
 pd.options.mode.chained_assignment = None
@@ -156,7 +154,7 @@ class snpeff_pipeline(object):
     ##################
 
     def run_snpeff_routine(self):
-        # self.vars_to_snpeff()
+        self.vars_to_snpeff()
         self.run_parse()
         self.run_parse_tsv()
         self.run_hdfs_upload()
