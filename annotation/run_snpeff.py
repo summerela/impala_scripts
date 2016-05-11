@@ -6,6 +6,7 @@ import datetime
 import subprocess as sp
 from impala.util import as_pandas
 import os
+import sys
 from tempfile import NamedTemporaryFile as nt
 
 # disable extraneous pandas warning
@@ -56,82 +57,31 @@ class snpeff_pipeline(object):
         basename = str('.'.join(in_file.split('.')[:-int(num_to_remove)]) if '.' in in_file else in_file)
         return basename
 
-    ############################
-    # Download Variants Table ##
-    ############################
+    ###################################################
+    # Download Variants Table and run through snpeff ##
+    ###################################################
 
     def run_query(self, input_query):
         self.cur.execute(input_query)
         query_df = as_pandas(self.cur)
         return query_df
 
-    # create vcf header
-    def create_header(self, outfile):
-        # create vcf header
-        lines = []
-        lines.append('##fileformat=VCFv4.0')
-        lines.append('##fileDate=' + self.today)
-        lines.append('##reference=grch37 v.75 \n')
-        header = '\n'.join(lines)
-        with open(outfile, 'wb') as out:
-            out.write(header)
-            out.close()
-
-    def vars_to_file(self):
+    def vars_to_snpeff(self):
         for chrom in self.chroms:
             get_vars_query = "SELECT chrom as '#chrom', pos, var_id as id, ref, allele as alt, 100 as qual, \
                              'PASS' as filter, 'GT' as 'format', '.' as INFO from wgs_ilmn.ilmn_vars \
                              where chrom = '{}'".format(chrom)
             var_df = self.run_query(get_vars_query)
-            # if not var_df.empty:
-            #     var_df.columns = map(str.upper, var_df.columns)
-            #     outfile = "{}/chrom{}_{}.vcf".format(self.vcf_dir, chrom, self.today)
-            #     self.create_header(outfile)
-            #     var_df.to_csv(outfile, header=True, index=False, mode='a', sep='\t')
-            temp = nt(suffix='.vcf')
-            var_df.to_csv(temp, header=True, index=False, mode='a', sep='\t')
-
-
-            snp_out = "chr{}_snpeff.vcf".format(chrom)
-            snpeff_cmd = r'''cat {input} | java -Xmx16g -jar {snpeff} -t GRCh37.75 > {vcf_out}'''.format(input= temp,
-                                                                                                     snpeff=self.snpeff_jar,
+            if not var_df.empty:
+                snp_out = "{}/chr{}_snpeff.vcf".format(self.vcf_dir, chrom)
+                snpeff_cmd = r'''java -Xmx16g -jar {snpeff} -t GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
                                                                                                      vcf_out=snp_out)
-
-            self.subprocess_cmd(snpeff_cmd, self.vcf_dir)
-
-
-
-
-
-            # self.subprocess_cmd(snpeff_cmd, self.vcf_dir)
-
-    ##################################
-    # run vcf files through snpeff  ##
-    ##################################
-
-    def snpeff(self, input_vcf):
-        '''
-        Runs _trimmed.vcf.gz files created with filter_vcf() function
-        through snpeff with the following options:
-            Xmx16g= use 16g of memory for java
-            t = Use multiple threads
-        :param input_vcf: _trimmed.vcf.gz vcf file created with filter_vcf()
-        :return: snpeff.vcf file with annotated snps
-        '''
-        snp_out = "{}_snpeff.vcf".format(self.get_file_base(input_vcf, 1))
-        snpeff_cmd = r'''java -Xmx16g -jar {snpeff} -t GRCh37.75 {vcf} > {vcf_out}'''.format(
-            snpeff = self.snpeff_jar, vcf= input_vcf, vcf_out= snp_out)
-        self.subprocess_cmd(snpeff_cmd, self.vcf_dir)
-
-    def run_snpeff(self):
-        '''
-        run snpeff on all _trimmed.vcf.gz files in vcf_dir
-        :param vcf_dir: path to _trimmed.vcf.gz files to run through snpeff
-        :return: snpeff annotated vcf files
-        '''
-        for file in os.listdir(self.vcf_dir):
-            if file.startswith('chrom'):
-                self.snpeff(file)
+                # run the subprocess command
+                ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
+                try:
+                    print ps.communicate(var_df.to_csv(sep='\t', header=True, index=False))
+                except sp.CalledProcessError as e:
+                    print e
 
     ##########################################################
     ## Output SnpEff effects as tsv file, one effect per line ##
@@ -206,11 +156,10 @@ class snpeff_pipeline(object):
     ##################
 
     def run_snpeff_routine(self):
-        self.vars_to_file()
-        # self.run_snpeff()
-        # self.run_parse()
-        # self.run_parse_tsv()
-        # self.run_hdfs_upload()
+        # self.vars_to_snpeff()
+        self.run_parse()
+        self.run_parse_tsv()
+        self.run_hdfs_upload()
 
 
 ##########  Main Routine  ############
