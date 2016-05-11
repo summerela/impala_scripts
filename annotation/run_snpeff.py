@@ -6,8 +6,7 @@ import datetime
 import subprocess as sp
 from impala.util import as_pandas
 import os
-import sys
-import StringIO
+from tempfile import NamedTemporaryFile as nt
 
 # disable extraneous pandas warning
 pd.options.mode.chained_assignment = None
@@ -89,12 +88,21 @@ class snpeff_pipeline(object):
             #     outfile = "{}/chrom{}_{}.vcf".format(self.vcf_dir, chrom, self.today)
             #     self.create_header(outfile)
             #     var_df.to_csv(outfile, header=True, index=False, mode='a', sep='\t')
-            var_df.to_csv(sys.stdout, sep='\t')
+            temp = nt(suffix='.vcf')
+            var_df.to_csv(temp, header=True, index=False, mode='a', sep='\t')
 
-            # df_out = var_df.to_csv(sys.stdout, sep='\t')
-            # snp_out = "chr{}_snpeff.vcf".format(chrom)
-            # snpeff_cmd = r'''{input} | java -Xmx16g -jar {snpeff} -t GRCh37.75 > {vcf_out}'''.format(input=var_df,
-            #     snpeff=self.snpeff_jar, vcf_out=snp_out)
+
+            snp_out = "chr{}_snpeff.vcf".format(chrom)
+            snpeff_cmd = r'''cat {input} | java -Xmx16g -jar {snpeff} -t GRCh37.75 > {vcf_out}'''.format(input= temp,
+                                                                                                     snpeff=self.snpeff_jar,
+                                                                                                     vcf_out=snp_out)
+
+            self.subprocess_cmd(snpeff_cmd, self.vcf_dir)
+
+
+
+
+
             # self.subprocess_cmd(snpeff_cmd, self.vcf_dir)
 
     ##################################
