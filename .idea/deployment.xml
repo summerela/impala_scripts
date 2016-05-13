@@ -1,18 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="On explicit save action" serverName="glados14" createEmptyFolders="true" promptOnLocalOverwrite="false" filePermissions="420" folderPermissions="493">
+  <component name="PublishConfigData" autoUpload="On explicit save action" serverName="Glados14" createEmptyFolders="true" promptOnLocalOverwrite="false" filePermissions="420" folderPermissions="493">
     <serverData>
-      <paths name="glados14">
+      <paths name="Glados14">
         <serverdata>
           <mappings>
             <mapping deploy="/my_titan_itmi/impala_scripts" local="$PROJECT_DIR$" web="/" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="glados17">
-        <serverdata>
-          <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/global_vars" local="$USER_HOME$/global_vars" web="/" />
           </mappings>
         </serverdata>
       </paths>
