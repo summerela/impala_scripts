@@ -270,6 +270,7 @@ for query in create_tables_list:
 ### ADD VARIANT  ANNOTATIONS  ###
 #################################
 
+# add rsID from dbSNP
 for chrom in snpeff.chroms:
     for pos in snpeff.blk_pos:
         add_dbsnp = '''
@@ -282,7 +283,14 @@ for chrom in snpeff.chroms:
             WHERE v.chrom = '{chrom}' and d.chrom = '{chrom}'
             AND v.blk_pos = {pos} and d.blk_pos = {pos};
             '''.format(chrom=chrom, pos=pos)
+        snpeff.run_query(add_dbsnp)
 
+# compute stats
+snpeff.run_query("compute stats wgs_ilmn.vars_dbsnp;")
+
+# add kaviar frequency and source from Kaviar
+for chrom in snpeff.chroms:
+    for pos in snpeff.blk_pos:
         add_kaviar = '''
         insert into wgs_ilmn.vars_kaviar partition (chrom, blk_pos)
         SELECT v.var_id, v.pos, v.ref, v.allele, v.rs_id,
@@ -294,7 +302,17 @@ for chrom in snpeff.chroms:
         WHERE v.chrom = '{chrom}' and k.chrom = '{chrom}'
         AND v.blk_pos = {pos} and k.blk_pos = {pos};
         '''.format(chrom=chrom, pos=pos)
+        snpeff.run_query(add_kaviar)
 
+# compute stats
+snpeff.run_query("compute stats wgs_ilmn.vars_kaviar;")
+
+# drop intermediary table
+snpeff.run_query("drop table wgs_ilmn.vars_dbsnp")
+
+# add clinvar significance and disease identification from clinVar
+for chrom in snpeff.chroms:
+    for pos in snpeff.blk_pos:
         add_clinvar = '''
         insert into wgs_ilmn.vars_clinvar partition (chrom, blk_pos)
         SELECT v.var_id, v.pos, v.ref, v.allele, v.rs_id,
@@ -306,7 +324,17 @@ for chrom in snpeff.chroms:
         WHERE v.chrom = '{chrom}' and c.chrom = '{chrom}'
         AND v.blk_pos = {pos} and c.blk_pos = {pos};
         '''.format(chrom=chrom, pos=pos)
+        snpeff.run_query(add_clinvar)
 
+# compute stats
+snpeff.run_query("compute stats wgs_ilmn.vars_clinvar;")
+
+# drop intermediary table
+snpeff.run_query("drop table wgs_ilmn.vars_kaviar")
+
+# add hgmd ratings
+for chrom in snpeff.chroms:
+    for pos in snpeff.blk_pos:
         add_hgmd = '''
         insert into wgs_ilmn.vars_hgmd partition (chrom, blk_pos)
         SELECT v.var_id, v.pos, v.ref, v.allele, v.rs_id,
@@ -319,7 +347,17 @@ for chrom in snpeff.chroms:
         WHERE v.chrom = '{chrom}' and h.chrom = '{chrom}'
         AND v.blk_pos = {pos} and h.blk_pos = {pos};
         '''.format(chrom=chrom, pos=pos)
+        snpeff.run_query(add_hgmd)
 
+# compute stats
+snpeff.run_query("compute stats wgs_ilmn.vars_hgmd;")
+
+# drop intermediary table
+snpeff.run_query("drop table wgs_ilmn.vars_clinvar")
+
+# add cadd, dann and interpro domain from dbnsfp
+for chrom in snpeff.chroms:
+    for pos in snpeff.blk_pos:
         add_dbnsfp = '''
         insert into wgs_ilmn.vars_dbnsfp partition (chrom, blk_pos)
         SELECT v.var_id, v.pos, v.ref, v.allele, v.rs_id,
@@ -333,7 +371,17 @@ for chrom in snpeff.chroms:
         WHERE v.chrom = '{chrom}' and d.chrom = '{chrom}'
         AND v.blk_pos = {pos} and d.blk_pos = {pos};
         '''.format(chrom=chrom, pos=pos)
+        snpeff.run_query(add_dbnsfp)
 
+# compute stats
+snpeff.run_query("compute stats wgs_ilmn.vars_dbnsfp;")
+
+# drop intermediary table
+snpeff.run_query("drop table wgs_ilmn.vars_hgmd")
+
+# add gene, transcript and exon id and names from ensembl
+for chrom in snpeff.chroms:
+    for pos in snpeff.blk_pos:
         add_ensembl = '''
             SELECT v.var_id, v.pos, v.ref, v.allele, v.rs_id,
                 v.dbsnp_buildid, v.kav_freq, v.kav_source,
@@ -348,22 +396,13 @@ for chrom in snpeff.chroms:
             WHERE v.chrom = '{chrom}' and e.chrom = '{chrom}'
             AND v.blk_pos = {pos} and e.blk_pos = {pos};
             '''.format(chrom=chrom, pos=pos)
-
-        annot_list = [add_dbsnp, add_kaviar, add_clinvar, add_hgmd, add_dbnsfp, add_ensembl]
-
-        for query in annot_list:
-            print ("Running query: \n {} \n").format(query)
-            snpeff.run_query(query)
+        snpeff.run_query(add_ensembl)
 
 # compute stats
-snpeff.run_query("compute stats wgs_ilmn.vars_dbnsfp;")
+snpeff.run_query("compute stats wgs_ilmn.vars_ensembl;")
 
-# clean up temp tables
-drop_list1 = ['wgs_ilmn.vars_dbsnp', 'wgs_ilmn.vars_kaviar', 'wgs_ilmn.vars_clinvar',
-              'wgs_ilmn.vars_hgmd']
-
-for query in drop_list1:
-    snpeff.run_query("drop table {}".format(query))
+# drop intermediary table
+snpeff.run_query("drop table wgs_ilmn.vars_dbnsfp")
 
 #######################################
 ### ADD snpEff Coding Consequences  ###
@@ -526,3 +565,5 @@ for chrom in snpeff.chroms:
         snpeff.run_query(add_ppc)
 
 snpeff.run_query("compute stats wgs_ilmn.global_vars")
+
+print("Global variants pipeline complete.")

@@ -69,6 +69,7 @@ class run_snpeff(object):
             print e
 
     def run_query(self, input_query):
+        print ("Running query: {}").format(input_query)
         try:
             self.cur.execute(input_query)
         except Exception as e:
