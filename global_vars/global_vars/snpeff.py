@@ -10,7 +10,7 @@ import os
 # disable extraneous pandas warning
 pd.options.mode.chained_assignment = None
 
-class run_snpeff(object):
+class snpeff_pipeline(object):
 
     # set related file paths
     tool_path = '/users/selasady/my_titan_itmi/tools/'
@@ -27,10 +27,7 @@ class run_snpeff(object):
         self.impala_port = impala_port
         self.impala_name = impala_user_name
         self.hdfs_path = hdfs_path
-        # self.chroms = map(str, range(1, 22)) + ['X', 'Y']
-        self.chroms = map(str, range(1,3))
-        self.blk_pos = map(str, range(0,50))
-        # self.blk_pos = map(str, range(0, 250))
+        self.chroms = map(str, range(1, 22)) + ['X', 'Y']
         self.conn = connect(host=self.impala_host, port=self.impala_port, timeout=10000, user=self.impala_name)
         self.cur = self.conn.cursor()
         self.now = datetime.datetime.now()
@@ -62,28 +59,17 @@ class run_snpeff(object):
     # Download Variants Table and run through snpeff ##
     ###################################################
 
-    def pandas_query(self, input_query):
-        try:
-            print ("Running query: {}".format(input_query))
-            self.cur.execute(input_query)
-            query_df = as_pandas(self.cur)
-            return query_df
-        except Exception as e:
-            print e
-
     def run_query(self, input_query):
-        print ("Running query: {}").format(input_query)
-        try:
-            self.cur.execute(input_query)
-        except Exception as e:
-            print e
+        self.cur.execute(input_query)
+        query_df = as_pandas(self.cur)
+        return query_df
 
     def vars_to_snpeff(self):
         for chrom in self.chroms:
             get_vars_query = "SELECT chrom as '#chrom', pos, var_id as id, ref, allele as alt, 100 as qual, \
                              'PASS' as filter, 'GT' as 'format', '.' as INFO from wgs_ilmn.ilmn_vars \
                              where chrom = '{}'".format(chrom)
-            var_df = self.pandas_query(get_vars_query)
+            var_df = self.run_query(get_vars_query)
             if not var_df.empty:
                 snp_out = "{}/chr{}_snpeff.vcf".format(self.vcf_dir, chrom)
                 snpeff_cmd = r'''java -Xmx16g -jar {snpeff} -t GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
@@ -163,21 +149,30 @@ class run_snpeff(object):
                 self.upload_hdfs(file)
         self.update_permissions()
 
-    ###################
-    ## Main routine  ##
-    ###################
-    def run_pipeline(self):
-        print ("Running SnpEff on variants... \n")
+    ##################
+    ## Run routine  ##
+    ##################
+
+    def run_snpeff_routine(self):
         self.vars_to_snpeff()
-        print ("Parsing snpeff output... \n")
         self.run_parse()
         self.run_parse_tsv()
-        print ("Uploading snepff files to HDFS")
         self.run_hdfs_upload()
 
 
 ##########  Main Routine  ############
 if __name__ == "__main__":
-    run_snpeff.run_pipeline()
 
+    vcf_dir = '/titan/ITMI1/workspaces/users/selasady/impala_scripts/annotation/snpeff'
+    impala_host = 'glados14'
+    impala_port = 21050
+    impala_user_name = 'selasady'
+    hdfs_path = '/user/selasady/'
+
+    #######################
+    # run snpeff routines #
+    #######################
+    snpeff = snpeff_pipeline(vcf_dir, impala_host, impala_port, impala_user_name, hdfs_path)
+    snpeff.run_snpeff_routine()
+    snpeff.cur.close()
 
