@@ -21,11 +21,11 @@ class run_snpeff(object):
     snpsift_jar = '{}snpEff/SnpSift.jar'.format(tool_path)
     vcf_verify = '{}snpEff/scripts/vcfBareBones.pl'.format(tool_path)
 
-    def __init__(self, vcf_dir, impala_host, impala_port, impala_user_name, hdfs_path):
+    def __init__(self, vcf_dir, impala_host, impala_port, hdfs_path):
         self.vcf_dir = vcf_dir
         self.impala_host = impala_host
         self.impala_port = impala_port
-        self.impala_name = impala_user_name
+        self.impala_name = 'hdfs'
         self.hdfs_path = hdfs_path
         # self.chroms = map(str, range(1, 22)) + ['X', 'Y']
         self.chroms = map(str, range(1,3))
@@ -153,15 +153,15 @@ class run_snpeff(object):
         self.subprocess_cmd(upload_cmd, self.vcf_dir)
 
     def update_permissions(self):
-        chown_cmd = "hdfs dfs -chown -R impala:supergroup {}".format(self.hdfs_path)
+        chown_cmd = "hdfs dfs -chmod 777 {}".format(self.hdfs_path)
         self.subprocess_cmd(chown_cmd, self.vcf_dir)
 
     def run_hdfs_upload(self):
+        self.update_permissions()
         self.make_hdfs_dir()
         for file in os.listdir(self.vcf_dir):
             if file.endswith('_snpeff_final.tsv'):
                 self.upload_hdfs(file)
-        self.update_permissions()
 
     ###################
     ## Main routine  ##
