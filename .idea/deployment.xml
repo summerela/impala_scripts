@@ -5,7 +5,8 @@
       <paths name="Glados14">
         <serverdata>
           <mappings>
-            <mapping deploy="/titan/ITMI1/workspaces/users/selasady/impala_scripts" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/my_titan_itmi/impala_scripts" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/global_vars" local="$USER_HOME$/global_vars" web="/" />
           </mappings>
         </serverdata>
       </paths>
