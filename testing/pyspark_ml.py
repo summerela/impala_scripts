@@ -4,7 +4,7 @@ import os
 from pyspark import SparkContext, SparkConf, SQLContext
 from pyspark.mllib.tree import RandomForest, RandomForestModel
 from pyspark.mllib.util import MLUtils
-
+from pyspark.sql.types import *
 
 class pyspark_ml():
 
@@ -22,6 +22,15 @@ class pyspark_ml():
         self.sc = SparkContext(conf=self.conf)
         self.somatic_chr = sorted(map(int, range(1, 23)))
         self.sqlContext = SQLContext(self.sc)
+
+    def tsv_to_libsvm(self, in_file):
+        df = self.sqlContext.read.load(in_file,
+                                  format='com.databricks.spark.csv',
+                                  header='true',
+                                  inferSchema='true')
+        print df.describe().show()
+
+
 
     def random_forest(self, in_file):
         data = MLUtils.loadLibSVMFile(self.sc, in_file)
@@ -51,5 +60,8 @@ if __name__ == '__main__':
     # specify name of input file on hdfs
     tsv_infile = 'sample_libsvm_data.txt'
 
+    # parse vcf
+    spark.tsv_to_libsvm(tsv_infile)
+
     # run tests
-    spark.random_forest(tsv_infile)
+    # spark.random_forest(tsv_infile)
