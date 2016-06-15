@@ -1,285 +1,183 @@
-##############################################################
-## update the following variables before running the script ##
-##############################################################
-# impala connection strings
-impala_host = 'glados18'
-impala_port = '21050'
-impala_user_name = 'selasady'
+#!/usr/bin/env python
 
-# specify input variants db and table
-input_db = 'p7_product'
-input_table = 'dbnsfp_vars'
+import pandas as pd
+from impala.dbapi import connect
+import datetime
+import subprocess as sp
+from impala.util import as_pandas
+import os
 
-# prefix for output files
-out_name = 'snpeff_vars'
+# disable extraneous pandas warning
+pd.options.mode.chained_assignment = None
 
-# home path to user's hdfs directory
-hdfs_path = '/user/selasady/'
+class run_snpeff(object):
 
-# unix file paths
-java_path = '/tools/java/jdk1.7/bin/java'
-gatk_jar =  '/users/selasady/my_titan_itmi/tools/GenomeAnalysisTK.jar'
-ref_fasta = '/users/selasady/my_titan_itmi/tools/human_g1k_v37.fasta'
-snpeff_jar = '/users/selasady/my_titan_itmi/tools/snpEff/snpEff.jar'
-snpeff_oneperline_perl = '/users/selasady/my_titan_itmi/tools/snpEff/scripts/vcfEffOnePerLine.pl'
-snpsift_jar = '/users/selasady/my_titan_itmi/tools/snpEff//SnpSift.jar'
-vcf_verify = '/users/selasady/my_titan_itmi/tools/snpEff/scripts/vcfBareBones.pl'
+    # set related file paths
+    tool_path = '/users/selasady/my_titan_itmi/tools/'
+    gatk = '{}GenomeAnalysisTK.jar'.format(tool_path)
+    ref_fasta = '{}human_g1k_v37.fasta'.format(tool_path)
+    snpeff_jar = '{}snpEff/snpEff.jar'.format(tool_path)
+    snpeff_oneperline = '{}snpEff/scripts/vcfEffOnePerLine.pl'.format(tool_path)
+    snpsift_jar = '{}snpEff/SnpSift.jar'.format(tool_path)
+    vcf_verify = '{}snpEff/scripts/vcfBareBones.pl'.format(tool_path)
+
+    def __init__(self, vcf_dir, impala_host, impala_port, hdfs_path):
+        self.vcf_dir = vcf_dir
+        self.impala_host = impala_host
+        self.impala_port = impala_port
+        self.impala_name = 'hdfs'
+        self.hdfs_path = hdfs_path
+        # self.chroms = map(str, range(1, 22)) + ['X', 'Y']
+        self.chroms = map(str, range(1,3))
+        self.blk_pos = map(str, range(0,50))
+        # self.blk_pos = map(str, range(0, 250))
+        self.conn = connect(host=self.impala_host, port=self.impala_port, timeout=10000, user=self.impala_name)
+        self.cur = self.conn.cursor()
+        self.now = datetime.datetime.now()
+        self.today = str(self.now.strftime("%Y%m%d"))
+        self.hdfs_out = "{}/snpeff_{}".format(self.hdfs_path, self.today)
+
+    @staticmethod
+    # create function to run bash command with subprocess
+    def subprocess_cmd(command, input_dir):
+        '''
+        Run programs in bash via subprocess
+        :param command: command string as would be run on the command line
+        :param input_dir: optional directory to run command in, default cwd
+        :return: runs bash command
+        '''
+        print ("Running \n {}".format(command))
+        ps = sp.Popen(command, shell=True, stdout=sp.PIPE, stderr=sp.PIPE, cwd=input_dir)
+        try:
+            print ps.communicate()
+        except sp.CalledProcessError as e:
+            print e
+
+    @staticmethod
+    def get_file_base(in_file, num_to_remove):
+        basename = str('.'.join(in_file.split('.')[:-int(num_to_remove)]) if '.' in in_file else in_file)
+        return basename
+
+    ###################################################
+    # Download Variants Table and run through snpeff ##
+    ###################################################
+
+    def pandas_query(self, input_query):
+        try:
+            print ("Running query: {}".format(input_query))
+            self.cur.execute(input_query)
+            query_df = as_pandas(self.cur)
+            return query_df
+        except Exception as e:
+            print e
+
+    def run_query(self, input_query):
+        print ("Running query: {}").format(input_query)
+        try:
+            self.cur.execute(input_query)
+        except Exception as e:
+            print e
+
+    def vars_to_snpeff(self):
+        for chrom in self.chroms:
+            get_vars_query = "SELECT chrom as '#chrom', pos, var_id as id, ref, allele as alt, 100 as qual, \
+                             'PASS' as filter, 'GT' as 'format', '.' as INFO from wgs_ilmn.ilmn_vars \
+                             where chrom = '{}'".format(chrom)
+            var_df = self.pandas_query(get_vars_query)
+            if not var_df.empty:
+                snp_out = "{}/chr{}_snpeff.vcf".format(self.vcf_dir, chrom)
+                snpeff_cmd = r'''java -Xmx16g -jar {snpeff} -t GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
+                                                                                                     vcf_out=snp_out)
+                # run the subprocess command
+                ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
+                try:
+                    print ps.communicate(var_df.to_csv(sep='\t', header=True, index=False))
+                except sp.CalledProcessError as e:
+                    print e
+
+    ##########################################################
+    ## Output SnpEff effects as tsv file, one effect per line ##
+    ############################################################
+    def parse_snpeff(self, input_vcf):
+        '''
+        Parse snpeff output to contain one allele per row
+        :param input_vcf: snpeff annotation results
+        :return: tsv file for upload to impala table
+        '''
+        out_name = "{}.tsv".format(self.get_file_base(input_vcf, 1))
+        parse_cmd = 'cat {vcf} | {perl} | java -Xmx16g -jar {snpsift} extractFields \
+            - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
+            "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
+            "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {out}'.format(vcf=input_vcf, perl=self.snpeff_oneperline, \
+                                                         snpsift=self.snpsift_jar, out=out_name)
+        self.subprocess_cmd(parse_cmd, self.vcf_dir)
+
+    def run_parse(self):
+        '''
+        parse snpeff output and create tsv files for
+        upload to impala table
+        :param vcf_dir: path to directory containing snpeff annotated vcf files
+        :return: annotated tsv files for upload to impala
+        '''
+        for file in os.listdir(self.vcf_dir):
+            if file.endswith('_snpeff.vcf'):
+                self.parse_snpeff(file)
+
+    ############################################
+    ## Remove Header and add pos_block column ##
+    ############################################
+
+    def parse_tsv(self, input_tsv):
+        final_out = "{}/{}_final.tsv".format(self.vcf_dir, self.get_file_base(input_tsv, 1))
+        final_df = pd.read_csv("{}/{}".format(self.vcf_dir, input_tsv), sep='\t', skiprows=1, header=None)
+        # cant use seq in pandas df slicing
+        final_df = final_df[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0]]
+        final_df['pos_block'] = final_df[1].div(1000000).astype(int)
+        final_df.to_csv(final_out, sep='\t', header=False, index=False)
+
+    def run_parse_tsv(self):
+        for file in os.listdir(self.vcf_dir):
+            if file.endswith('_snpeff.tsv'):
+                self.parse_tsv(file)
+
+    #############################
+    ## Upload results to hdfs  ##
+    #############################
+
+    def make_hdfs_dir(self):
+        mkdir_cmd = "hdfs dfs -mkdir {}".format(self.hdfs_out)
+        self.subprocess_cmd(mkdir_cmd, self.vcf_dir)
+
+    def upload_hdfs(self, in_tsv):
+        upload_cmd = 'hdfs dfs -put {} {}'.format(in_tsv, self.hdfs_out)
+        self.subprocess_cmd(upload_cmd, self.vcf_dir)
+
+    def update_permissions(self):
+        chown_cmd = "hdfs dfs -chmod 777 {}".format(self.hdfs_path)
+        self.subprocess_cmd(chown_cmd, self.vcf_dir)
+
+    def run_hdfs_upload(self):
+        self.update_permissions()
+        self.make_hdfs_dir()
+        for file in os.listdir(self.vcf_dir):
+            if file.endswith('_snpeff_final.tsv'):
+                self.upload_hdfs(file)
+
+    ###################
+    ## Main routine  ##
+    ###################
+    def run_pipeline(self):
+        print ("Running SnpEff on variants... \n")
+        self.vars_to_snpeff()
+        print ("Parsing snpeff output... \n")
+        self.run_parse()
+        self.run_parse_tsv()
+        print ("Uploading snepff files to HDFS")
+        self.run_hdfs_upload()
 
 
-
-## create connection to impala
-conn=connect(host=impala_host, port=impala_port, timeout=10000, user=impala_user_name)
-cur = conn.cursor()
-
-# create list of chromosomes to process
-chroms = map( str, range(1,22) ) + ['X','Y','M']
-
-##########################################
-## create vcf files for each chromosome ##
-##########################################
-# create vcf header
-def create_header(outfile_name):
-   # create vcf header
-    lines=[]
-    lines.append('##fileformat=VCFv4.0')
-    lines.append('##fileDate='+ time.strftime("%y%m%d"))
-    lines.append('##reference=grch37 v.74')
-    lines.append('#CHROM\t' + 'POS\t' + 'ID\t' + 'REF\t' + 'ALT\t' + 'INFO\t' + '\n')
-    header = '\n'.join(lines)
-    out = open(outfile_name, 'wb')
-    out.write(header)
-    out.close()
-
-### download variants that are not intergenic
-def create_vcf(db_name, table_name, chrom_name):
-    print "Looking for variants in chromosome {}... \n".format(chrom_name)
-    # create named file for each chromosome
-    vcf_out = 'chr' + chrom_name + '_' + out_name + '.vcf'
-    # connect to vars_to_snpeff table
-    gene_vars = "SELECT chrom, pos, \
-    CASE when rs_id is null then '.' \
-     else rs_id \
-    END AS id, ref, alt, '.' as info from {}.{} WHERE chrom = '{}' order by pos".format(db_name, table_name, chrom_name)
-    cur.execute(gene_vars)
-    vars = as_pandas(cur)
-    # write variants to file
-    if len(vars) > 0:
-        print "Creating VCF files for chromosome {}... \n".format(chrom_name)
-        create_header(vcf_out)
-        vars.to_csv(vcf_out, sep='\t', index=None, mode='a', header=False)
-    else:
-        print "No variants found for chromosome {} \n".format(chrom_name)
+##########  Main Routine  ############
+if __name__ == "__main__":
+    run_snpeff.run_pipeline()
 
 
-# download each chromosome in input_table and turn into vcf file
-# for chrom in chroms:
-#     create_vcf(input_db, input_table, chrom)
-
-######################################################
-# check vcf formatting using snpeff vcfBareBones.pl ##
-######################################################
-# process all vcf files created from the query using snpeff tsv to vcf
-# for file in os.listdir(os.getcwd()):
-#     if file.endswith(out_name + '.vcf'):
-#         print "Verifying VCF format for {}... \n".format(file)
-#         vcf_checked_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_verified.vcf'
-#         snp_verify_cmd = 'cat {} | {} > {}'.format(file, vcf_verify,vcf_checked_out)
-#         # create the file and run snpeff
-#         with open(vcf_checked_out, "w") as out_file:
-#             try:
-#                 ps = subprocess.Popen(snp_verify_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-#                 print ps.communicate()[0]
-#             except subprocess.CalledProcessError as e:
-#                  print e.output
-
-# ############################################################
-# # annotate variants with coding consequences using snpeff ##
-# ############################################################
-# for file in os.listdir(os.getcwd()):
-#     # run intergenic variants through snpeff using 'closest' feature to annotate to nearest gene
-#     if file.endswith('intergenic_verified.vcf'):
-#         print "Annotating coding consequences for {} with snpeff... \n".format(file)
-#         # create names for input and output files
-#         vcf_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_snpeff.vcf'
-#         # create the file and run snpeff
-#         with open(vcf_out, "w") as f:
-#             try:
-#                 subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "closest", "-t", "-v", "GRCh37.75", file], stdout=f)
-#             except subprocess.CalledProcessError as e:
-#                  print e.output
-    # run non-intergenic variants through snpeff
-    # elif file.endswith(out_name + '_verified.vcf'):
-    # print "Annotating coding consequences for {} with snpeff... \n".format(in_file)
-    # # create names for input and output files
-    # vcf_out = str('.'.join(in_file.split('.')[:-1]) if '.' in in_file else in_file) + '_snpeff.vcf'
-    # # create the file and run snpeff
-    # with open(vcf_out, "w") as f:
-    #     try:
-    #         subprocess.call([java_path, "-Xmx16g", "-jar", snpeff_jar, "-t", "-v", "GRCh37.75", in_file], stdout=f)
-    #     except subprocess.CalledProcessError as e:
-    #          print e.output
-
-# ##########################################################
-# ## Output SnpEff effects as tsv file, one effect per line ##
-# ############################################################
-for file in os.listdir(os.getcwd()):
-    if file.endswith('_snpeff.vcf'):
-        print "Parsing snpeff output for {}... \n".format(file)
-        tsv_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_parsed.tsv'
-        # create command to parse snpeff
-        snpout_cmd = 'cat {} | {} | {} -Xmx16g -jar {} extractFields \
-        - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
-        "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
-        "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {}'.format(file, snpeff_oneperline_perl, \
-        java_path, snpsift_jar,tsv_out)
-        # call subprocess and communicate to pipe output between commands
-        ps = subprocess.Popen(snpout_cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-        print ps.communicate()[0]
-
-
-# # TODO enable function when snpeff 'closest' function is fixed by Broad Inst.
-#
-# import copy
-#
-# for file in os.listdir(os.getcwd()):
-#     if file.endswith('intergenic_verified_snpeff.vcf'):
-#         print "Parsing snpeff output for {}... \n".format(file)
-#         # create command to parse snpeff
-#         df = pd.read_csv(file, sep='\t', skiprows=3, usecols=['#CHROM', 'POS', 'ID', 'REF', 'ALT', 'INFO'])
-#
-#         for row in df.itertuples():
-#             fixed_cols = list(row[:-1])
-#             parts = row[-1].split('|')
-#
-#             # the first one is CLOSEST=0 or something
-#             fixed_cols.append(parts.pop(0))
-#
-#             for el in parts:
-#                 my_row = copy.deepcopy(fixed_cols)
-#                 my_row.extend(el.split(','))
-#
-#                 out = ','.join(map(str, my_row))
-#
-#                 with open('./test.csv','ab') as outfile:
-#                     writer = csv.writer(outfile, lineterminator='\n', newline='')
-#                     writer.writerow([out])
-#
-#
-# ############################################
-# ## Remove Header and add pos_block column ##
-# ############################################
-
-# TODO convert '.' to '\n' for impala import
-
-# # remove header that was needed for running snpeff
-# for file in os.listdir(os.getcwd()):
-#     if file.endswith('_parsed.tsv'):
-#         final_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_final.csv'
-#         final_df = pd.read_csv(file, sep='\t', skiprows=1, header=None)
-#         # cant use seq in pandas df slicing
-#         final_df = final_df[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0]]
-#         final_df['pos_block'] = final_df[1].div(1000000).astype(int)
-#         final_df.to_csv(final_out, sep=',', header=False, index=False)
-#
-# ###############################
-# ## Upload results to hdfs  ##
-# #############################
-# # TODO add distance column to non-intergenic variants table when fixed
-# #
-# import datetime
-# now = datetime.datetime.now()
-# today = str(now.strftime("%Y%m%d"))
-#
-# # # define output path on hdfs
-# out_path = "{}snpeff_{}".format(hdfs_path, today)
-# mkdir_cmd = "hdfs dfs -mkdir {}".format(out_path)
-# mkdir_proc = subprocess.Popen(mkdir_cmd, shell=True, stderr=subprocess.STDOUT)
-# if mkdir_proc.communicate()[0]:
-#     print "Errors creating HDFS directory: " + mkdir_proc.communicate()[0]
-#
-# # put each file in the snpeff directory
-# for file in os.listdir(os.getcwd()):
-#     if file.endswith('_final.csv'):
-#         print "Uploading files to HDFS... \n"
-#         hdfs_cmd = 'hdfs dfs -put {} {}'.format(file, out_path)
-#         hdfs_proc = subprocess.Popen(hdfs_cmd, shell=True, stderr=subprocess.STDOUT)
-#         if hdfs_proc.communicate()[0]:
-#             print "Errors uploading files to HDFS: " + hdfs_proc.communicate()[0]
-#
-# # set read/write permissions on directory
-# chown_dir_cmd = "hdfs dfs -chown -R impala:supergroup {}".format(hdfs_path)
-# chown_proc = subprocess.Popen(chown_dir_cmd, shell=True, stderr=subprocess.STDOUT)
-# if chown_proc.communicate()[0]:
-#     print "Errors setting read/write permissions on HDFS directory: " + chown_proc.communicate()[0]
-#
-# ##############################
-# # Insert results into table ##
-# ##############################
-# # drop the table if it already exists
-# drop_coding = "drop table if exists {}.coding_{}".format(input_db, today)
-# cur.execute(drop_coding)
-
-# create partitioned table
-# create_coding_table = '''
-# create table {}.coding_{}
-#     (
-#       pos int,
-#       id string,
-#       ref string,
-#       alt string,
-#       gene string,
-#       gene_id string,
-#       effect string,
-#       impact string,
-#       feature string,
-#       feature_id string,
-#       biotype string,
-#       rank int,
-#       distance int,
-#       hgvs_c string,
-#       hgvs_p string
-#       )
-# PARTITIONED BY (chrom string, pos_block int)
-#    '''.format(input_db, today)
-# cur.execute(create_coding_table)
-
-# load hdfs files into table
-# load_query = '''
-# load data inpath '{}' into table {}.coding_{}
-# '''.format(out_path, input_db, today)
-# cur.execute(load_query)
-
-# ############################
-# # add pos_block partition ##
-# ############################
-#
-#
-# ############################
-# # compute stats on table ##
-# ############################
-# coding_compstats = "compute stats {}.coding_{}".format(input_db, today)
-# cur.execute(coding_compstats)
-
-#####################
-# close connection ##
-#####################
-cur.close()
-
-# vcf_basic = '/users/selasady/my_titan_itmi/impala_scripts/annotation/parse_vcf.pl'
-
-# OLD FORMAT USING vcftools verify
-# process all vcf files created from the query
-
-# out_name = 'file_out_basename'
-# vcf_out =
-#
-# for file in os.listdir(os.getcwd()):
-#     if any(file.endswith(x) for x in ((out_name + '.vcf'), (out_name + '_intergenic.vcf'))):
-#         print "Verifying VCF format for {}... \n".format(file)
-#         vcf_checked_out = str('.'.join(file.split('.')[:-1]) if '.' in file else file) + '_verified.vcf'
-#         # create the file and run snpeff
-#         with open(vcf_out, "w") as out_file:
-#             try:
-#                 subprocess.call(['perl', vcf_basic, file], stdout=out_file)
-#             except subprocess.CalledProcessError as e:
-#                  print e.output
