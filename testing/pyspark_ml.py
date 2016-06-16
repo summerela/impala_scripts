@@ -3,6 +3,8 @@
 import os
 from pyspark import SparkContext, SparkConf, SQLContext
 from pyspark.mllib.tree import RandomForest, RandomForestModel
+from pyspark.mllib.linalg import Vectors
+from pyspark.mllib.feature import StandardScaler
 from pyspark.mllib.util import MLUtils
 from pyspark.sql.types import *
 
@@ -27,8 +29,29 @@ class pyspark_ml():
         df = self.sqlContext.read.load(in_file,
                                   format='com.databricks.spark.csv',
                                   header='true',
-                                  inferSchema='true')
-        print df.describe().show()
+                                  inferSchema='true',
+                                  delimiter='\t' )
+        print df.take(10)
+
+    def scale_features(self, in_file):
+        data = MLUtils.loadLibSVMFile(self.sc, in_file)
+        label = data.map(lambda x: x.label)
+        features = data.map(lambda x: x.features)
+
+        scaler1 = StandardScaler().fit(features)
+        scaler2 = StandardScaler(withMean=True, withStd=True).fit(features)
+
+        # data1 will be unit variance.
+        data_var = label.zip(scaler1.transform(features))
+
+        # Without converting the features into dense vectors, transformation with zero mean will raise
+        # exception on sparse vector.
+        # data2 will be unit variance and zero mean.
+        data_mean = label.zip(scaler2.transform(features.map(lambda x: Vectors.dense(x.toArray()))))
+
+        return data_var, data_mean
+
+
 
 
 
@@ -63,5 +86,10 @@ if __name__ == '__main__':
     # parse vcf
     spark.tsv_to_libsvm(tsv_infile)
 
-    # run tests
+    data_var, data_mean = spark.scale_features(tsv_infile)
+
+
+    print data_var.take(10)
+
+    # run random forest
     # spark.random_forest(tsv_infile)
