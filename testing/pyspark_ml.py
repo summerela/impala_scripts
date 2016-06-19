@@ -1,18 +1,14 @@
 #!/usr/bin/env pyspark
 
+'''
+ pyspark --packages com.databricks:spark-csv_2.10:1.2.0 pyspark_ml.py  2>/dev/null
+'''
+
 import os
 from pyspark import SparkContext, SparkConf, SQLContext
-from pyspark.mllib.linalg import Vectors
 from pyspark.mllib.feature import StandardScaler
-from pyspark.mllib.util import MLUtils
-from pyspark.mllib.classification import SVMWithSGD
+from pyspark.mllib.classification import SVMWithSGD, LogisticRegressionWithLBFGS, NaiveBayes
 from pyspark.mllib.regression import LabeledPoint, LinearRegressionWithSGD
-from pyspark.mllib.evaluation import RegressionMetrics
-from pyspark.mllib.classification import LogisticRegressionWithLBFGS
-from pyspark.mllib.classification import NaiveBayes
-from pyspark.ml.feature import VectorAssembler
-from pyspark.sql.functions import col
-
 
 
 
@@ -36,35 +32,41 @@ class pyspark_classify():
         self.sc = SparkContext(conf=self.conf)
         # create sql context submodule for extra features
         self.sqlContext = SQLContext(self.sc)
-        # read in parquet format data from hdfs
-        self.data = self.sqlContext.read.parquet("{}".format(in_file))
-        self.label = self.data.map(lambda x: x.label)
-        self.features = self.data.map(lambda x: x[['qual', 'filter', 'rsid']])
-        # create a set of labeled points to pass to svm model
-        # self.labeled_points = self.data.map(lambda row: LabeledPoint(row[0], row[1:]))
+        # read in data from hdfs
+        self.data = self.sc.textFile("{}".format(self.in_file)).map(lambda line:[float(x) for x in line.split(' ')])
+        self.features = self.data.map(lambda row: row[1:])
+        self.labels = self.data.map(lambda row: row[0])
 
-    def scale_split(self):
-        # create scaler model to transform data to mean of 0 and scale data by stdev
-        scaler = StandardScaler(withMean=True, withStd=True).fit(self.features)
-        # apply scaling to data features
-        scalerModel = scaler.fit(self.data)
-        scaledData = scalerModel.transform(self.data)
-        # create training and test set
-        trainingData, testData = scaledData.randomSplit([0.7, 0.3])
-        # cach the training data for speed
-        trainingData.cache()
-        return trainingData, testData
+    def scale_data(self):
+        # scale data to have 0 mean and std
+        scaler = StandardScaler(withStd=True, withMean=False)
+        scalerModel = scaler.fit(self.features)
+        # Normalize each feature to have unit standard deviation.
+        scaledFeatures = scalerModel.transform(self.features)
+        transformedData = self.labels.zip(scaledFeatures)
+        transformedData = transformedData.map(lambda row: LabeledPoint(row[0], [row[1]]))
+        return transformedData
 
-    def getMSE(self, testingData, model):
-        # get mean squared error for each model
-        valuesAndPreds = testingData.map(lambda p: (p.label, model.predict(p.features[0])))
+    def split_data(self):
+        # split the data into training and testing sets
+        scaled_data = self.scale_data()
+        train_set, test_set = scaled_data.randomSplit([0.8,0.2])
+        return train_set, test_set
+
+    def getMSE(self, model, test_set):
+        # use testing data to get mean squared error for each model
+        valuesAndPreds = test_set.map(lambda p: (p.label, model.predict(p.features[0])))
         MSE = valuesAndPreds.map(lambda (v, p): (v - p) ** 2).reduce(lambda x, y: x + y) / valuesAndPreds.count()
         return MSE
+
+    def getTrainingError(self, model, test_set):
+        labelsAndPreds = test_set.map(lambda p: (p.label, model.predict(p.features)))
+        trainErr = labelsAndPreds.filter(lambda (v, p): v != p).count() / float(test_set.count())
+        return trainErr
 
     def run_svm(self, training_data):
         # Build the model
         svm_model = SVMWithSGD.train(training_data, iterations=int(self.num_iterations))
-        print("Mean Squared Error = " + str(self.getMSE(svm_model)))
         return svm_model
 
     def run_linear_regression(self, training_data):
@@ -79,33 +81,54 @@ class pyspark_classify():
         bayes_model = NaiveBayes.train(training_data, lambda_=1.0)
         return bayes_model
 
-
-
-
-
+    def train_models(self):
+        train, test = spark.split_data()
+        svm = self.run_svm(train)
+        svm_test = self.getTrainingError(svm, test)
+        linear = self.run_linear_regression(train)
+        linear_test = self.getMSE(linear, test)
+        logistic = self.run_logistic_regression(train)
+        logistic_test = self.getTrainingError(logistic, test)
+        bayes = self.run_naive_bayes(train)
+        bayes_test = self.getMSE(bayes, test)
+        return svm_test, linear_test, logistic_test, bayes_test
 
 
 ##########################
 if __name__ == '__main__':
 
     # instantiate class with input data file, num of iterations, current wd, hdfs dir, spark evn, spark job name, num cores
-    spark = pyspark_classify('hdfs://nameservice1/vlad/wgs_ilmn.db/svm_parquet', 100, os.getcwd(), '/vlad/', "local", "etl_test", 10)
+    # spark = pyspark_classify('hdfs://nameservice1/vlad/wgs_ilmn.db/svm_parquet', 100, os.getcwd(), '/vlad/', "local", "etl_test", 10)
+    spark = pyspark_classify('sample_svm_data.txt', 100, os.getcwd(), '/User/selasady/', "local",
+                             "etl_test", 10)
+
+    svm_test, linear_test, logistic_test, bayes_test = spark.train_models()
+
+    print "SVM training error = {}".format(svm_test)
+    print "Linear regression mean squared error = {}".format(linear_test)
+    print "Logistic regression training error = {}".format(logistic_test)
+    print "Naive bayes mean standard error = {}".format(bayes_test)
 
 
-    # parsedData = spark.parse_data()
-    #
-    # print parsedData.take(2)
 
 
 
 
 
 
-    # train, test = spark.scale_split()
-    #
-    # spark.run_svm(train)
 
 
+
+
+
+
+
+
+
+
+
+
+    ####################################################################################################################
 
     # def tsv_to_libsvm(self, in_file):
     #     df = self.sqlContext.read.load(in_file,
@@ -134,3 +157,22 @@ if __name__ == '__main__':
     #     print('Test Error = ' + str(testErr))
     #     print('Learned classification forest model:')
     #     print(model.toDebugString())
+
+
+    # self.data = self.sqlContext.read.parquet("{}".format(in_file))
+    # self.label = self.data.map(lambda x: x.label)
+    # self.features = self.data.map(lambda x: x[['qual', 'filter', 'rsid']])
+    # create a set of labeled points to pass to svm model
+    # self.labeled_points = self.data.map(lambda row: LabeledPoint(row[0], row[1:]))
+
+    # create scaler model to transform data to mean of 0 and scale data by stdev
+    # scaler = StandardScaler(withMean=True, withStd=True)
+    # apply scaling to data features
+    # model = scaler.fit(self.data)
+    # result = model.transform(self.data)
+    # create training and test set
+    # trainingData, testData = scaledData.randomSplit([0.7, 0.3])
+    # # cach the training data for speed
+    # trainingData.cache()
+    # return trainingData, testData
+    # return result
