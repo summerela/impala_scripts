@@ -2,7 +2,7 @@
 
 '''
 Assumptions:
-Input file is in either tsv or bzip2 format and contains at least the following columns:
+Input file is in impala table at least the following columns:
 - chrom
 - pos
 - ref
@@ -10,18 +10,13 @@ Input file is in either tsv or bzip2 format and contains at least the following 
 - subject_id
 - sample_id
 
-Requirments:
-
-- /titan/ITMI1/workspaces/users/selasady/impala_scripts/testing/jars/spark-csv_2.10-1.4.0.jar
-- /titan/ITMI1/workspaces/users/selasady/impala_scripts/testing/jars/commons-csv-1.2.jar
-
 To Run:
 
 - Edit main routine
 
 Type the following from command line
 
-/usr/bin/spark-submit --jars /titan/ITMI1/workspaces/users/selasady/impala_scripts/testing/jars/spark-csv_2.10-1.4.0.jar,/titan/ITMI1/workspaces/users/selasady/impala_scripts/testing/jars/commons-csv-1.2.jar spark_etl_test.py  2>/dev/null
+pyspark --packages com.databricks:spark-csv_2.10:1.2.0 spark_etl_test.py  2>/dev/null
 
 
 '''
@@ -38,7 +33,8 @@ from pyspark import SparkContext, SparkConf, SQLContext
 
 class TestETL(unittest.TestCase):
 
-    def __init__(self, local_dir='./', hdfs_dir='/titan/ITMI1/workspaces/users/', master='local', appname='spark_app', spark_mem=2):
+    def __init__(self, in_table, local_dir='./', hdfs_dir='/vlad/wgs_ilmn.db', master='local', appname='spark_app', spark_mem=2):
+        self.in_table = in_table
         self.local_dir = local_dir
         self.hdfs_dir = hdfs_dir
         self.master = master
@@ -51,62 +47,34 @@ class TestETL(unittest.TestCase):
         self.sc = SparkContext(conf=self.conf)
         self.somatic_chr = sorted(map( int, range(1,23) ))
         self.sqlContext = SQLContext(self.sc)
-
-        
-    def tsv_to_df(self, input_file):
-        # import file as dataframe, all cols will be imported as strings
-        df = self.sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("delimiter", "\t").option("inferSchema", "true").load(input_file)
-        # # cache df object to avoid rebuilding each time
-        df.cache()
-        # register as temp table for querying
-        df.registerTempTable("spark_df")
-        return df
-
-    def sparkDf_to_pandasDf(self, input_df):
-        pandas_df = input_df.toPandas()
-        return pandas_df
+        # encode any parquet binary formatting as strings
+        self.sqlContext.sql("SET spark.sql.parquet.binaryAsString=true")
+        self.data = self.sqlContext.read.parquet("{}".format(self.in_table))
+        self.data.registerTempTable("parquet_tbl")
 
     def check_empty(self, col_name):
-        result = self.sqlContext.sql("""SELECT * FROM spark_df WHERE {} = 'NULL'""".format(col_name))
+        result = self.sqlContext.sql("SELECT * FROM parquet_tbl WHERE (chrom IS NULL or ref IS NULL or subject_id IS NULL or allele IS NULL or sample_id IS NULL)".format(col_name))
         self.assertTrue(result.count() == 0, "Null values found in {} column.".format(col_name))
 
     def check_chrom_set(self):
-        result = self.sqlContext.sql("""SELECT distinct chrom FROM spark_df ORDER BY CAST(chrom as int)""")
+        result = self.sqlContext.sql("SELECT distinct chrom FROM parquet_tbl ORDER BY CAST(chrom as int)")
         self.assertItemsEqual(self.somatic_chr, result.rdd.map(lambda r: r.chrom).collect(),
                               "Not all somatic chromosomes are loaded {}.".format(result))
 
     def check_chrom_count(self):
-        result = self.sqlContext.sql("""
-        SELECT chrom, COUNT(*)
-        FROM spark_df
-        GROUP BY chrom
-        HAVING COUNT(*) < 1000
-        """)
-        # for name, group in input_df['chrom'].groupby(input_df['chrom']):
-        self.assertTrue(result.count() == 0, "Not all chromosomes contain at least 1000 rows.")
+        result = self.sqlContext.sql("SELECT chrom, COUNT(*) FROM parquet_tbl GROUP BY chrom HAVING COUNT(*) < 10000")
+        self.assertTrue(result.count() == 0, "Not all chromosomes contain at least 10000 rows.")
 
     def check_chrom_prefix(self):
-        result = self.sqlContext.sql("""
-            SELECT chrom
-            FROM spark_df
-            WHERE chrom LIKE '*chr*'
-            """)
+        result = self.sqlContext.sql("SELECT * FROM parquet_tbl WHERE chrom LIKE '*chr*'")
         self.assertTrue(result.count() == 0, "The 'chr' prefix was not removed from the chrom column.")
 
     def check_chrom_mt(self):
-        result = self.sqlContext.sql("""
-            SELECT chrom
-            FROM spark_df
-            WHERE chrom = 'MT' or chrom = 'mt'
-            """)
+        result = self.sqlContext.sql("SELECT * FROM parquet_tbl WHERE chrom = 'MT' or chrom = 'mt' ")
         self.assertTrue(result.count() == 0, "The 'MT' prefix was not changed to 'M' in the chrom column.")
 
-    def alt_check(self):
-        result = self.sqlContext.sql("""
-        SELECT alt
-        FROM spark_df
-        WHERE regexp_extract( alt, '([^ACGTN.])', 0 ) IS NULL
-        """)
+    def ref_check(self):
+        result = self.sqlContext.sql("SELECT * FROM parquet_tbl WHERE regexp_extract( ref, '([^ACGTN.])', 0 ) IS NULL")
         self.assertTrue(result.count() == 0, "The ref field contains values other than A,T,G,C or N.")
 
     def test_alleles(self):
@@ -165,47 +133,43 @@ class TestETL(unittest.TestCase):
         # close connection
         self.sc.stop()
 
-    def run_tests(self, input_df):
+    def run_tests(self):
 
         try:
-            os.path.isfile(input_df)
+            os.path.isfile(self.in_table)
         except Exception as e:
             print e
-
-        file_df = self.tsv_to_df(input_df)
-
-        pd_df = self.sparkDf_to_pandasDf(file_df)
 
         # check chrom, pos, sample_id column vals not empty
         self.check_empty("chrom")
         self.check_empty("ref")
         self.check_empty("subject_id")
-        # self.check_empty("allele")
+        self.check_empty("allele")
         self.check_empty("sample_id")
 
-        # check that all somatic chroms loaded
-        self.check_chrom_set()
-
-        # check that each chrom contains at least 1000 rows
-        self.check_chrom_count()
-
-        # check that 'chr' prefix has been removed from chromosome
-        self.check_chrom_prefix()
-
-        # check that mitochondrial chromosome has been renamed from MT to M
-        self.check_chrom_mt()
-
-        # alt cols contains expected values A T G C N only
-        self.alt_check()
-
-        # # check for no more than two alleles per person at chrom, pos, ref
-        self.test_alleles()
+        # # check that all somatic chroms loaded
+        # self.check_chrom_set()
         #
-        # # # ref allele should be the same at each position
-        self.test_ref()
-
-        # verify 1-based coords
-        # self.check_one_based(pd_df)
+        # # check that each chrom contains at least 1000 rows
+        # self.check_chrom_count()
+        #
+        # # check that 'chr' prefix has been removed from chromosome
+        # self.check_chrom_prefix()
+        #
+        # # check that mitochondrial chromosome has been renamed from MT to M
+        # self.check_chrom_mt()
+        #
+        # # alt cols contains expected values A T G C N only
+        # self.alt_check()
+        #
+        # # # check for no more than two alleles per person at chrom, pos, ref
+        # self.test_alleles()
+        # #
+        # # # # ref allele should be the same at each position
+        # self.test_ref()
+        #
+        # # verify 1-based coords
+        # # self.check_one_based(pd_df)
 
         self.tear_down()
 
@@ -214,10 +178,22 @@ class TestETL(unittest.TestCase):
 if __name__ == '__main__':
 
     # instantiate class with current wd, hdfs dir, spark evn, spark job name, num cores
-    spark = TestETL(os.getcwd(), '/user/selasady/', "local", "etl_test", 10)
+    spark = TestETL('hdfs://nameservice1/vlad/wgs_ilmn.db/vcf_variant', os.getcwd(), '/user/selasady/', 'local', 'vcf_testing', 10)
 
-    # specify input file to process
-    tsv_infile = '/user/selasady/test_set.txt.bz2'
 
     # run tests
-    spark.run_tests(tsv_infile)
+    spark.run_tests()
+
+
+
+
+######################## unused code snippets #######################
+
+# def tsv_to_df(self, input_file):
+#     # import file as dataframe, all cols will be imported as strings
+#     df = self.sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("delimiter", "\t").option("inferSchema", "true").load(input_file)
+#     # # cache df object to avoid rebuilding each time
+#     df.cache()
+#     # register as temp table for querying
+#     df.registerTempTable("spark_df")
+#     return df
