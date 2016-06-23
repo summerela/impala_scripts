@@ -76,8 +76,9 @@ class TestETL(unittest.TestCase):
         self.assertTrue(result.count() == 0, "The 'MT' prefix was not changed to 'M' in the chrom column.")
 
     def ref_check(self):
-        result = self.sqlContext.sql("SELECT * FROM parquet_tbl WHERE regexp_extract( ref, '([^ACGTN.])', 0 ) IS NULL")
-        self.assertTrue(result.count() == 0, "The ref field contains values other than A,T,G,C or N.")
+        result = self.sqlContext.sql("SELECT allele, regexp_replace(allele, 'A|T|G|C|N|\\.', '') as test_col \
+        from parquet_tbl WHERE regexp_replace(allele, 'A|T|G|C|N|\\.', '')  <> ''")
+        self.assertTrue(result.count() == 0, "The ref field contains characters other than A,T,G,C or N.")
 
     def test_alleles(self):
         result = self.sqlContext.sql("SELECT chrom, pos, ref, alt, subject_id, sample_id FROM parquet_tbl WHERE \
@@ -147,48 +148,3 @@ if __name__ == '__main__':
 
     # run tests
     spark.run_tests()
-
-
-
-
-######################## unused code snippets #######################
-
-# def tsv_to_df(self, input_file):
-#     # import file as dataframe, all cols will be imported as strings
-#     df = self.sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("delimiter", "\t").option("inferSchema", "true").load(input_file)
-#     # # cache df object to avoid rebuilding each time
-#     df.cache()
-#     # register as temp table for querying
-#     df.registerTempTable("spark_df")
-#     return df
-
-# def get_ref_snp(self, input_df):
-#     random_snp = input_df[['chrom', 'pos', 'ref', 'alt']][input_df['ref'] != '.'].sample(1)
-#     return random_snp
-#
-# def query_snp(self, input_snp):
-#     # testing if variant has 1-based coords
-#     exclude = ['ins', 'del']
-#     query_string = "chr{}:{}".format(input_snp.iloc[0]['chrom'], input_snp.iloc[0]['pos'])
-#     test_url = 'http://myvariant.info/v1/query?q={}'.format(query_string)
-#     response = urllib.urlopen(test_url)
-#     data = json.loads(response.read())
-#     ref_var = []
-#     while len(ref_var) == 0:
-#         for x in range(0,4):
-#             try:
-#                  ref_hit = data['hits'][0]['_id'] if len(data['hits'][0]['_id']) > 0 else 'null'
-#                  if any(x in exclude for x in ref_hit):
-#                      pass
-#             except:
-#                  time.sleep(10)
-#         else:
-#             ref_var.append(ref_hit)
-#             ref_out = ''.join(ref_var)
-#             return ref_out
-#
-# def check_one_based(self, input_df):
-#     test_snp = self.get_ref_snp(input_df)
-#     ref_snp = self.query_snp(test_snp)
-#     file_snp =  "chr{}:g.{}{}>{}".format(test_snp.iloc[0]['chrom'], test_snp.iloc[0]['pos'],  test_snp.iloc[0]['ref'],  test_snp.iloc[0]['alt'])
-#     self.assertEqual(ref_snp, file_snp, "File variant {} does not match reference {}".format(file_snp, ref_snp))
