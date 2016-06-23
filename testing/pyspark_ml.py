@@ -1,8 +1,12 @@
 #!/usr/bin/env pyspark
 
 '''
+Input: svm format with label | feature1 | feature2 format
+Output: SVM model and comparison score
+
+Run using the following command:
  pyspark --packages com.databricks:spark-csv_2.10:1.2.0 pyspark_ml.py  2>/dev/null
-'''
+ '''
 
 import os
 from pyspark import SparkContext, SparkConf, SQLContext
@@ -15,7 +19,7 @@ from pyspark.mllib.regression import LabeledPoint, LinearRegressionWithSGD
 class pyspark_classify():
 
     def __init__(self, in_file, num_iterations=100, local_dir=os.getcwd(), hdfs_dir='/vlad/',
-                 master='local', appname='spark_ml', spark_mem=4):
+                 master='yarn', appname='spark_ml'):
         self.in_file = in_file
         self.local_dir = local_dir
         self.hdfs_dir = hdfs_dir
@@ -24,11 +28,9 @@ class pyspark_classify():
         # spark connection string options
         self.master = master
         self.appname = appname
-        self.spark_mem = int(spark_mem)
         self.conf = (SparkConf()
                      .setMaster(self.master)
-                     .setAppName(self.appname)
-                     .set("spark.executor.memory", self.spark_mem))
+                     .setAppName(self.appname))
         self.sc = SparkContext(conf=self.conf)
         # create sql context submodule for extra features
         self.sqlContext = SQLContext(self.sc)
@@ -41,7 +43,7 @@ class pyspark_classify():
         # scale data to have 0 mean and std
         scaler = StandardScaler(withStd=True, withMean=False)
         scalerModel = scaler.fit(self.features)
-        # Normalize each feature to have unit standard deviation.
+        # ormalize each feature to have unit standard deviation.
         scaledFeatures = scalerModel.transform(self.features)
         transformedData = self.labels.zip(scaledFeatures)
         transformedData = transformedData.map(lambda row: LabeledPoint(row[0], [row[1]]))
@@ -60,8 +62,9 @@ class pyspark_classify():
         return MSE
 
     def getTrainingError(self, model, test_set):
-        labelsAndPreds = test_set.map(lambda p: (p.label, model.predict(p.features)))
-        trainErr = labelsAndPreds.filter(lambda (v, p): v != p).count() / float(test_set.count())
+        predictions = model.predict(test_set.map(lambda x: x.features))
+        labelsPredictions = test_set.map(lambda lp: lp.label).zip(predictions)
+        trainErr = labelsPredictions.filter(lambda (v, p): v != p).count() / float(test_set.count())
         return trainErr
 
     def run_svm(self, training_data):
@@ -99,8 +102,8 @@ if __name__ == '__main__':
 
     # instantiate class with input data file, num of iterations, current wd, hdfs dir, spark evn, spark job name, num cores
     # spark = pyspark_classify('hdfs://nameservice1/vlad/wgs_ilmn.db/svm_parquet', 100, os.getcwd(), '/vlad/', "local", "etl_test", 10)
-    spark = pyspark_classify('sample_svm_data.txt', 100, os.getcwd(), '/User/selasady/', "local",
-                             "etl_test", 10)
+    spark = pyspark_classify(in_file='sample_svm_data.txt', num_iterations=100, local_dir=os.getcwd(), hdfs_dir='/User/selasady/', master="local",
+                            appname="etl_test")
 
     svm_test, linear_test, logistic_test, bayes_test = spark.train_models()
 
