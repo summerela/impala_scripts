@@ -33,8 +33,10 @@ from pyspark import SparkContext, SparkConf, SQLContext
 
 class TestETL(unittest.TestCase):
 
-    def __init__(self, in_table, local_dir='./', hdfs_dir='/vlad/wgs_ilmn.db', appname='spark_app'):
+    def __init__(self, in_table, is_vcf='no', platform='illumina', local_dir='./', hdfs_dir='/vlad/wgs_ilmn.db', appname='spark_app'):
         self.in_table = in_table
+        self.is_vcf = is_vcf
+        self.platform = platform
         self.local_dir = local_dir
         self.hdfs_dir = hdfs_dir
         self.appname = appname
@@ -53,10 +55,12 @@ class TestETL(unittest.TestCase):
 
 
     def check_empty(self, col_name):
+        # check for null values
         result = self.sqlContext.sql("SELECT * FROM parquet_tbl WHERE {} IS NULL".format(col_name)).count()
         self.assertTrue(result == 0, "Null ?values found in {} column.".format(col_name))
 
     def check_chrom_set(self):
+        # check that all chroms are loaded
         result = self.sqlContext.sql("SELECT distinct chrom FROM parquet_tbl")
         uploaded_chroms = sorted(map(str, result.rdd.map(lambda r: r.chrom).collect()))
         self.assertListEqual(self.somatic_chr, uploaded_chroms,
@@ -64,34 +68,64 @@ class TestETL(unittest.TestCase):
                                  set(self.somatic_chr).difference(uploaded_chroms)))
 
     def check_chrom_count(self):
+        # check that data was uploaded for each chrom
         result = self.sqlContext.sql("SELECT chrom, COUNT(*) FROM parquet_tbl GROUP BY chrom HAVING COUNT(*) < 10000")
         self.assertTrue(result.count() == 0, "Not all chromosomes contain at least 10000 rows.")
 
     def check_chrom_prefix(self):
+        # check that 'chr' prefix was removed in chrom column
         result = self.sqlContext.sql("SELECT * FROM parquet_tbl WHERE chrom LIKE '*chr*'")
         self.assertTrue(result.count() == 0, "The 'chr' prefix was not removed from the chrom column.")
 
     def check_chrom_mt(self):
+        # check that mitochondria was renamed from MT to M
         result = self.sqlContext.sql("SELECT * FROM parquet_tbl WHERE chrom = 'MT' or chrom = 'mt' ")
         self.assertTrue(result.count() == 0, "The 'MT' prefix was not changed to 'M' in the chrom column.")
 
-    def ref_check(self):
+    def allele_check(self):
+        # check that the allele column only contains A,T,G,C, N or .
         result = self.sqlContext.sql("SELECT allele, regexp_replace(allele, 'A|T|G|C|N|\\.', '') as test_col \
         from parquet_tbl WHERE regexp_replace(allele, 'A|T|G|C|N|\\.', '')  <> ''")
         self.assertTrue(result.count() == 0, "The ref field contains characters other than A,T,G,C or N.")
 
     def test_alleles(self):
+        # check for row duplications
         result = self.sqlContext.sql("SELECT chrom, pos, ref, alt, subject_id, sample_id FROM parquet_tbl WHERE \
             length(ref) = length(alt) AND alt <> '.' GROUP BY chrom, pos, ref, alt, subject_id, sample_id \
         HAVING COUNT(*) > 2")
-        self.assertTrue(result.count() == 0, "The alt field contains values other than A,T,G,C or N.")
+        self.assertTrue(result.count() == 0, "More than two alleles found per locus.")
 
-    def test_ref(self):
-        result = self.sqlContext.sql("SELECT chrom, pos, ref FROM parquet_tbl WHERE length(ref) = length(alt) \
-            AND ref <> '.' GROUP BY chrom, pos, ref HAVING COUNT(*) > 2")
-        # self.assertTrue(result.count() == 0, "Multiple values for the reference field were found at: {}".format(result))
-        print result.collect()
+    def subjects_loaded(self):
+        if str.lower(self.platform) == 'cgi':
+            vcf_file = 'hdfs://nameservice1/vlad/wgs_cg.db/vcf_file/'
+            file_tbl = self.sqlContext.read.parquet("{}".format(vcf_file))
+            # register parquet file as temp table to query
+            vcf_file_tbl = file_tbl.registerTempTable("vcf_file_tbl")
+            result = self.sqlContext.sql("WITH a AS (SELECT DISTINCT subject_id FROM parquet_tbl) \
+                                         SELECT a.*, b.subject_id \
+                                         FROM a \
+                                         FULL OUTER JOIN vcf_file_tbl b \
+                                         ON a.subject_id = b.subject_id \
+                                         WHERE (a.subject_id IS NULL or b.subject_id IS NULL)")
+            self.assertTrue(result.count() == 0,
+                            "All subject id's were not found in both tables.")
 
+        elif str.lower(self.platform) == 'illumina':
+            vcf_file = 'hdfs://nameservice1/vlad/ilmn_cg.db/vcf_file/'
+            file_tbl = self.sqlContext.read.parquet("{}".format(vcf_file))
+            # register parquet file as temp table to query
+            vcf_file_tbl = file_tbl.registerTempTable("vcf_file_tbl")
+            result = self.sqlContext.sql("WITH a AS (SELECT DISTINCT subject_id FROM parquet_tbl) \
+                                         SELECT a.*, b.subject_id \
+                                         FROM a \
+                                         FULL OUTER JOIN vcf_file_tbl b \
+                                         ON a.subject_id = b.subject_id \
+                                         WHERE (a.subject_id IS NULL or b.subject_id IS NULL)")
+            self.assertTrue(result.count() == 0,
+                        "All subject id's were not found in both tables.")
+
+        else:
+            print("Please enter either platform='illumina' or platform='cgi' in your class argument.")
 
     def tear_down(self):
         # clear memory cache
@@ -100,51 +134,54 @@ class TestETL(unittest.TestCase):
         self.sc.stop()
 
     def run_tests(self):
-
+        # check that table exists
         try:
             os.path.isfile(self.in_table)
         except Exception as e:
             print e
 
-
-
+        # listing each test instead of using run_main
+        # for ease of customization
 
         # check chrom, pos, sample_id column vals not empty
-        # self.check_empty("chrom")
-        # self.check_empty("ref")
-        # self.check_empty("subject_id")
-        # self.check_empty("sample_id")
+        self.check_empty("chrom")
+        self.check_empty("ref")
+        self.check_empty("subject_id")
+        self.check_empty("sample_id")
 
-        # check that all somatic chroms loaded
-        # self.check_chrom_set()
+        # check that all chroms loaded
+        self.check_chrom_set()
 
-        # # check that each chrom contains at least 1000 rows
-        # self.check_chrom_count()
+        # check that each chrom contains at least 10000 rows
+        self.check_chrom_count()
 
-        # # check that 'chr' prefix has been removed from chromosome
-        # self.check_chrom_prefix()
-        #
-        # # check that mitochondrial chromosome has been renamed from MT to M
-        # self.check_chrom_mt()
-        #
-        # # alt cols contains expected values A T G C N only
-        # self.ref_check()
-        #
-        # # # check for no more than two alleles per person at chrom, pos, ref
-        # self.test_alleles()
-        # #
-        # # # # ref allele should be the same at each position
-        self.test_ref()
+        # check that 'chr' prefix has been removed from chromosome
+        self.check_chrom_prefix()
 
-        self.tear_down()
+        # check that mitochondria has been renamed from MT to M
+        self.check_chrom_mt()
+
+         # check for no more than two alleles per person at each locus
+        self.test_alleles()
 
 
 ###############
 if __name__ == '__main__':
 
     # instantiate class
-    spark = TestETL(in_table='hdfs://nameservice1/vlad/wgs_ilmn.db/vcf_variant/', local_dir=os.getcwd(), hdfs_dir='/user/selasady/', appname='vcf_testing')
-
+    spark = TestETL(in_table='hdfs://nameservice1/vlad/wgs_ilmn.db/vcf_variant/', is_vcf='yes', platform='cgi', local_dir=os.getcwd(), hdfs_dir='/user/selasady/', appname='vcf_testing')
 
     # run tests
-    spark.run_tests()
+    # spark.run_tests()
+
+    if spark.is_vcf == 'yes':
+        spark.subjects_loaded()
+        spark.tear_down()
+    else:
+        print ("Unit tests complete.")
+        spark.tear_down()
+
+
+
+# /itmi/wgs_cg.db/vcf_nocall
+# /itmi/wgs_cg.db/vcf_variant
