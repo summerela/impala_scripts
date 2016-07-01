@@ -97,7 +97,7 @@ class TestETL(unittest.TestCase):
 
     def subjects_loaded(self):
         if str.lower(self.platform) == 'cgi':
-            vcf_file = 'hdfs://nameservice1/vlad/wgs_cg.db/vcf_file/'
+            vcf_file = 'hdfs://nameservice1/vlad/wgs_cg.db/vcf_file_test/'
             file_tbl = self.sqlContext.read.parquet("{}".format(vcf_file))
             # register parquet file as temp table to query
             vcf_file_tbl = file_tbl.registerTempTable("vcf_file_tbl")
@@ -111,7 +111,7 @@ class TestETL(unittest.TestCase):
                             "All subject id's were not found in both tables.")
 
         elif str.lower(self.platform) == 'illumina':
-            vcf_file = 'hdfs://nameservice1/vlad/ilmn_cg.db/vcf_file/'
+            vcf_file = 'hdfs://nameservice1/vlad/wgs_ilmn.db/vcf_file_test/'
             file_tbl = self.sqlContext.read.parquet("{}".format(vcf_file))
             # register parquet file as temp table to query
             vcf_file_tbl = file_tbl.registerTempTable("vcf_file_tbl")
@@ -126,6 +126,14 @@ class TestETL(unittest.TestCase):
 
         else:
             print("Please enter either platform='illumina' or platform='cgi' in your class argument.")
+
+    def chrom_per_subject(self):
+        result = self.sqlContext.sql("with t as (select distinct subject_id, chrom \
+                                     from vcf_variant) \
+                                     select subject_id, count(*) as count from t \
+                                     group by subject_id having count < 25")
+        self.assertTrue(result.count() == 0,
+                        "Not all chromosomes were loaded for the following subject_id's: \n {}".format(result))
 
     def tear_down(self):
         # clear memory cache
@@ -169,15 +177,19 @@ class TestETL(unittest.TestCase):
 if __name__ == '__main__':
 
     # instantiate class
-    spark = TestETL(in_table='hdfs://nameservice1/vlad/wgs_ilmn.db/vcf_variant/', is_vcf='yes', platform='cgi', local_dir=os.getcwd(), hdfs_dir='/user/selasady/', appname='vcf_testing')
-
-    # run tests
-    # spark.run_tests()
+    spark = TestETL(in_table='hdfs://nameservice1/vlad/wgs_ilmn.db/vcf_variant/', is_vcf='yes',
+                    platform='illumina', local_dir=os.getcwd(), hdfs_dir='/user/selasady/', appname='vcf_testing')
 
     if spark.is_vcf == 'yes':
+        # run tests
+        spark.run_tests()
+        # check that all subjects listed in the vcf_file metadata were loaded
         spark.subjects_loaded()
+        spark.chrom_per_subject()
         spark.tear_down()
     else:
+        # run tests
+        spark.run_tests()
         print ("Unit tests complete.")
         spark.tear_down()
 

@@ -3,7 +3,7 @@
   <component name="NewModuleRootManager">
     <content url="file://$USER_HOME$/global_vars" />
     <content url="file://$MODULE_DIR$" />
-    <orderEntry type="jdk" jdkName="Glados14" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 2.7.12 (/System/Library/Frameworks/Python.framework/Versions/2.7/bin/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
