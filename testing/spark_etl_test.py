@@ -177,7 +177,11 @@ class TestETL(unittest.TestCase):
 if __name__ == '__main__':
 
     # instantiate class
+<<<<<<< HEAD
     spark = TestETL(in_table=, is_vcf='yes', 'hdfs://ip-10-0-0-118.ec2.internal:8020/itmi/wgs_cg.db/vcf_variant/'
+=======
+    spark = TestETL(in_table='hdfs://nameservice1/vlad/wgs_ilmn.db/vcf_variant/', is_vcf='yes',
+>>>>>>> 97b9e513c07b98b63ca24ec1fa41d26cbc3dd4ae
                     platform='illumina', local_dir=os.getcwd(), hdfs_dir='/user/selasady/', appname='vcf_testing')
 
     if spark.is_vcf == 'yes':
@@ -196,6 +200,10 @@ if __name__ == '__main__':
 
 
 # /itmi/wgs_cg.db/vcf_nocall
+<<<<<<< HEAD
 # /itmi/wgs_cg.db/vcf_variant
 # 'hdfs://ip-10-0-0-118.ec2.internal:8020/itmi/wgs_cg.db/vcf_variant/'
 # 'hdfs://nameservice1/vlad/wgs_ilmn.db/vcf_variant/'
+=======
+# /itmi/wgs_cg.db/vcf_variant
+>>>>>>> 97b9e513c07b98b63ca24ec1fa41d26cbc3dd4ae
