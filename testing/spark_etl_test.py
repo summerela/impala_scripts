@@ -1,98 +1,8 @@
-<<<<<<< HEAD
-#!/usr/bin/env pyspark
-
-import os
-import unittest
-import pandas as pd
-
-from pyspark import SparkContext, SparkConf, SQLContext
-
-
-############################
-### Unit Test with Spark ###
-############################
-
-class etl_test(unittest.TestCase):
-
-    def __init__(self, local_dir='./', hdfs_dir='/titan/ITMI1/workspaces/users/', master='local', appname='spark_app', spark_mem=2):
-        self.local_dir = local_dir
-        self.hdfs_dir = hdfs_dir
-        self.master = master
-        self.appname = appname
-        self.spark_mem = int(spark_mem)
-        self.conf = (SparkConf()
-               .setMaster(self.master)
-               .setAppName(self.appname)
-               .set("spark.executor.memory", self.spark_mem))
-        self.sc = SparkContext(conf=self.conf)
-        self.somatic_chr = map( str, range(1,23) )
-        self.sqlContext = SQLContext(self.sc)
-
-        
-    def tsv_to_df(self, input_file, header_bool, delim_var):
-        # import file as dataframe, all cols will be imported as strings
-        df = self.sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("delimiter", "\t").option("inferSchema", "true").load(input_file)
-        # # cache df object to avoid rebuilding each time
-        df.cache()
-        return df
-
-
-    def check_chrom_set(self, input_df):
-        chrom_cols = input_df.select('chrom').distinct().collect()
-        print ("The following chromosomes are loaded: {} \n").format(str(chrom_cols))
-        self.assertItemsEqual(self.somatic_chr, chrom_cols, "Not all somatic chromosomes are loaded.")
-
-    def check_chrom_empty(self, input_df):
-        assert input_df.where(input_df.chrom.isNull()).count() == 0, "Null values found in chrom column."
-
-    def check_chrom_count(self, input_df):
-        for name, group in input_df.groupBy('chrom'):
-            assert input_df.groupBy('chrom').count() > 1000, "{}".format(input_df.groupBy('chrom').count().show())
-
-    def tear_down(self):
-        # close connection
-        self.sc.stop()
-
-
-
-    #### tests for variant tables ###
-    #
-    # chrom, pos, sample_id column vals not empty
-    # chrom cols contain at least one A T G C
-    # gt contains at least one of 0/1, 1/1, 1/2
-    # if gt = 0/0 at this chrom/pos allele_idx = (etc) ?
-    # zygosity column is not all null
-    # check that chr prefix has been removed
-    # check that MT = M
-    # if filter = pass, gt should never = '.'
-    #
-
-
-
-###############
-if __name__ == '__main__':
-
-    spark = etl_test(os.getcwd(), '/user/selasady/', "local", "etl_test", 2)
-
-    file_df = spark.tsv_to_df('/user/selasady/etl_test/test_query.txt', 'True', '\t')
-
-    # spark.check_chrom_set(file_df)
-    # spark.check_chrom_empty(file_df)
-    spark.check_chrom_count(file_df)
-
-
-
-
-
-
-
-    
-=======
 #!/usr/bin/env pyspark
 
 '''
 Assumptions:
-Input file is in either tsv or bzip2 format and contains at least the following columns:
+Input file is in impala table at least the following columns:
 - chrom
 - pos
 - ref
@@ -100,18 +10,13 @@ Input file is in either tsv or bzip2 format and contains at least the following 
 - subject_id
 - sample_id
 
-Requirments:
-
-- /titan/ITMI1/workspaces/users/selasady/impala_scripts/testing/jars/spark-csv_2.10-1.4.0.jar
-- /titan/ITMI1/workspaces/users/selasady/impala_scripts/testing/jars/commons-csv-1.2.jar
-
 To Run:
 
 - Edit main routine
 
 Type the following from command line
 
-/usr/bin/spark-submit --jars /titan/ITMI1/workspaces/users/selasady/impala_scripts/testing/jars/spark-csv_2.10-1.4.0.jar,/titan/ITMI1/workspaces/users/selasady/impala_scripts/testing/jars/commons-csv-1.2.jar spark_etl_test.py  2>/dev/null
+pyspark spark_etl_test.py  2>/dev/null
 
 
 '''
@@ -128,194 +33,169 @@ from pyspark import SparkContext, SparkConf, SQLContext
 
 class TestETL(unittest.TestCase):
 
-    def __init__(self, local_dir='./', hdfs_dir='/titan/ITMI1/workspaces/users/', master='local', appname='spark_app', spark_mem=2):
+    def __init__(self, in_table, is_vcf='no', platform='illumina', local_dir='./', hdfs_dir='/vlad/wgs_ilmn.db', appname='spark_app'):
+        self.in_table = in_table
+        self.is_vcf = is_vcf
+        self.platform = platform
         self.local_dir = local_dir
         self.hdfs_dir = hdfs_dir
-        self.master = master
         self.appname = appname
-        self.spark_mem = int(spark_mem)
         self.conf = (SparkConf()
-               .setMaster(self.master)
-               .setAppName(self.appname)
-               .set("spark.executor.memory", self.spark_mem))
+               .setAppName(self.appname))
         self.sc = SparkContext(conf=self.conf)
-        self.somatic_chr = sorted(map( int, range(1,23) ))
+        self.somatic_chr = sorted(map(str, range(1,23) + ["M", "X", "Y"]))
         self.sqlContext = SQLContext(self.sc)
+        # encode any parquet binary formatting as strings
+        self.sqlContext.sql("SET spark.sql.parquet.binaryAsString=true")
+        # # cache table metadata for query speed
+        self.sqlContext.sql("SET spark.sql.parquet.cacheMetadata=true")
+        self.data = self.sqlContext.read.parquet("{}".format(self.in_table))
+        # register parquet file as temp table to query
+        self.parquet_tbl = self.data.registerTempTable("parquet_tbl")
 
-        
-    def tsv_to_df(self, input_file):
-        # import file as dataframe, all cols will be imported as strings
-        df = self.sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("delimiter", "\t").option("inferSchema", "true").load(input_file)
-        # # cache df object to avoid rebuilding each time
-        df.cache()
-        # register as temp table for querying
-        df.registerTempTable("spark_df")
-        return df
-
-    def sparkDf_to_pandasDf(self, input_df):
-        pandas_df = input_df.toPandas()
-        return pandas_df
 
     def check_empty(self, col_name):
-        result = self.sqlContext.sql("""SELECT * FROM spark_df WHERE {} = 'NULL'""".format(col_name))
-        self.assertTrue(result.count() == 0, "Null values found in {} column.".format(col_name))
+        # check for null values
+        result = self.sqlContext.sql("SELECT * FROM parquet_tbl WHERE {} IS NULL".format(col_name)).count()
+        self.assertTrue(result == 0, "Null ?values found in {} column.".format(col_name))
 
     def check_chrom_set(self):
-        result = self.sqlContext.sql("""SELECT distinct chrom FROM spark_df ORDER BY CAST(chrom as int)""")
-        self.assertItemsEqual(self.somatic_chr, result.rdd.map(lambda r: r.chrom).collect(),
-                              "Not all somatic chromosomes are loaded {}.".format(result))
+        # check that all chroms are loaded
+        result = self.sqlContext.sql("SELECT distinct chrom FROM parquet_tbl")
+        uploaded_chroms = sorted(map(str, result.rdd.map(lambda r: r.chrom).collect()))
+        self.assertListEqual(self.somatic_chr, uploaded_chroms,
+                             "The following chromosomes are not loaded: \n {}".format(
+                                 set(self.somatic_chr).difference(uploaded_chroms)))
 
     def check_chrom_count(self):
-        result = self.sqlContext.sql("""
-        SELECT chrom, COUNT(*)
-        FROM spark_df
-        GROUP BY chrom
-        HAVING COUNT(*) < 1000
-        """)
-        # for name, group in input_df['chrom'].groupby(input_df['chrom']):
-        self.assertTrue(result.count() == 0, "Not all chromosomes contain at least 1000 rows.")
+        # check that data was uploaded for each chrom
+        result = self.sqlContext.sql("SELECT chrom, COUNT(*) FROM parquet_tbl GROUP BY chrom HAVING COUNT(*) < 10000")
+        self.assertTrue(result.count() == 0, "Not all chromosomes contain at least 10000 rows.")
 
     def check_chrom_prefix(self):
-        result = self.sqlContext.sql("""
-            SELECT chrom
-            FROM spark_df
-            WHERE chrom LIKE '*chr*'
-            """)
+        # check that 'chr' prefix was removed in chrom column
+        result = self.sqlContext.sql("SELECT * FROM parquet_tbl WHERE chrom LIKE '*chr*'")
         self.assertTrue(result.count() == 0, "The 'chr' prefix was not removed from the chrom column.")
 
     def check_chrom_mt(self):
-        result = self.sqlContext.sql("""
-            SELECT chrom
-            FROM spark_df
-            WHERE chrom = 'MT' or chrom = 'mt'
-            """)
+        # check that mitochondria was renamed from MT to M
+        result = self.sqlContext.sql("SELECT * FROM parquet_tbl WHERE chrom = 'MT' or chrom = 'mt' ")
         self.assertTrue(result.count() == 0, "The 'MT' prefix was not changed to 'M' in the chrom column.")
 
-    def alt_check(self):
-        result = self.sqlContext.sql("""
-        SELECT alt
-        FROM spark_df
-        WHERE regexp_extract( alt, '([^ACGTN.])', 0 ) IS NULL
-        """)
-        self.assertTrue(result.count() == 0, "The ref field contains values other than A,T,G,C or N.")
+    def allele_check(self):
+        # check that the allele column only contains A,T,G,C, N or .
+        result = self.sqlContext.sql("SELECT allele, regexp_replace(allele, 'A|T|G|C|N|\\.', '') as test_col \
+        from parquet_tbl WHERE regexp_replace(allele, 'A|T|G|C|N|\\.', '')  <> ''")
+        self.assertTrue(result.count() == 0, "The ref field contains characters other than A,T,G,C or N.")
 
     def test_alleles(self):
-        result = self.sqlContext.sql("""
-        SELECT chrom, pos, ref, alt, subject_id, sample_id
-        FROM spark_df
-        WHERE length(ref) = length(alt)
-        AND alt <> '.'
-        GROUP BY chrom, pos, ref, alt, subject_id, sample_id
-        HAVING COUNT(*) > 2
-        """)
-        self.assertTrue(result.count() == 0, "The alt field contains values other than A,T,G,C or N.")
+        # check for row duplications
+        result = self.sqlContext.sql("SELECT chrom, pos, ref, alt, subject_id, sample_id FROM parquet_tbl WHERE \
+            length(ref) = length(alt) AND alt <> '.' GROUP BY chrom, pos, ref, alt, subject_id, sample_id \
+        HAVING COUNT(*) > 2")
+        self.assertTrue(result.count() == 0, "More than two alleles found per locus.")
 
-    def test_ref(self):
-        result = self.sqlContext.sql("""
-            SELECT chrom, pos, ref
-            FROM spark_df
-            WHERE length(ref) = length(alt)
-            AND ref <> '.'
-            GROUP BY chrom, pos, ref
-            HAVING COUNT(*) > 2
-            """)
-        self.assertTrue(result.count() == 0, "Multiple values for the reference field were found at: {}".format(result))
+    def subjects_loaded(self):
+        if str.lower(self.platform) == 'cgi':
+            vcf_file = 'hdfs://nameservice1/vlad/wgs_cg.db/vcf_file_test/'
+            file_tbl = self.sqlContext.read.parquet("{}".format(vcf_file))
+            # register parquet file as temp table to query
+            vcf_file_tbl = file_tbl.registerTempTable("vcf_file_tbl")
+            result = self.sqlContext.sql("WITH a AS (SELECT DISTINCT subject_id FROM parquet_tbl) \
+                                         SELECT a.*, b.subject_id \
+                                         FROM a \
+                                         FULL OUTER JOIN vcf_file_tbl b \
+                                         ON a.subject_id = b.subject_id \
+                                         WHERE (a.subject_id IS NULL or b.subject_id IS NULL)")
+            self.assertTrue(result.count() == 0,
+                            "All subject id's were not found in both tables.")
 
-    # def get_ref_snp(self, input_df):
-    #     random_snp = input_df[['chrom', 'pos', 'ref', 'alt']][input_df['ref'] != '.'].sample(1)
-    #     return random_snp
-    #
-    # def query_snp(self, input_snp):
-    #     exclude = ['ins', 'del']
-    #     query_string = "chr{}:{}".format(input_snp.iloc[0]['chrom'], input_snp.iloc[0]['pos'])
-    #     test_url = 'http://myvariant.info/v1/query?q={}'.format(query_string)
-    #     response = urllib.urlopen(test_url)
-    #     data = json.loads(response.read())
-    #     ref_var = []
-    #     while len(ref_var) == 0:
-    #         for x in range(0,4):
-    #             try:
-    #                  ref_hit = data['hits'][0]['_id'] if len(data['hits'][0]['_id']) > 0 else 'null'
-    #                  if any(x in exclude for x in ref_hit):
-    #                      pass
-    #             except:
-    #                  time.sleep(10)
-    #         else:
-    #             ref_var.append(ref_hit)
-    #             ref_out = ''.join(ref_var)
-    #             return ref_out
-    #
-    # def check_one_based(self, input_df):
-    #     test_snp = self.get_ref_snp(input_df)
-    #     ref_snp = self.query_snp(test_snp)
-    #     file_snp =  "chr{}:g.{}{}>{}".format(test_snp.iloc[0]['chrom'], test_snp.iloc[0]['pos'],  test_snp.iloc[0]['ref'],  test_snp.iloc[0]['alt'])
-    #     self.assertEqual(ref_snp, file_snp, "File variant {} does not match reference {}".format(file_snp, ref_snp))
+        elif str.lower(self.platform) == 'illumina':
+            vcf_file = 'hdfs://nameservice1/vlad/wgs_ilmn.db/vcf_file_test/'
+            file_tbl = self.sqlContext.read.parquet("{}".format(vcf_file))
+            # register parquet file as temp table to query
+            vcf_file_tbl = file_tbl.registerTempTable("vcf_file_tbl")
+            result = self.sqlContext.sql("WITH a AS (SELECT DISTINCT subject_id FROM parquet_tbl) \
+                                         SELECT a.*, b.subject_id \
+                                         FROM a \
+                                         FULL OUTER JOIN vcf_file_tbl b \
+                                         ON a.subject_id = b.subject_id \
+                                         WHERE (a.subject_id IS NULL or b.subject_id IS NULL)")
+            self.assertTrue(result.count() == 0,
+                        "All subject id's were not found in both tables.")
+
+        else:
+            print("Please enter either platform='illumina' or platform='cgi' in your class argument.")
+
+    def chrom_per_subject(self):
+        result = self.sqlContext.sql("with t as (select distinct subject_id, chrom \
+                                     from vcf_variant) \
+                                     select subject_id, count(*) as count from t \
+                                     group by subject_id having count < 25")
+        self.assertTrue(result.count() == 0,
+                        "Not all chromosomes were loaded for the following subject_id's: \n {}".format(result))
 
     def tear_down(self):
+        # clear memory cache
+        self.sqlContext.clearCache()
         # close connection
         self.sc.stop()
 
-    def run_tests(self, input_df):
-
+    def run_tests(self):
+        # check that table exists
         try:
-            os.path.isfile(input_df)
+            os.path.isfile(self.in_table)
         except Exception as e:
             print e
 
-        file_df = self.tsv_to_df(input_df)
-
-        pd_df = self.sparkDf_to_pandasDf(file_df)
+        # listing each test instead of using run_main
+        # for ease of customization
 
         # check chrom, pos, sample_id column vals not empty
         self.check_empty("chrom")
         self.check_empty("ref")
         self.check_empty("subject_id")
-        # self.check_empty("allele")
         self.check_empty("sample_id")
 
-        # check that all somatic chroms loaded
+        # check that all chroms loaded
         self.check_chrom_set()
 
-        # check that each chrom contains at least 1000 rows
+        # check that each chrom contains at least 10000 rows
         self.check_chrom_count()
 
         # check that 'chr' prefix has been removed from chromosome
         self.check_chrom_prefix()
 
-        # check that mitochondrial chromosome has been renamed from MT to M
+        # check that mitochondria has been renamed from MT to M
         self.check_chrom_mt()
 
-        # alt cols contains expected values A T G C N only
-        self.alt_check()
-
-        # # check for no more than two alleles per person at chrom, pos, ref
+         # check for no more than two alleles per person at each locus
         self.test_alleles()
-        #
-        # # # ref allele should be the same at each position
-        self.test_ref()
-
-        # verify 1-based coords
-        # self.check_one_based(pd_df)
-
-        self.tear_down()
 
 
 ###############
 if __name__ == '__main__':
 
-    # instantiate class with current wd, hdfs dir, spark evn, spark job name, num cores
-    spark = TestETL(os.getcwd(), '/user/selasady/', "local", "etl_test", 10)
+    # instantiate class
+    spark = TestETL(in_table=, is_vcf='yes', 'hdfs://ip-10-0-0-118.ec2.internal:8020/itmi/wgs_cg.db/vcf_variant/'
+                    platform='illumina', local_dir=os.getcwd(), hdfs_dir='/user/selasady/', appname='vcf_testing')
 
-    # specify input file to process
-    tsv_infile = '/user/selasady/test_set.txt.bz2'
+    if spark.is_vcf == 'yes':
+        # run tests
+        spark.run_tests()
+        # check that all subjects listed in the vcf_file metadata were loaded
+        spark.subjects_loaded()
+        spark.chrom_per_subject()
+        spark.tear_down()
+    else:
+        # run tests
+        spark.run_tests()
+        print ("Unit tests complete.")
+        spark.tear_down()
 
-    # run tests
-    spark.run_tests(tsv_infile)
 
 
-
-
-
-
-    
->>>>>>> b27f625ad58727a28746c32346cc85298146db12
+# /itmi/wgs_cg.db/vcf_nocall
+# /itmi/wgs_cg.db/vcf_variant
+# 'hdfs://ip-10-0-0-118.ec2.internal:8020/itmi/wgs_cg.db/vcf_variant/'
+# 'hdfs://nameservice1/vlad/wgs_ilmn.db/vcf_variant/'

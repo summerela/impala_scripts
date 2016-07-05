@@ -1,9 +1,0 @@
-#!/usr/bin/env python
-
-import os
-
-class hdfs_command(object):
-    test_string = "testing testing 123"
-
-    def test(self):
-        print(test_string)
