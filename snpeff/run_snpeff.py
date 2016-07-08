@@ -2,12 +2,12 @@
 
 '''
 Assumptions:
-- python 2.7.10
+- python 2.7.10 available via pyenv
 - snpeff 4.2
 - GRCh37.75
-- impala ODBC driver accessed through python impyla module
+- impala accessible either directly on cluster or via impala ODBC/impyla
 - gv_illumina.sh script created table wgs_ilmn.illumina_vars
-- set write permissions on output directory and hdfs directory
+- able to set write permissions on output directory and hdfs directory
 - cloudera impala cluster containing table of variants
 
 Input:
@@ -224,17 +224,17 @@ if __name__ == "__main__":
 
     # ITMI options
     out_dir = '/home/ec2-user/elasasu/impala_scripts/global_vars/gv_out'
-    impala_host = 'glados14'
-    impala_port = 21050
-    impala_user_name = 'selasady'
-    hdfs_path = '/user/selasady/'
+    hdfs_path = '/elasasu/'
 
     # ISB options
     # out_dir = '/titan/ITMI1/workspaces/users/selasady/impala_scripts/annotation/snpeff'
-    # impala_host = 'glados14'
-    # impala_port = 21050
-    # impala_user_name = 'selasady'
     # hdfs_path = '/user/selasady/'
+
+    # options relevant only when connecting remote
+    impala_host = 'glados14'
+    impala_port = 21050
+    impala_user_name = 'selasady'
+
 
     #######################
     # run snpeff routines #

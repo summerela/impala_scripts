@@ -168,7 +168,7 @@ create table wgs_ilmn.vars_hgmd
 partitioned by (chrom string, pos_block int)
  STORED AS PARQUET;"
 
-for x in $(seq 1 22) X Y; do for y in $(seq 0 249); do nohup impala-shell -q "
+for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "
 insert into wgs_ilmn.vars_hgmd partition (chrom, pos_block)
 SELECT v.*,h.id as hgmd_id, h.var_class as hgmd_varclass
 FROM wgs_ilmn.vars_clinvar v
