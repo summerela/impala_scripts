@@ -121,7 +121,7 @@ class snpeff_pipeline(object):
                 stdout,stderr = ps.communicate(var_df.to_csv(sep='\t', header=True, index=False))
                 if stdout:
                     logger.info(stdout)
-                if stderrr:
+                if stderr:
                     logger.error(stderr)
             else:
                 print("No variants found for chromosome {}".format(chrom))
