@@ -25,6 +25,12 @@ import datetime
 import subprocess as sp
 from impala.util import as_pandas
 import os
+import logging
+
+logger = logging.getLogger('snpeff')
+hdlr = logging.FileHandler('snpeff.log')
+logger.addHandler(hdlr)
+logger.setLevel(logging.INFO)
 
 # disable extraneous pandas warning
 pd.options.mode.chained_assignment = None
@@ -51,7 +57,8 @@ class snpeff_pipeline(object):
         self.impala_port = impala_port
         self.impala_name = impala_user_name
         self.hdfs_path = hdfs_path
-        self.chroms = map(str, range(8, 22)) + ['X', 'Y']
+        # self.chroms = map(str, range(1, 22)) + ['X', 'Y']
+        self.chroms = [22, 'Y']
         self.conn = connect(host=self.impala_host, port=self.impala_port, timeout=10000, user=self.impala_name)
         self.cur = self.conn.cursor()
         self.now = datetime.datetime.now()
@@ -111,10 +118,11 @@ class snpeff_pipeline(object):
                                                                                                      vcf_out=snp_out)
                 # run the subprocess command
                 ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
-                try:
-                    print ps.communicate(var_df.to_csv(sep='\t', header=True, index=False))
-                except sp.CalledProcessError as e:
-                    print e
+                stdout,stderr = ps.communicate(var_df.to_csv(sep='\t', header=True, index=False))
+                if stdout:
+                    logger.info(stdout)
+                if stderrr:
+                    logger.error(stderr)
             else:
                 print("No variants found for chromosome {}".format(chrom))
 
@@ -145,6 +153,8 @@ class snpeff_pipeline(object):
         for file in os.listdir(self.out_dir):
             if file.endswith('_snpeff.vcf'):
                 self.parse_snpeff(file)
+            else:
+                pass
 
     ############################################
     ## Remove Header and add pos_block column ##
