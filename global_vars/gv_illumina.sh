@@ -19,32 +19,33 @@
 # illumina variants with distinct reference variants     ###
 ############################################################
 # create ilmn_vars empty table
-impala-shell -q "create table wgs_ilmn.ilmn_vars
-(
-  var_id string,
-  pos int,
-  ref string,
-  allele string)
-partitioned by (chrom string, pos_block int)
-STORED AS PARQUET;"
+
+#impala-shell -q "create table wgs_ilmn.ilmn_vars
+#(
+#  var_id string,
+#  pos int,
+#  ref string,
+#  allele string)
+#partitioned by (chrom string, pos_block int)
+#STORED AS PARQUET;"
 
 # insert variants into wgs_ilmn.ilmn_vars
-for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "
-insert into wgs_ilmn.ilmn_vars partition (chrom, pos_block)
-SELECT var_id, pos, ref, allele, chrom, blk_pos FROM wgs_ilmn.vcf_distinct WHERE chrom = '$x' AND blk_pos = $y
-UNION
-SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.dbnsfp_distinct WHERE chrom = '$x' AND blk_pos = $y
-UNION
-SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.kaviar_distinct WHERE chrom = '$x' AND blk_pos = $y
-UNION
-SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.clinvar_distinct WHERE chrom = '$x' AND blk_pos = $y
-UNION
-SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.dbsnp WHERE chrom = '$x' AND blk_pos = $y
-UNION
-SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.hgmd WHERE chrom = '$x' AND blk_pos = $y;"; done; done
+#for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "
+#insert into wgs_ilmn.ilmn_vars partition (chrom, pos_block)
+#SELECT var_id, pos, ref, allele, chrom, blk_pos FROM wgs_ilmn.vcf_distinct WHERE chrom = '$x' AND blk_pos = $y
+#UNION
+#SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.dbnsfp_distinct WHERE chrom = '$x' AND blk_pos = $y
+#UNION
+#SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.kaviar_distinct WHERE chrom = '$x' AND blk_pos = $y
+#UNION
+#SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.clinvar_distinct WHERE chrom = '$x' AND blk_pos = $y
+#UNION
+#SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.dbsnp WHERE chrom = '$x' AND blk_pos = $y
+#UNION
+#SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.hgmd WHERE chrom = '$x' AND blk_pos = $y;"; done; done
 
 # compute stats on new table
-impala-shell -q "compute stats wgs_ilmn.ilmn_vars;"
+#impala-shell -q "compute stats wgs_ilmn.ilmn_vars;"
 
 ###################
 ### RUN SNPEFF  ###
@@ -52,7 +53,6 @@ impala-shell -q "compute stats wgs_ilmn.ilmn_vars;"
 # edit this script before running
 pyenv shell 2.7.10
 python ./illumina_snpeff.py
-
 
 ##################################
 ### ADD REFERENCE ANNOTATIONS  ###
@@ -382,13 +382,3 @@ SELECT v.*,
 FROM wgs_ilmn.vars_coding v
 WHERE v.chrom = '$x'
 AND v.blk_pos = $y;"; done; done
-
-
-
-
-
-
-
-
-
-
