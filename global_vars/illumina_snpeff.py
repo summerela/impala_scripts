@@ -58,7 +58,7 @@ class snpeff_pipeline(object):
         self.impala_name = impala_user_name
         self.hdfs_path = hdfs_path
         # self.chroms = map(str, range(1, 22)) + ['X', 'Y']
-        self.chroms = [22, 'Y']
+        self.chroms = 'Y'
         self.conn = connect(host=self.impala_host, port=self.impala_port, timeout=10000, user=self.impala_name)
         self.cur = self.conn.cursor()
         self.now = datetime.datetime.now()
@@ -123,6 +123,8 @@ class snpeff_pipeline(object):
                     logger.info(stdout)
                 if stderr:
                     logger.error(stderr)
+                    print ("Error encountered, check snpeff.log")
+
             else:
                 print("No variants found for chromosome {}".format(chrom))
 
