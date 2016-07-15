@@ -26,12 +26,12 @@
 #  pos int,
 #  ref string,
 #  allele string)
-#partitioned by (chrom string, pos_block int)
+#partitioned by (chrom string, blk_pos int)
 #STORED AS PARQUET;"
 
 # insert variants into wgs_ilmn.ilmn_vars
 #for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "
-#insert into wgs_ilmn.ilmn_vars partition (chrom, pos_block)
+#insert into wgs_ilmn.ilmn_vars partition (chrom, blk_pos)
 #SELECT var_id, pos, ref, allele, chrom, blk_pos FROM wgs_ilmn.vcf_distinct WHERE chrom = '$x' AND blk_pos = $y
 #UNION
 #SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.dbnsfp_distinct WHERE chrom = '$x' AND blk_pos = $y
@@ -52,7 +52,7 @@
 ###################
 # edit this script before running
 pyenv shell 2.7.10
-python ./illumina_snpeff.py
+#python ./illumina_snpeff.py
 
 ##################################
 ### ADD REFERENCE ANNOTATIONS  ###
@@ -69,11 +69,11 @@ create table wgs_ilmn.vars_dbsnp
   rs_id string,
   dbsnp_buildid string
 )
-partitioned by (chrom string, pos_block int)
+partitioned by (chrom string, blk_pos int)
  STORED AS PARQUET;"
 
 for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "
-insert into wgs_ilmn.vars_dbsnp partition (chrom, pos_block)
+insert into wgs_ilmn.vars_dbsnp partition (chrom, blk_pos)
 SELECT v.*, d.rs_id, d.dbsnpbuildid as dbsnp_buildid
 FROM wgs_ilmn.ilmn_vars v
 LEFT JOIN anno_grch37.dbsnp d
@@ -97,11 +97,11 @@ create table wgs_ilmn.vars_kaviar
   kav_freq FLOAT,
   kav_source STRING
 )
-partitioned by (chrom string, pos_block int)
+partitioned by (chrom string, blk_pos int)
  STORED AS PARQUET;"
 
 for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "
-insert into wgs_ilmn.vars_kaviar partition (chrom, pos_block)
+insert into wgs_ilmn.vars_kaviar partition (chrom, blk_pos)
 SELECT v.*, k.kav_freq, k.kav_source
 FROM wgs_ilmn.vars_dbsnp v
 LEFT JOIN anno_grch37.kaviar_distinct k
@@ -130,11 +130,11 @@ create table wgs_ilmn.vars_clinvar
   clin_sig string,
   clin_dbn string
 )
-partitioned by (chrom string, pos_block int)
+partitioned by (chrom string, blk_pos int)
  STORED AS PARQUET;"
 
 for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "
-insert into wgs_ilmn.vars_clinvar partition (chrom, pos_block)
+insert into wgs_ilmn.vars_clinvar partition (chrom, blk_pos)
 SELECT v.*, c.clin_sig, c.clin_dbn
 FROM wgs_ilmn.vars_kaviar v
 LEFT JOIN anno_grch37.clinvar_distinct c
@@ -165,11 +165,11 @@ create table wgs_ilmn.vars_hgmd
   hgmd_id string,
   hgmd_varclass string
 )
-partitioned by (chrom string, pos_block int)
+partitioned by (chrom string, blk_pos int)
  STORED AS PARQUET;"
 
 for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "
-insert into wgs_ilmn.vars_hgmd partition (chrom, pos_block)
+insert into wgs_ilmn.vars_hgmd partition (chrom, blk_pos)
 SELECT v.*,h.id as hgmd_id, h.var_class as hgmd_varclass
 FROM wgs_ilmn.vars_clinvar v
 LEFT JOIN anno_grch37.hgmd h
@@ -203,11 +203,11 @@ create table wgs_ilmn.vars_dbnsfp
   dann_score float,
   interpro_domain string
 )
-partitioned by (chrom string, pos_block int)
+partitioned by (chrom string, blk_pos int)
  STORED AS PARQUET;"
 
 for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "
-insert into wgs_ilmn.vars_dbnsfp partition (chrom, pos_block)
+insert into wgs_ilmn.vars_dbnsfp partition (chrom, blk_pos)
 SELECT v.*, d.cadd_raw, d.dann_score, d.interpro_domain
 FROM wgs_ilmn.vars_hgmd v
 LEFT JOIN anno_grch37.dbnsfp_distinct d  ON v.var_id = d.var_id
@@ -247,11 +247,11 @@ create table wgs_ilmn.vars_ensembl
   exon_name string,
   exon_number int
 )
-partitioned by (chrom string, pos_block int)
+partitioned by (chrom string, blk_pos int)
  STORED AS PARQUET;"
 
 for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "
-insert into wgs_ilmn.vars_ensembl partition (chrom, pos_block)
+insert into wgs_ilmn.vars_ensembl partition (chrom, blk_pos)
 SELECT v.*, e.strand, e.gene_name, e.gene_id, e.transcript_name, e.transcript_id, e.exon_name, e.exon_number
 FROM wgs_ilmn.vars_dbsnfp v
 LEFT JOIN anno_grch37.ensembl_distinct e
@@ -305,11 +305,11 @@ create table wgs_ilmn.vars_coding
   hgvs_c string,
   hgvs_p string
 )
-partitioned by (chrom string, pos_block int)
+partitioned by (chrom string, blk_pos int)
  STORED AS PARQUET;"
 
 for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "
-insert into wgs_ilmn.vars_coding partition (chrom, pos_block)
+insert into wgs_ilmn.vars_coding partition (chrom, blk_pos)
 SELECT v.*,c.effect, c.impact, c.feature, c.feature_id, c.biotype, c.rank, c.hgvs_c, c.hgvs_p
 FROM wgs_ilmn.vars_ensembl v
 LEFT JOIN anno_grch37.coding c
@@ -366,11 +366,11 @@ create table wgs_ilmn.global_vars
   var_type string,
   ppc_rating string
 )
-partitioned by (chrom string, pos_block int)
+partitioned by (chrom string, blk_pos int)
  STORED AS PARQUET;"
 
 for x in $(seq 1 22) M X Y; do for y in $(seq 0 249); do nohup impala-shell -q "
-insert into wgs_ilmn.global_vars partition (chrom, pos_block)
+insert into wgs_ilmn.global_vars partition (chrom, blk_pos)
 SELECT v.*,
     CASE WHEN ((length(ref) == length(allele)) and (effect IN ('codings_sequence_variant', 'chromosome',
     'missense_variant', 'initator_codon_variant', 'stop_retained_variant', 'transcript_variant')) THEN 'non-synonymous',

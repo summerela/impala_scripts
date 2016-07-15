@@ -230,8 +230,8 @@ if __name__ == "__main__":
     # out_dir = '/titan/ITMI1/workspaces/users/selasady/impala_scripts/annotation/snpeff'
     # hdfs_path = '/user/selasady/'
 
-    # options relevant only when connecting remote
-    impala_host = 'glados14'
+    # options only need to be changed for remote connection
+    impala_host = 'localhost'
     impala_port = 21050
     impala_user_name = 'selasady'
 
