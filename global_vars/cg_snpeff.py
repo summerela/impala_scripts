@@ -6,7 +6,7 @@ Assumptions:
 - snpeff 4.2
 - GRCh37.75
 - impala accessible either directly on cluster or via impala ODBC/impyla
-- gv_illumina.sh script created table wgs_ilmn.illumina_vars
+- gv_cgi.sh script created table wgs_cg.cg_vars
 - able to set write permissions on output directory and hdfs directory
 - cloudera impala cluster containing table of variants
 - Does not run on mitochondria
@@ -102,13 +102,13 @@ class snpeff_pipeline(object):
 
     def vars_to_snpeff(self):
         '''
-        Run snpeff by chromosome on ilmn_vars table
+        Run snpeff by chromosome on cg_vars table
         :return: vcf files of annoated variants for each chrom
         '''
         for chrom in self.chroms:
             # select variants by chromosome
             get_vars_query = "SELECT chrom as '#chrom', pos, var_id as id, ref, allele as alt, 100 as qual, \
-                             'PASS' as filter, 'GT' as 'format', '.' as INFO from wgs_ilmn.ilmn_vars \
+                             'PASS' as filter, 'GT' as 'format', '.' as INFO from wgs_cg.cg_vars \
                              where chrom = '{}'".format(chrom)
             var_df = self.run_query(get_vars_query)
             # run snpeff on query results
@@ -150,7 +150,6 @@ class snpeff_pipeline(object):
         else:
             raise SystemExit("Parsed tsv file was not created for {}".format(input_vcf))
 
-
     def run_parse(self):
         '''
         parse snpeff output and create tsv files for
@@ -161,6 +160,8 @@ class snpeff_pipeline(object):
         for file in os.listdir(self.out_dir):
             if file.endswith('_snpeff.vcf'):
                 self.parse_snpeff(file)
+            else:
+                pass
 
     ############################################
     ## Remove Header and add pos_block column ##
@@ -245,7 +246,7 @@ class snpeff_pipeline(object):
 if __name__ == "__main__":
 
     # ITMI options
-    out_dir = '/home/ec2-user/elasasu/impala_scripts/global_vars/gv_out'
+    out_dir = '/home/ec2-user/elasasu/impala_scripts/global_vars/cgi_out'
     hdfs_path = '/elasasu/'
 
     # ISB options
