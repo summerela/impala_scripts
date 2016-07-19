@@ -35,8 +35,8 @@ logger.setLevel(logging.INFO)
 # disable extraneous pandas warning
 pd.options.mode.chained_assignment = None
 
-class snpeff_pipeline(object):
 
+class snpeff_pipeline(object):
     # set related file paths
 
     # ITMI impala cluster
@@ -57,8 +57,7 @@ class snpeff_pipeline(object):
         self.impala_port = impala_port
         self.impala_name = impala_user_name
         self.hdfs_path = hdfs_path
-        # self.chroms = map(str, range(1, 22)) + ['X', 'Y']
-        self.chroms = 'Y'
+        self.chroms = map(str, range(2, 22)) + ['X', 'Y']
         self.conn = connect(host=self.impala_host, port=self.impala_port, timeout=10000, user=self.impala_name)
         self.cur = self.conn.cursor()
         self.now = datetime.datetime.now()
@@ -81,11 +80,6 @@ class snpeff_pipeline(object):
         except sp.CalledProcessError as e:
             print e
 
-    @staticmethod
-    def get_file_base(in_file, num_to_remove):
-        basename = str('.'.join(in_file.split('.')[:-int(num_to_remove)]) if '.' in in_file else in_file)
-        return basename
-
     ###################################################
     # Download Variants Table and run through snpeff ##
     ###################################################
@@ -100,98 +94,78 @@ class snpeff_pipeline(object):
         query_df = as_pandas(self.cur)
         return query_df
 
-    def vars_to_snpeff(self):
+    def run_snpeff(self, input_chrom):
         '''
         Run snpeff by chromosome on ilmn_vars table
         :return: vcf files of annoated variants for each chrom
         '''
-        for chrom in self.chroms:
-            # select variants by chromosome
-            get_vars_query = "SELECT chrom as '#chrom', pos, var_id as id, ref, allele as alt, 100 as qual, \
-                             'PASS' as filter, 'GT' as 'format', '.' as INFO from wgs_ilmn.ilmn_vars \
-                             where chrom = '{}'".format(chrom)
-            var_df = self.run_query(get_vars_query)
-            # run snpeff on query results
-            if not var_df.empty:
-                snp_out = "{}/chr{}_snpeff.vcf".format(self.out_dir, chrom)
-                snpeff_cmd = r'''java -Xmx16g -jar {snpeff} -t -v GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
-                                                                                                     vcf_out=snp_out)
-                # run the subprocess command
-                ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
-                stdout,stderr = ps.communicate(var_df.to_csv(sep='\t', header=True, index=False))
-                if stdout:
-                    logger.info(stdout)
-                if stderr:
-                    logger.error(stderr)
-                    raise SystemExit("Error encountered, check snpeff.log")
+        # select variants by chromosome
+        get_vars_query = "SELECT chrom as '#chrom', pos, var_id as id, ref, allele as alt, 100 as qual, \
+                         'PASS' as filter, 'GT' as 'format', '.' as INFO from wgs_ilmn.ilmn_vars \
+                         where chrom = '{}'".format(input_chrom)
+        var_df = self.run_query(get_vars_query)
+        # run snpeff on query results
+        if not var_df.empty:
+            snp_out = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
+            snpeff_cmd = r'''java -Xmx16g -jar {snpeff} -t -v GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
+                                                                                              vcf_out=snp_out)
+            # run the subprocess command
+            ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
+            stdout, stderr = ps.communicate(var_df.to_csv(sep='\t', header=True, index=False))
+            if stdout:
+                logger.info(stdout)
+            if stderr:
+                logger.error(stderr)
+                print("Error encountered on chrom {}, check snpeff.log".format(input_chrom))
 
-            else:
-                print("No variants found for chromosome {}".format(chrom))
+        else:
+            print("No variants found for chromosome {}".format(input_chrom))
 
     ##########################################################
     ## Output SnpEff effects as tsv file, one effect per line ##
     ############################################################
-    def parse_snpeff(self, input_vcf):
+    def parse_snpeff(self, input_chrom):
         '''
         Parse snpeff output to contain one allele per row
         :param input_vcf: snpeff annotation results
         :return: tsv file for upload to impala table
         '''
-        out_name = "{}.tsv".format(self.get_file_base(input_vcf, 1))
+        in_name = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
+        out_name = "{}/chr{}_snpeff.tsv".format(self.out_dir, input_chrom)
         parse_cmd = 'cat {vcf} | {perl} | java -Xmx16g -jar {snpsift} extractFields \
             - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
             "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
-            "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {out}'.format(vcf=input_vcf, perl=self.snpeff_oneperline, \
-                                                         snpsift=self.snpsift_jar, out=out_name)
+            "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {out}'.format(vcf=in_name, perl=self.snpeff_oneperline, \
+                                                            snpsift=self.snpsift_jar, out=out_name)
         self.subprocess_cmd(parse_cmd, self.out_dir)
         # if tsv has been created, delete snpeff vcf
         if os.path.isfile(out_name):
-            os.remove(input_vcf)
+            os.remove(in_name)
         else:
-            raise SystemExit("Parsed tsv file was not created for {}".format(input_vcf))
-
-
-    def run_parse(self):
-        '''
-        parse snpeff output and create tsv files for
-        upload to impala table
-        :param out_dir: path to directory containing snpeff annotated vcf files
-        :return: annotated tsv files for upload to impala
-        '''
-        for file in os.listdir(self.out_dir):
-            if file.endswith('_snpeff.vcf'):
-                self.parse_snpeff(file)
+            raise SystemExit("Parsed tsv file was not created for {}".format(input_chrom))
 
     ############################################
     ## Remove Header and add pos_block column ##
     ############################################
 
-    def parse_tsv(self, input_tsv):
+    def parse_tsv(self, input_chrom):
         '''
         remove header from tsv file and subset columns
         :param input_tsv: one-per line tsv file of snpeff annotated variants
         :return: final.tsv with no header and extraneous columns removed
         '''
-        final_out = "{}/{}_final.tsv".format(self.out_dir, self.get_file_base(input_tsv, 1))
-        final_df = pd.read_csv("{}/{}".format(self.out_dir, input_tsv), sep='\t', skiprows=1, header=None)
+        in_name = "{}/chr{}_snpeff.tsv".format(self.out_dir, input_chrom)
+        final_out = "{}/chr{}_final.tsv".format(self.out_dir, input_chrom)
+        final_df = pd.read_csv("{}".format(in_name), sep='\t', skiprows=1, header=None)
         # cant use seq in pandas df slicing
         final_df = final_df[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0]]
         final_df['pos_block'] = final_df[1].div(1000000).astype(int)
         final_df.to_csv(final_out, sep='\t', header=False, index=False)
         # if final_tsv has been created, delete snpeff tsv
         if os.path.isfile(final_out):
-            os.remove(input_tsv)
+            os.remove(in_name)
         else:
-            raise SystemExit("Parsed tsv file was not created for {}".format(input_tsv))
-
-    def run_parse_tsv(self):
-        '''
-        run the final tsv parsing function parse_tsv()
-        :return: chrom_snpeff.tsv ready for upload to hdfs
-        '''
-        for file in os.listdir(self.out_dir):
-            if file.endswith('_snpeff.tsv'):
-                self.parse_tsv(file)
+            raise SystemExit("Parsed tsv file was not created for {}".format(input_chrom))
 
     #############################
     ## Upload results to hdfs  ##
@@ -204,49 +178,37 @@ class snpeff_pipeline(object):
         '''
         mkdir_cmd = "hdfs dfs -mkdir {}".format(self.hdfs_out)
         self.subprocess_cmd(mkdir_cmd, self.out_dir)
+        chown_cmd = "hdfs dfs -chmod 777 {}".format(self.hdfs_path)
+        self.subprocess_cmd(chown_cmd, self.out_dir)
 
-    def upload_hdfs(self, in_tsv):
+    def upload_hdfs(self, input_chrom):
         '''
         upload chrom_snpeff.tsv files into hdfs_out
         :param in_tsv: chrom_snpeff.tsv files
         :return: files on hdfs directory
         '''
-        upload_cmd = 'hdfs dfs -put {} {}'.format(in_tsv, self.hdfs_out)
+        up_file = "{}/chr{}_final.tsv".format(self.out_dir, input_chrom)
+        upload_cmd = 'hdfs dfs -put {} {}'.format(up_file, self.hdfs_out)
         self.subprocess_cmd(upload_cmd, self.out_dir)
-
-    def update_permissions(self):
-        '''
-        make sure we can write to hdfs directory
-        :return: hdfs directory modified with read/write/view access to 777
-        '''
-        chown_cmd = "hdfs dfs -chmod 777 {}".format(self.hdfs_path)
-        self.subprocess_cmd(chown_cmd, self.out_dir)
-
-    def run_hdfs_upload(self):
-        self.make_hdfs_dir()
-        for file in os.listdir(self.out_dir):
-            if file.endswith('_snpeff_final.tsv'):
-                self.upload_hdfs(file)
-        self.update_permissions()
 
     ##################
     ## Run routine  ##
     ##################
 
-    def run_snpeff_routine(self):
-        self.vars_to_snpeff()
-        self.run_parse()
-        self.run_parse_tsv()
-        self.run_hdfs_upload()
-        self.cur.close()
+    def run_snpeff_routine(self, input_chrom):
+        print ("Running snpeff on chromosome {} \n".format(input_chrom))
+        # self.run_snpeff(input_chrom=input_chrom)
+        self.parse_snpeff(input_chrom=input_chrom)
+        self.parse_tsv(input_chrom=input_chrom)
+        self.upload_hdfs(input_chrom=input_chrom)
 
 
 ##########  Main Routine  ############
 if __name__ == "__main__":
 
     # ITMI options
-    out_dir = '/home/ec2-user/elasasu/impala_scripts/global_vars/gv_out'
-    hdfs_path = '/elasasu/'
+    out_dir = '/home/ec2-user/elasasu/impala_scripts/global_vars/illumina_gv'
+    hdfs_path = 'elasasu/'
 
     # ISB options
     # out_dir = '/titan/ITMI1/workspaces/users/selasady/impala_scripts/annotation/snpeff'
@@ -255,16 +217,17 @@ if __name__ == "__main__":
     # options only need to be changed for remote connection
     impala_host = 'localhost'
     impala_port = 21050
-    impala_user_name = 'selasady'
-
+    impala_user_name = 'ec2-user'
 
     #######################
     # run snpeff routines #
     #######################
     # instantiate class with user args
     snpeff = snpeff_pipeline(out_dir, impala_host, impala_port, impala_user_name, hdfs_path)
+    # create hdfs directory to upload files to
+    snpeff.make_hdfs_dir()
     # run the main routines
-    snpeff.run_snpeff_routine()
-
-# TODO add cleanup
-# TODO process one chrom through whole snpeff pipeline, then delete?
+    for chrom in snpeff.chroms:
+        snpeff.run_snpeff_routine(input_chrom=chrom)
+    # close the connection
+    snpeff.cur.close()

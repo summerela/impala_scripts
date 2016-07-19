@@ -50,8 +50,7 @@ impala-shell -q "compute stats wgs_cg.cg_vars;"
 ### RUN SNPEFF  ###
 ###################
 # edit this script before running
-pyenv shell 2.7.10
-python ./illumina_snpeff.py &
+python ./cg_snpeff.py &
 
 ##################################
 ### ADD REFERENCE ANNOTATIONS  ###
