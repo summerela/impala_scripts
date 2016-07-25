@@ -189,9 +189,9 @@ class snpeff():
         :return: hdfs output directory
         '''
         mkdir_cmd = "hdfs dfs -mkdir {}".format(self.hdfs_out)
-        self.subprocess_cmd(mkdir_cmd, self.out_dir)
+        self.subprocess_cmd(mkdir_cmd)
         chown_cmd = "hdfs dfs -chmod 777 {}".format(self.hdfs_path)
-        self.subprocess_cmd(chown_cmd, self.out_dir)
+        self.subprocess_cmd(chown_cmd)
 
     def upload_hdfs(self, input_chrom):
         '''
@@ -201,7 +201,7 @@ class snpeff():
         '''
         up_file = "{}/chr{}_final.tsv".format(self.out_dir, input_chrom)
         upload_cmd = 'hdfs dfs -put {} {}'.format(up_file, self.hdfs_out)
-        self.subprocess_cmd(upload_cmd, self.out_dir)
+        self.subprocess_cmd(upload_cmd)
 
     def remove_final(self, input_chrom):
         '''
@@ -223,7 +223,7 @@ class snpeff():
     ## Run routine  ##
     ##################
 
-    def main(self):
+    def run_snpeff_pipeline(self):
         self.make_hdfs_dir()
         for chrom in self.chroms:
             print ("Running snpeff on chromosome {} \n".format(chrom))
@@ -237,4 +237,4 @@ class snpeff():
 
 ##########  Main Routine  ############
 if __name__ == "__main__":
-    snpeff.main()
+    snpeff().run_snpeff_pipeline()
