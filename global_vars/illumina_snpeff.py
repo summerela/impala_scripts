@@ -227,11 +227,11 @@ class snpeff(object):
         self.make_hdfs_dir()
         for chrom in self.chroms:
             print ("Running snpeff on chromosome {} \n".format(chrom))
-            # self.run_snpeff(chrom)
-            # self.parse_snpeff(chrom)
-            # self.parse_tsv(chrom)
-            # self.upload_hdfs(chrom)
-            # self.remove_final(chrom)
+            self.run_snpeff(chrom)
+            self.parse_snpeff(chrom)
+            self.parse_tsv(chrom)
+            self.upload_hdfs(chrom)
+            self.remove_final(chrom)
         self.cur.close()
 
 

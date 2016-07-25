@@ -269,46 +269,46 @@ create_tables_list = [create_vars_dbsnp, create_vars_kaviar, create_vars_clinvar
 # # run snpeff in the background using threading module
 snpeff_thread = threading.Thread(target=snpeff.run_snpeff_pipeline())
 snpeff_thread.start()
-#
-# #################################
-# ### ADD VARIANT  ANNOTATIONS  ###
-# #################################
-#
-# # check that each table has at least as many rows as the previous table
-# # if new table passes check, drop previous table to save disk space
-# def check_tables(table1, table2):
-#     count1 = snpeff.pandas_query("SELECT COUNT(1) FROM {}".format(table1))
-#     count2 = snpeff.pandas_query("SELECT COUNT(1) FROM {}".format(table2))
-#     if int(count2.ix[0]) >= int(count1.ix[0]) >= 1000:
-#         snpeff.run_query("drop table {}".format(table1))
-#     else:
-#         sys.exit("{} has less rows than {}.".format(table2, table1))
-#
-# # add rsID from dbSNP
-# for chrom in snpeff.chroms:
-#     for pos in snpeff.blk_pos:
-#         add_dbsnp = '''
-#             insert into wgs_ilmn.vars_dbsnp partition (chrom, blk_pos)
-#             with vars as (
-#             SELECT v.var_id, v.pos, v.ref, v.allele, v.chrom, v.blk_pos
-#             FROM wgs_ilmn.ilmn_vars v
-#             WHERE v.chrom = '{chrom}'
-#             AND v.blk_pos = {pos}
-#             ),
-#             dbsnp as (
-#             SELECT d.rs_id, d.dbsnpbuildid as dbsnp_buildid, d.var_id
-#             from anno_grch37.dbsnp d
-#             )
-#             SELECT vars.var_id, vars.pos, vars.ref, vars.allele, dbsnp.rs_id, dbsnp.dbsnp_buildid,
-#                 vars.chrom, vars.blk_pos
-#             from vars
-#             LEFT JOIN dbsnp
-#              ON vars.var_id = dbsnp.var_id;
-#             '''.format(chrom=chrom, pos=pos)
-#         snpeff.run_query(add_dbsnp)
-#
-# # compute stats
-# snpeff.run_query("compute stats wgs_ilmn.vars_dbsnp;")
+
+#################################
+### ADD VARIANT  ANNOTATIONS  ###
+#################################
+
+# check that each table has at least as many rows as the previous table
+# if new table passes check, drop previous table to save disk space
+def check_tables(table1, table2):
+    count1 = snpeff.pandas_query("SELECT COUNT(1) FROM {}".format(table1))
+    count2 = snpeff.pandas_query("SELECT COUNT(1) FROM {}".format(table2))
+    if int(count2.ix[0]) >= int(count1.ix[0]) >= 1000:
+        snpeff.run_query("drop table {}".format(table1))
+    else:
+        sys.exit("{} has less rows than {}.".format(table2, table1))
+
+# add rsID from dbSNP
+for chrom in snpeff.chroms:
+    for pos in snpeff.blk_pos:
+        add_dbsnp = '''
+            insert into wgs_ilmn.vars_dbsnp partition (chrom, blk_pos)
+            with vars as (
+            SELECT v.var_id, v.pos, v.ref, v.allele, v.chrom, v.blk_pos
+            FROM wgs_ilmn.ilmn_vars v
+            WHERE v.chrom = '{chrom}'
+            AND v.blk_pos = {pos}
+            ),
+            dbsnp as (
+            SELECT d.rs_id, d.dbsnpbuildid as dbsnp_buildid, d.var_id
+            from anno_grch37.dbsnp d
+            )
+            SELECT vars.var_id, vars.pos, vars.ref, vars.allele, dbsnp.rs_id, dbsnp.dbsnp_buildid,
+                vars.chrom, vars.blk_pos
+            from vars
+            LEFT JOIN dbsnp
+             ON vars.var_id = dbsnp.var_id;
+            '''.format(chrom=chrom, pos=pos)
+        snpeff.run_query(add_dbsnp)
+
+# compute stats
+snpeff.run_query("compute stats wgs_ilmn.vars_dbsnp;")
 #
 # # add kaviar frequency and source from Kaviar
 # for chrom in snpeff.chroms:
