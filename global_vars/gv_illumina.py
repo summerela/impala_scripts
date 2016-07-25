@@ -11,7 +11,7 @@ hdfs_path = 'elasasu/'
 vcf_dir = '/home/ec2-user/elasasu/impala_scripts/global_vars/illumina_gv'
 
 # instantiate snpeff script and variables
-snpeff = snp.snpeff_pipeline(vcf_dir, impala_host, impala_port, impala_user_name, hdfs_path)
+snpeff = snp.snpeff(vcf_dir, impala_host, impala_port, impala_user_name, hdfs_path)
 
 ########################################################
 # create tables needed to store data along the way   ###
