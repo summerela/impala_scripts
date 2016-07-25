@@ -235,6 +235,6 @@ class snpeff(object):
         self.cur.close()
 
 
-##########  Main Routine  ############
-if __name__ == "__main__":
-    snpeff().run_snpeff_pipeline()
+# ##########  Main Routine  ############
+# if __name__ == "__main__":
+#     snpeff().run_snpeff_pipeline()
