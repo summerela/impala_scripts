@@ -66,7 +66,7 @@ class snpeff(object):
         self.hdfs_out = "{}/snpeff_{}".format(self.hdfs_path, self.today)
 
     # create function to run bash command with subprocess
-    def subprocess_cmd(command, input_dir):
+    def subprocess_cmd(command):
         '''
         Run programs in bash via subprocess
         :param command: command string as would be run on the command line
@@ -74,7 +74,7 @@ class snpeff(object):
         :return: runs bash command
         '''
         print ("Running \n {}".format(command))
-        ps = sp.Popen(command, shell=True, stdout=sp.PIPE, stderr=sp.PIPE, cwd=input_dir)
+        ps = sp.Popen(command, shell=True, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
         try:
             print ps.communicate()
         except sp.CalledProcessError as e:
