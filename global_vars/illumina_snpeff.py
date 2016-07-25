@@ -236,5 +236,15 @@ class snpeff(object):
 
 
 # ##########  Main Routine  ############
-# if __name__ == "__main__":
-#     snpeff().run_snpeff_pipeline()
+if __name__ == "__main__":
+
+    # ITMI options
+    impala_host = 'localhost'
+    impala_port = 21050
+    impala_user_name = 'ec2-user'
+    hdfs_path = 'elasasu/'
+    vcf_dir = '/home/ec2-user/elasasu/impala_scripts/global_vars/illumina_gv'
+
+    snp = snpeff(vcf_dir, impala_host=impala_host, impala_port=impala_port, impala_user_name=impala_user_name,
+                 hdfs_path=hdfs_path)
+    snp.run_snpeff_pipeline()
