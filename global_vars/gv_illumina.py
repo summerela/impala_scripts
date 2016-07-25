@@ -232,8 +232,8 @@ create_tables_list = [create_vars_dbsnp, create_vars_kaviar, create_vars_clinvar
                create_global_vars]
 
 # create each table in the list
-for query in create_tables_list:
-    snpeff.run_query(query)
+# for query in create_tables_list:
+#     snpeff.run_query(query)
 
 ############################################################
 # create table of all variants found by joining distinct ###
@@ -267,8 +267,8 @@ for query in create_tables_list:
 # ###################
 #
 # # run snpeff in the background using threading module
-# snpeff_thread = threading.Thread(target=snpeff.run_pipeline)
-# snpeff_thread.start()
+snpeff_thread = threading.Thread(target=snpeff.main())
+snpeff_thread.start()
 #
 # #################################
 # ### ADD VARIANT  ANNOTATIONS  ###
