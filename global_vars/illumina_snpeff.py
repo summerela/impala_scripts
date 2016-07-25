@@ -19,6 +19,7 @@ annotated variants uploaded to hdfs and converted
 into an impala table
 
 '''
+from subprocess import Popen, PIPE
 import pandas as pd
 from impala.dbapi import connect
 import datetime
@@ -36,8 +37,7 @@ logger.setLevel(logging.INFO)
 pd.options.mode.chained_assignment = None
 
 
-class snpeff_pipeline(object):
-    # set related file paths
+class snpeff():
 
     # ITMI impala cluster
     tool_path = '/opt/cloudera/parcels/ITMI/'
@@ -45,7 +45,7 @@ class snpeff_pipeline(object):
     snpeff_oneperline = '{}share/snpEff/scripts/vcfEffOnePerLine.pl'.format(tool_path)
     snpsift_jar = '{}share/snpEff/SnpSift.jar'.format(tool_path)
 
-    # on ISB impala cluster
+    # ISB impala cluster
     # tool_path = '/users/selasady/my_titan_itmi/tools/'
     # snpeff_jar = '{}snpEff/snpEff.jar'.format(tool_path)
     # snpeff_oneperline = '{}snpEff/scripts/vcfEffOnePerLine.pl'.format(tool_path)
@@ -57,14 +57,14 @@ class snpeff_pipeline(object):
         self.impala_port = impala_port
         self.impala_name = impala_user_name
         self.hdfs_path = hdfs_path
-        self.chroms = map(str, range(2, 22)) + ['X', 'Y']
+        self.chroms = map(str, range(0, 22)) + ['X', 'Y']
+        self.blk_pos = range(0,250)
         self.conn = connect(host=self.impala_host, port=self.impala_port, timeout=10000, user=self.impala_name)
         self.cur = self.conn.cursor()
         self.now = datetime.datetime.now()
         self.today = str(self.now.strftime("%Y%m%d"))
         self.hdfs_out = "{}/snpeff_{}".format(self.hdfs_path, self.today)
 
-    @staticmethod
     # create function to run bash command with subprocess
     def subprocess_cmd(command, input_dir):
         '''
@@ -191,43 +191,38 @@ class snpeff_pipeline(object):
         upload_cmd = 'hdfs dfs -put {} {}'.format(up_file, self.hdfs_out)
         self.subprocess_cmd(upload_cmd, self.out_dir)
 
+    def remove_final(self, input_chrom):
+        '''
+        check that final.tsv was uploaded to hdfs
+        and delete from local dir
+        :param input_chrom: chrom to check final.tsv on
+        :return: removes final.tsv files from local dir
+        '''
+        remove_file = "{}/chr{}_final.tsv".format(self.out_dir, input_chrom)
+        remove_cmd = "hdfs dfs -cat {}| head".format(remove_file)
+        process = Popen(remove_cmd, shell=True, stdout=PIPE, stderr=PIPE)
+        std_out, std_err = process.communicate()
+        if std_out:
+            os.remove(remove_file)
+        else:
+            raise SystemExit("Final tsv file was not created for {}".format(input_chrom))
+
     ##################
     ## Run routine  ##
     ##################
 
-    def run_snpeff_routine(self, input_chrom):
-        print ("Running snpeff on chromosome {} \n".format(input_chrom))
-        # self.run_snpeff(input_chrom=input_chrom)
-        self.parse_snpeff(input_chrom=input_chrom)
-        self.parse_tsv(input_chrom=input_chrom)
-        self.upload_hdfs(input_chrom=input_chrom)
+    def main(self):
+        self.make_hdfs_dir()
+        for chrom in self.chroms:
+            print ("Running snpeff on chromosome {} \n".format(chrom))
+            self.run_snpeff(chrom)
+            self.parse_snpeff(chrom)
+            self.parse_tsv(chrom)
+            self.upload_hdfs(chrom)
+            self.remove_final(chrom)
+        self.cur.close()
 
 
 ##########  Main Routine  ############
 if __name__ == "__main__":
-
-    # ITMI options
-    out_dir = '/home/ec2-user/elasasu/impala_scripts/global_vars/illumina_gv'
-    hdfs_path = 'elasasu/'
-
-    # ISB options
-    # out_dir = '/titan/ITMI1/workspaces/users/selasady/impala_scripts/annotation/snpeff'
-    # hdfs_path = '/user/selasady/'
-
-    # options only need to be changed for remote connection
-    impala_host = 'localhost'
-    impala_port = 21050
-    impala_user_name = 'ec2-user'
-
-    #######################
-    # run snpeff routines #
-    #######################
-    # instantiate class with user args
-    snpeff = snpeff_pipeline(out_dir, impala_host, impala_port, impala_user_name, hdfs_path)
-    # create hdfs directory to upload files to
-    snpeff.make_hdfs_dir()
-    # run the main routines
-    for chrom in snpeff.chroms:
-        snpeff.run_snpeff_routine(input_chrom=chrom)
-    # close the connection
-    snpeff.cur.close()
+    snpeff.main()

@@ -1,16 +1,17 @@
 #!/usr/bin/env python
-import snpeff as snp
+import illumina_snpeff as snp
 import sys
+import threading
 
-# user args
-vcf_dir = '/titan/ITMI1/workspaces/users/selasady/impala_scripts/annotation/snpeff'
-impala_host = 'glados14'
+# ITMI options
+impala_host = 'localhost'
 impala_port = 21050
-hdfs_path = '/user/selasady/'
+impala_user_name = 'ec2-user'
+hdfs_path = 'elasasu/'
+vcf_dir = '/home/ec2-user/elasasu/impala_scripts/global_vars/illumina_gv'
 
 # instantiate snpeff script and variables
-snpeff = snp.run_snpeff(vcf_dir, impala_host, impala_port, hdfs_path)
-
+snpeff = snp.snpeff_pipeline(vcf_dir, impala_host, impala_port, impala_user_name, hdfs_path)
 
 ########################################################
 # create tables needed to store data along the way   ###
@@ -241,7 +242,7 @@ for query in create_tables_list:
 
 # insert variants into wgs_ilmn.ilmn_vars by chromosome and block_pos
 for chrom in snpeff.chroms:
-    for pos in snpeff.blk_poss:
+    for pos in snpeff.blk_pos:
         print ("Running query for chrom {} blk_pos {}").format(chrom, pos)
         insert_ilmn_vars = '''
         insert into wgs_ilmn.ilmn_vars partition (chrom, blk_pos)
@@ -257,14 +258,17 @@ for chrom in snpeff.chroms:
         UNION
         SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.hgmd_test WHERE chrom = '{chrom}' AND blk_pos = {pos};
         '''.format(chrom=chrom, pos=pos)
-        snpeff.run_query(insert_ilmn_vars)
+        # snpeff.run_query(insert_ilmn_vars)
 
-snpeff.run_query("compute stats wgs_ilmn.ilmn_vars;")
+# snpeff.run_query("compute stats wgs_ilmn.ilmn_vars;")
 
 ###################
 ### run snpeff  ###
 ###################
-snpeff.run_pipeline()
+
+# run snpeff in the background using threading module
+snpeff_thread = threading.Thread(target=snpeff.run_pipeline)
+snpeff_thread.start()
 
 #################################
 ### ADD VARIANT  ANNOTATIONS  ###
@@ -566,6 +570,10 @@ row format delimited fields terminated by '\t'
 location '{}';
 '''.format(snpeff.hdfs_out)
 
+# make sure that the snpeff pipeline has finished running
+snpeff_thread.join()
+
+# add snpeff annotations
 snpeff.run_query(create_snpeff_table)
 snpeff.run_query("compute stats wgs_ilmn.snpeff_results")
 
@@ -713,5 +721,3 @@ for chrom in snpeff.chroms:
 snpeff.run_query("compute stats wgs_ilmn.global_vars")
 
 print("Global variants pipeline complete.")
-
-# TODO: add check to make sure each table exists at every step, else stop and raise error
