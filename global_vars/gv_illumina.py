@@ -267,7 +267,7 @@ create_tables_list = [create_vars_dbsnp, create_vars_kaviar, create_vars_clinvar
 # ###################
 #
 # # run snpeff in the background using threading module
-snpeff_thread = threading.Thread(target=snpeff.main())
+snpeff_thread = threading.Thread(target=snpeff.run_snpeff_pipeline())
 snpeff_thread.start()
 #
 # #################################
