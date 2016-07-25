@@ -84,15 +84,27 @@ class snpeff():
     # Download Variants Table and run through snpeff ##
     ###################################################
 
-    def run_query(self, input_query):
+    def pandas_query(self, input_query):
         '''
-        Query impala
+        Query impala and return results as pandas df
         :param input_query: query to run as string
         :return: query results as pandas dataframe
         '''
-        self.cur.execute(input_query)
-        query_df = as_pandas(self.cur)
-        return query_df
+        try:
+            print ("Running query: {}".format(input_query))
+            self.cur.execute(input_query)
+            query_df = as_pandas(self.cur)
+            return query_df
+        except Exception as e:
+            print e
+
+    def run_query(self, input_query):
+        print ("Running query: {}").format(input_query)
+        try:
+            self.cur.execute(input_query)
+        except Exception as e:
+            print e
+
 
     def run_snpeff(self, input_chrom):
         '''
@@ -103,7 +115,7 @@ class snpeff():
         get_vars_query = "SELECT chrom as '#chrom', pos, var_id as id, ref, allele as alt, 100 as qual, \
                          'PASS' as filter, 'GT' as 'format', '.' as INFO from wgs_ilmn.ilmn_vars \
                          where chrom = '{}'".format(input_chrom)
-        var_df = self.run_query(get_vars_query)
+        var_df = self.pandas_query(get_vars_query)
         # run snpeff on query results
         if not var_df.empty:
             snp_out = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
