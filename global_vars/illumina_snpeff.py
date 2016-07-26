@@ -67,14 +67,15 @@ class snpeff(object):
 
     # create function to run bash command with subprocess
     @staticmethod
-    def subprocess_cmd(command):
+    def subprocess_cmd(command, cwd=os.getcwd() ):
         '''
         Run programs in bash via subprocess
         :param command: command string as would be run on the command line
+        :param input_dir: optional directory to run command in, default cwd
         :return: runs bash command
         '''
         print ("Running \n {}".format(command))
-        ps = sp.Popen(command, shell=True, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
+        ps = sp.Popen(command, shell=True, stdout=sp.PIPE, stderr=sp.PIPE, cwd=cwd)
         try:
             print ps.communicate()
         except sp.CalledProcessError as e:
