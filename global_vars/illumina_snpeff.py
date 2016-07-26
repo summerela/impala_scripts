@@ -219,13 +219,13 @@ class snpeff(object):
         :return: removes final.tsv files from local dir
         '''
         remove_file = "{}/chr{}_final.tsv".format(self.out_dir, input_chrom)
-        remove_cmd = "hdfs dfs -cat {}| head".format(remove_file)
-        process = Popen(remove_cmd, shell=True, stdout=PIPE, stderr=PIPE)
-        std_out, std_err = process.communicate()
-        if std_out:
+        remove_cmd = "hdfs dfs -test -e {}".format(remove_file)
+        process = Popen(remove_cmd, shell=True)
+
+        if process.communicate() == '':
             os.remove(remove_file)
         else:
-            raise SystemExit("Final tsv file was not created for {}".format(input_chrom))
+            raise SystemExit("Final tsv file was not uploaded for chromosome {}".format(input_chrom))
 
     ##################
     ## Run routine  ##
@@ -236,10 +236,10 @@ class snpeff(object):
         self.check_outdir(self.out_dir)
         for chrom in snpeff.chroms:
             print ("Running snpeff on chromosome {} \n".format(chrom))
-            self.run_snpeff(chrom)
-            self.parse_snpeff(chrom)
-            self.parse_tsv(chrom)
-            self.upload_hdfs(chrom)
+            # self.run_snpeff(chrom)
+            # self.parse_snpeff(chrom)
+            # self.parse_tsv(chrom)
+            # self.upload_hdfs(chrom)
             self.remove_final(chrom)
         self.cur.close()
 
