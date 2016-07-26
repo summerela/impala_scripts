@@ -38,8 +38,8 @@ pd.options.mode.chained_assignment = None
 
 class snpeff(object):
 
-    chroms = map(str, range(1, 22)) + ['X', 'Y']
-    var_blocks = range(0,250)
+    chroms = map(str, range(1, 23)) + ['X', 'Y']
+    var_blocks = range(0,251)
 
     # ITMI impala cluster
     tool_path = '/opt/cloudera/parcels/ITMI/'
@@ -223,20 +223,18 @@ class snpeff(object):
         remove_cmd = "hdfs dfs -test -e {}".format(remove_file)
         process = Popen(remove_cmd, shell=True, stdout=PIPE, stderr=PIPE)
         std_out, std_err = process.communicate()
-        print std_out
-        print std_err
-        # if process.communicate() == '':
-        #     os.remove(remove_file)
-        # else:
-        #     raise SystemExit("Final tsv file was not uploaded for chromosome {}".format(input_chrom))
+        if std_err:
+            raise SystemExit("Final tsv file was not uploaded for chromosome {}".format(input_chrom))
+        else:
+            os.remove(remove_file)
 
     ##################
     ## Run routine  ##
     ##################
 
     def run_snpeff_pipeline(self):
-        self.make_hdfs_dir()
-        self.check_outdir(self.out_dir)
+        # self.make_hdfs_dir()
+        # self.check_outdir(self.out_dir)
         for chrom in snpeff.chroms:
             print ("Running snpeff on chromosome {} \n".format(chrom))
             # self.run_snpeff(chrom)
