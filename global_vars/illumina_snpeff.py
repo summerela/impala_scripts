@@ -22,7 +22,6 @@ into an impala table
 from subprocess import Popen, PIPE
 import pandas as pd
 from impala.dbapi import connect
-import datetime
 import subprocess as sp
 from impala.util import as_pandas
 import os
@@ -38,6 +37,9 @@ pd.options.mode.chained_assignment = None
 
 
 class snpeff(object):
+
+    chroms = map(str, range(0, 22)) + ['X', 'Y']
+    var_blocks = range(0,250)
 
     # ITMI impala cluster
     tool_path = '/opt/cloudera/parcels/ITMI/'
@@ -57,13 +59,9 @@ class snpeff(object):
         self.impala_port = impala_port
         self.impala_name = impala_user_name
         self.hdfs_path = hdfs_path
-        self.chroms = map(str, range(0, 22)) + ['X', 'Y']
-        self.blk_pos = range(0,250)
         self.conn = connect(host=self.impala_host, port=self.impala_port, timeout=10000, user=self.impala_name)
         self.cur = self.conn.cursor()
-        self.now = datetime.datetime.now()
-        self.today = str(self.now.strftime("%Y%m%d"))
-        self.hdfs_out = "{}/snpeff_{}".format(self.hdfs_path, self.today)
+        self.hdfs_out = "{}/ilmn_snpeff".format(self.hdfs_path)
 
     # create function to run bash command with subprocess
     @staticmethod
@@ -80,6 +78,11 @@ class snpeff(object):
             print ps.communicate()
         except sp.CalledProcessError as e:
             print e
+
+    @staticmethod
+    def check_outdir(output_dir):
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
     ###################################################
     # Download Variants Table and run through snpeff ##
@@ -172,7 +175,7 @@ class snpeff(object):
         final_df = pd.read_csv("{}".format(in_name), sep='\t', skiprows=1, header=None)
         # cant use seq in pandas df slicing
         final_df = final_df[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0]]
-        final_df['pos_block'] = final_df[1].div(1000000).astype(int)
+        final_df['blk_pos'] = final_df[1].div(1000000).astype(int)
         final_df.to_csv(final_out, sep='\t', header=False, index=False)
         # if final_tsv has been created, delete snpeff tsv
         if os.path.isfile(final_out):
@@ -226,7 +229,8 @@ class snpeff(object):
 
     def run_snpeff_pipeline(self):
         self.make_hdfs_dir()
-        for chrom in self.chroms:
+        self.check_outdir(self.out_dir)
+        for chrom in snpeff.chroms:
             print ("Running snpeff on chromosome {} \n".format(chrom))
             self.run_snpeff(chrom)
             self.parse_snpeff(chrom)
@@ -244,8 +248,8 @@ if __name__ == "__main__":
     impala_port = 21050
     impala_user_name = 'ec2-user'
     hdfs_path = 'elasasu/'
-    vcf_dir = '/home/ec2-user/elasasu/impala_scripts/global_vars/illumina_gv'
+    out_dir = '/home/ec2-user/elasasu/impala_scripts/global_vars/illumina_gv'
 
-    snp = snpeff(vcf_dir, impala_host=impala_host, impala_port=impala_port, impala_user_name=impala_user_name,
+    snp = snpeff(out_dir=out_dir, impala_host=impala_host, impala_port=impala_port, impala_user_name=impala_user_name,
                  hdfs_path=hdfs_path)
     snp.run_snpeff_pipeline()

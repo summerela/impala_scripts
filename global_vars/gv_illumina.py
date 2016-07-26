@@ -242,7 +242,7 @@ create_tables_list = [create_vars_dbsnp, create_vars_kaviar, create_vars_clinvar
 
 # insert variants into wgs_ilmn.ilmn_vars by chromosome and block_pos
 # for chrom in snpeff.chroms:
-#     for pos in snpeff.blk_pos:
+#     for pos in snpeff.var_blocks:
 #         print ("Running query for chrom {} blk_pos {}").format(chrom, pos)
 #         insert_ilmn_vars = '''
 #         insert into wgs_ilmn.ilmn_vars partition (chrom, blk_pos)
@@ -286,7 +286,7 @@ def check_tables(table1, table2):
 
 # add rsID from dbSNP
 for chrom in snpeff.chroms:
-    for pos in snpeff.blk_pos:
+    for pos in snpeff.var_blocks:
         add_dbsnp = '''
             insert into wgs_ilmn.vars_dbsnp partition (chrom, blk_pos)
             with vars as (
@@ -312,7 +312,7 @@ snpeff.run_query("compute stats wgs_ilmn.vars_dbsnp;")
 #
 # # add kaviar frequency and source from Kaviar
 # for chrom in snpeff.chroms:
-#     for pos in snpeff.blk_pos:
+#     for pos in snpeff.var_blocks:
 #         add_kaviar = '''
 #         insert into wgs_ilmn.vars_kaviar partition (chrom, blk_pos)
 #     WITH vars AS
@@ -347,7 +347,7 @@ snpeff.run_query("compute stats wgs_ilmn.vars_dbsnp;")
 #
 # # add clinvar significance and disease identification from clinVar
 # for chrom in snpeff.chroms:
-#     for pos in snpeff.blk_pos:
+#     for pos in snpeff.var_blocks:
 #         add_clinvar = '''
 #         insert into wgs_ilmn.vars_clinvar partition (chrom, blk_pos)
 #         with vars as (
@@ -378,7 +378,7 @@ snpeff.run_query("compute stats wgs_ilmn.vars_dbsnp;")
 #
 # # add hgmd ratings
 # for chrom in snpeff.chroms:
-#     for pos in snpeff.blk_pos:
+#     for pos in snpeff.var_blocks:
 #         add_hgmd = '''
 #         insert into wgs_ilmn.vars_hgmd partition (chrom, blk_pos)
 #         WITH vars as (
@@ -411,7 +411,7 @@ snpeff.run_query("compute stats wgs_ilmn.vars_dbsnp;")
 #
 # # add cadd, dann and interpro domain from dbnsfp
 # for chrom in snpeff.chroms:
-#     for pos in snpeff.blk_pos:
+#     for pos in snpeff.var_blocks:
 #         add_dbnsfp = '''
 #         insert into wgs_ilmn.vars_dbnsfp partition (chrom, blk_pos)
 #         WITH vars AS
@@ -468,7 +468,7 @@ snpeff.run_query("compute stats wgs_ilmn.vars_dbsnp;")
 #
 # # add gene, transcript and exon id and names from ensembl
 # for chrom in snpeff.chroms:
-#     for pos in snpeff.blk_pos:
+#     for pos in snpeff.var_blocks:
 #         add_ensembl = '''
 #         INSERT INTO TABLE wgs_ilmn.vars_ensembl partition(chrom, blk_pos)
 #         WITH vars AS
@@ -605,7 +605,7 @@ snpeff.run_query("compute stats wgs_ilmn.vars_dbsnp;")
 #
 # # insert results into partitioned table
 # for chrom in snpeff.chroms:
-#     for pos in snpeff.blk_pos:
+#     for pos in snpeff.var_blocks:
 #         insert_snpeff_partitioned = '''
 #         insert into table wgs_ilmn.snpeff_partitioned  partition (chrom, blk_pos)
 #         select var_id, pos, ref, alt,gene,gene_id,affect,
@@ -621,7 +621,7 @@ snpeff.run_query("compute stats wgs_ilmn.vars_dbsnp;")
 #
 # # join snpeff results with annotated variants
 # for chrom in snpeff.chroms:
-#     for pos in snpeff.blk_pos:
+#     for pos in snpeff.var_blocks:
 #         add_coding = '''
 #         insert into table wgs_ilmn.vars_coding partition(chrom, blk_pos)
 #         select v.var_id,v.pos,v.ref,v.allele,v.rs_id,
@@ -683,16 +683,16 @@ snpeff.run_query("compute stats wgs_ilmn.vars_dbsnp;")
 #  var_type string,
 #  ppc_rating string
 # )
-# partitioned by (chrom string, pos_block int)
+# partitioned by (chrom string, blk_pos int)
 # STORED AS PARQUET;
 # '''
 #
 # snpeff.run_query(create_gv)
 #
 # for chrom in snpeff.chroms:
-#     for pos in snpeff.blk_pos:
+#     for pos in snpeff.var_blocks:
 #         add_ppc = '''
-#         insert into wgs_ilmn.global_vars partition (chrom, pos_block)
+#         insert into wgs_ilmn.global_vars partition (chrom, blk_pos)
 #         SELECT var_id,pos,ref,allele,rs_id,dbsnp_buildid,kav_freq,
 #         kav_source, clin_sig, clin_dbn, hgmd_id, hgmd_varclass,
 #         cadd_raw, dann_score, interpro_domain, strand,
