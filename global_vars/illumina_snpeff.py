@@ -38,7 +38,7 @@ pd.options.mode.chained_assignment = None
 
 class snpeff(object):
 
-    chroms = map(str, range(1, 23)) + ['X', 'Y']
+    chroms = map(str, range(2, 23)) + ['X', 'Y']
     var_blocks = range(0,251)
 
     # ITMI impala cluster
@@ -241,7 +241,7 @@ class snpeff(object):
             # self.parse_snpeff(chrom)
             # self.parse_tsv(chrom)
             # self.upload_hdfs(chrom)
-            self.remove_final(chrom)
+            # self.remove_final(chrom)
         self.cur.close()
 
 
