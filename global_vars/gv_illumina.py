@@ -10,6 +10,8 @@ impala_user_name = 'ec2-user'
 hdfs_path = 'elasasu/'
 vcf_dir = '/home/ec2-user/elasasu/impala_scripts/global_vars/illumina_gv'
 
+chrom_list = map(str, range(1, 23)) + ['X', 'Y']
+
 # instantiate snpeff script and variables
 snpeff = snp.snpeff(vcf_dir, impala_host, impala_port, impala_user_name, hdfs_path)
 
@@ -241,7 +243,7 @@ create_tables_list = [create_vars_dbsnp, create_vars_kaviar, create_vars_clinvar
 ############################################################
 
 # insert variants into wgs_ilmn.ilmn_vars by chromosome and block_pos
-# for chrom in snpeff.chroms:
+# for chrom in chrom_list:
 #     for pos in snpeff.var_blocks:
 #         print ("Running query for chrom {} blk_pos {}").format(chrom, pos)
 #         insert_ilmn_vars = '''
@@ -283,7 +285,7 @@ def check_tables(table1, table2):
         sys.exit("{} has less rows than {}.".format(table2, table1))
 
 # add rsID from dbSNP
-for chrom in snpeff.chroms:
+for chrom in chrom_list:
     for pos in snpeff.var_blocks:
         add_dbsnp = '''
             insert into wgs_ilmn.vars_dbsnp partition (chrom, blk_pos)
@@ -309,7 +311,7 @@ for chrom in snpeff.chroms:
 # snpeff.run_query("compute stats wgs_ilmn.vars_dbsnp;")
 #
 # # add kaviar frequency and source from Kaviar
-# for chrom in snpeff.chroms:
+# for chrom in chrom_list:
 #     for pos in snpeff.var_blocks:
 #         add_kaviar = '''
 #         insert into wgs_ilmn.vars_kaviar partition (chrom, blk_pos)
@@ -344,7 +346,7 @@ for chrom in snpeff.chroms:
 # check_tables('wgs_ilmn.vars_dbsnp', 'wgs_ilmn.vars_kaviar')
 #
 # # add clinvar significance and disease identification from clinVar
-# for chrom in snpeff.chroms:
+# for chrom in chrom_list:
 #     for pos in snpeff.var_blocks:
 #         add_clinvar = '''
 #         insert into wgs_ilmn.vars_clinvar partition (chrom, blk_pos)
@@ -375,7 +377,7 @@ for chrom in snpeff.chroms:
 # check_tables('wgs_ilmn.vars_kaviar', 'wgs_ilmn.vars_clinvar')
 #
 # # add hgmd ratings
-# for chrom in snpeff.chroms:
+# for chrom in chrom_list:
 #     for pos in snpeff.var_blocks:
 #         add_hgmd = '''
 #         insert into wgs_ilmn.vars_hgmd partition (chrom, blk_pos)
@@ -408,7 +410,7 @@ for chrom in snpeff.chroms:
 #
 #
 # # add cadd, dann and interpro domain from dbnsfp
-# for chrom in snpeff.chroms:
+# for chrom in chrom_list:
 #     for pos in snpeff.var_blocks:
 #         add_dbnsfp = '''
 #         insert into wgs_ilmn.vars_dbnsfp partition (chrom, blk_pos)
@@ -465,7 +467,7 @@ for chrom in snpeff.chroms:
 #
 #
 # # add gene, transcript and exon id and names from ensembl
-# for chrom in snpeff.chroms:
+# for chrom in chrom_list:
 #     for pos in snpeff.var_blocks:
 #         add_ensembl = '''
 #         INSERT INTO TABLE wgs_ilmn.vars_ensembl partition(chrom, blk_pos)
@@ -602,7 +604,7 @@ for chrom in snpeff.chroms:
 # snpeff.run_query(create_snpeff_partitioned)
 #
 # # insert results into partitioned table
-# for chrom in snpeff.chroms:
+# for chrom in chrom_list:
 #     for pos in snpeff.var_blocks:
 #         insert_snpeff_partitioned = '''
 #         insert into table wgs_ilmn.snpeff_partitioned  partition (chrom, blk_pos)
@@ -618,7 +620,7 @@ for chrom in snpeff.chroms:
 # snpeff.run_query("compute stats wgs_ilmn.snpeff_partitioned")
 #
 # # join snpeff results with annotated variants
-# for chrom in snpeff.chroms:
+# for chrom in chrom_list:
 #     for pos in snpeff.var_blocks:
 #         add_coding = '''
 #         insert into table wgs_ilmn.vars_coding partition(chrom, blk_pos)
@@ -687,7 +689,7 @@ for chrom in snpeff.chroms:
 #
 # snpeff.run_query(create_gv)
 #
-# for chrom in snpeff.chroms:
+# for chrom in chrom_list:
 #     for pos in snpeff.var_blocks:
 #         add_ppc = '''
 #         insert into wgs_ilmn.global_vars partition (chrom, blk_pos)
