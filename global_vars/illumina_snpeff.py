@@ -155,6 +155,7 @@ class snpeff(object):
                                                             snpsift=self.snpsift_jar, out=out_name)
         if os.path.isfile(in_name):
             self.subprocess_cmd(parse_cmd, self.out_dir)
+            os.remove(in_name)
         else:
             raise SystemExit("A vcf file was not created for chromosome {}".format(input_chrom))
 
@@ -221,7 +222,6 @@ class snpeff(object):
         remove_file = "{}/chr{}_final.tsv".format(self.out_dir, input_chrom)
         remove_cmd = "hdfs dfs -test -e {}".format(remove_file)
         process = Popen(remove_cmd, shell=True)
-
         if process.communicate() == '':
             os.remove(remove_file)
         else:
