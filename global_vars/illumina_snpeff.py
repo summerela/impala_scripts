@@ -221,11 +221,14 @@ class snpeff(object):
         '''
         remove_file = "{}/chr{}_final.tsv".format(self.out_dir, input_chrom)
         remove_cmd = "hdfs dfs -test -e {}".format(remove_file)
-        process = Popen(remove_cmd, shell=True)
-        if process.communicate() == '':
-            os.remove(remove_file)
-        else:
-            raise SystemExit("Final tsv file was not uploaded for chromosome {}".format(input_chrom))
+        process = Popen(remove_cmd, shell=True, stdout=PIPE, stderr=PIPE)
+        std_out, std_err = process.communicate()
+        print std_out
+        print std_err
+        # if process.communicate() == '':
+        #     os.remove(remove_file)
+        # else:
+        #     raise SystemExit("Final tsv file was not uploaded for chromosome {}".format(input_chrom))
 
     ##################
     ## Run routine  ##
