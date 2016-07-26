@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import illumina_snpeff as snp
 import sys
+import subprocess as sp
 
 # ITMI options
 impala_host = 'localhost'
@@ -265,7 +266,7 @@ create_tables_list = [create_vars_dbsnp, create_vars_kaviar, create_vars_clinvar
 # ### run snpeff  ###
 # ###################
 run_snp_cmd = "nohup python illumina_snpeff.py"
-snpeff.subprocess_cmd(run_snp_cmd, shell=True)
+sp.Popen(run_snp_cmd,shell=True)
 
 #################################
 ### ADD VARIANT  ANNOTATIONS  ###
