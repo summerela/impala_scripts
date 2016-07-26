@@ -233,15 +233,15 @@ class snpeff(object):
     ##################
 
     def run_snpeff_pipeline(self):
-        # self.make_hdfs_dir()
-        # self.check_outdir(self.out_dir)
+        self.make_hdfs_dir()
+        self.check_outdir(self.out_dir)
         for chrom in snpeff.chroms:
             print ("Running snpeff on chromosome {} \n".format(chrom))
-            # self.run_snpeff(chrom)
-            # self.parse_snpeff(chrom)
-            # self.parse_tsv(chrom)
-            # self.upload_hdfs(chrom)
-            # self.remove_final(chrom)
+            self.run_snpeff(chrom)
+            self.parse_snpeff(chrom)
+            self.parse_tsv(chrom)
+            self.upload_hdfs(chrom)
+            self.remove_final(chrom)
         self.cur.close()
 
 
