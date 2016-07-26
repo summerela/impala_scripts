@@ -265,7 +265,7 @@ create_tables_list = [create_vars_dbsnp, create_vars_kaviar, create_vars_clinvar
 # ### run snpeff  ###
 # ###################
 run_snp_cmd = "nohup python illumina_snpeff.py"
-snpeff.subprocess_cmd(run_snp_cmd)
+snpeff.subprocess_cmd(run_snp_cmd, shell=True)
 
 #################################
 ### ADD VARIANT  ANNOTATIONS  ###
