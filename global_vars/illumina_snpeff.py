@@ -38,7 +38,7 @@ pd.options.mode.chained_assignment = None
 
 class snpeff(object):
 
-    chroms = map(str, range(0, 22)) + ['X', 'Y']
+    chroms = map(str, range(1, 22)) + ['X', 'Y']
     var_blocks = range(0,250)
 
     # ITMI impala cluster
@@ -153,12 +153,12 @@ class snpeff(object):
             "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
             "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {out}'.format(vcf=in_name, perl=self.snpeff_oneperline, \
                                                             snpsift=self.snpsift_jar, out=out_name)
-        self.subprocess_cmd(parse_cmd, self.out_dir)
-        # if tsv has been created, delete snpeff vcf
-        if os.path.isfile(out_name):
-            os.remove(in_name)
+        if os.path.isfile(in_name):
+            self.subprocess_cmd(parse_cmd, self.out_dir)
         else:
-            raise SystemExit("Parsed tsv file was not created for {}".format(input_chrom))
+            raise SystemExit("A vcf file was not created for chromosome {}".format(input_chrom))
+
+
 
     ############################################
     ## Remove Header and add pos_block column ##
@@ -172,16 +172,17 @@ class snpeff(object):
         '''
         in_name = "{}/chr{}_snpeff.tsv".format(self.out_dir, input_chrom)
         final_out = "{}/chr{}_final.tsv".format(self.out_dir, input_chrom)
-        final_df = pd.read_csv("{}".format(in_name), sep='\t', skiprows=1, header=None)
-        # cant use seq in pandas df slicing
-        final_df = final_df[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0]]
-        final_df['blk_pos'] = final_df[1].div(1000000).astype(int)
-        final_df.to_csv(final_out, sep='\t', header=False, index=False)
+
         # if final_tsv has been created, delete snpeff tsv
-        if os.path.isfile(final_out):
+        if os.path.isfile(in_name):
+            final_df = pd.read_csv("{}".format(in_name), sep='\t', skiprows=1, header=None)
+            # cant use seq in pandas df slicing
+            final_df = final_df[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0]]
+            final_df['blk_pos'] = final_df[1].div(1000000).astype(int)
+            final_df.to_csv(final_out, sep='\t', header=False, index=False)
             os.remove(in_name)
         else:
-            raise SystemExit("Parsed tsv file was not created for {}".format(input_chrom))
+            raise SystemExit("A parsed snpeff tsv was not created for chromosome {}".format(input_chrom))
 
     #############################
     ## Upload results to hdfs  ##
@@ -205,7 +206,10 @@ class snpeff(object):
         '''
         up_file = "{}/chr{}_final.tsv".format(self.out_dir, input_chrom)
         upload_cmd = 'hdfs dfs -put {} {}'.format(up_file, self.hdfs_out)
-        self.subprocess_cmd(upload_cmd)
+        if os.path.isfile(up_file):
+            self.subprocess_cmd(upload_cmd)
+        else:
+            raise SystemExit("A final tsv was not created for chromosome {}".format(input_chrom))
 
     def remove_final(self, input_chrom):
         '''
