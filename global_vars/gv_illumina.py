@@ -267,8 +267,8 @@ create_tables_list = [create_vars_dbsnp, create_vars_kaviar, create_vars_clinvar
 # ###################
 # ### run snpeff  ###
 # ###################
-run_snp_cmd = "nohup python illumina_snpeff.py"
-sp.Popen(run_snp_cmd,shell=True)
+# run_snp_cmd = "nohup python illumina_snpeff.py"
+# sp.Popen(run_snp_cmd,shell=True)
 
 #################################
 ### ADD VARIANT  ANNOTATIONS  ###
@@ -305,46 +305,46 @@ for chrom in chrom_list:
             LEFT JOIN dbsnp
              ON vars.var_id = dbsnp.var_id;
             '''.format(chrom=chrom, pos=pos)
-        snpeff.run_query(add_dbsnp)
-#
-# # compute stats
-# snpeff.run_query("compute stats wgs_ilmn.vars_dbsnp;")
-#
-# # add kaviar frequency and source from Kaviar
-# for chrom in chrom_list:
-#     for pos in snpeff.var_blocks:
-#         add_kaviar = '''
-#         insert into wgs_ilmn.vars_kaviar partition (chrom, blk_pos)
-#     WITH vars AS
-#       (SELECT v.var_id,
-#              v.pos,
-#              v.ref,
-#              v.allele,
-#              v.rs_id,
-#              v.dbsnp_buildid,
-#              v.chrom,
-#              v.blk_pos
-#       FROM wgs_ilmn.vars_dbsnp v
-#       WHERE v.chrom = '{chrom}'
-#       AND v.blk_pos = {pos} ),
-#       kav as (
-#         SELECT k.var_id, k.kav_freq, k.kav_source
-#         FROM anno_grch37.kaviar_distinct k
-#         )
-#         SELECT vars.var_id, vars.pos, vars.ref, vars.allele, vars.rs_id,
-#             vars.dbsnp_buildid, kav.kav_freq, kav.kav_source, vars.chrom,
-#             vars.blk_pos
-#         FROM vars
-#         LEFT JOIN kav
-#          ON vars.var_id = kav.var_id;
-#         '''.format(chrom=chrom, pos=pos)
-#         snpeff.run_query(add_kaviar)
-#
-# # compute stats
-# snpeff.run_query("compute stats wgs_ilmn.vars_kaviar;")
-#
-# check_tables('wgs_ilmn.vars_dbsnp', 'wgs_ilmn.vars_kaviar')
-#
+        # snpeff.run_query(add_dbsnp)
+
+# compute stats
+snpeff.run_query("compute stats wgs_ilmn.vars_dbsnp;")
+
+# add kaviar frequency and source from Kaviar
+for chrom in chrom_list:
+    for pos in snpeff.var_blocks:
+        add_kaviar = '''
+        insert into wgs_ilmn.vars_kaviar partition (chrom, blk_pos)
+    WITH vars AS
+      (SELECT v.var_id,
+             v.pos,
+             v.ref,
+             v.allele,
+             v.rs_id,
+             v.dbsnp_buildid,
+             v.chrom,
+             v.blk_pos
+      FROM wgs_ilmn.vars_dbsnp v
+      WHERE v.chrom = '{chrom}'
+      AND v.blk_pos = {pos} ),
+      kav as (
+        SELECT k.var_id, k.kav_freq, k.kav_source
+        FROM anno_grch37.kaviar_distinct k
+        )
+        SELECT vars.var_id, vars.pos, vars.ref, vars.allele, vars.rs_id,
+            vars.dbsnp_buildid, kav.kav_freq, kav.kav_source, vars.chrom,
+            vars.blk_pos
+        FROM vars
+        LEFT JOIN kav
+         ON vars.var_id = kav.var_id;
+        '''.format(chrom=chrom, pos=pos)
+        snpeff.run_query(add_kaviar)
+
+# compute stats
+snpeff.run_query("compute stats wgs_ilmn.vars_kaviar;")
+
+check_tables('wgs_ilmn.vars_dbsnp', 'wgs_ilmn.vars_kaviar')
+
 # # add clinvar significance and disease identification from clinVar
 # for chrom in chrom_list:
 #     for pos in snpeff.var_blocks:
