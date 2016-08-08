@@ -176,7 +176,10 @@ class snpeff(object):
 
         # if final_tsv has been created, delete snpeff tsv
         if os.path.isfile(in_name):
-            final_df = pd.read_csv("{}".format(in_name), sep='\t', skiprows=1, header=None)
+            final_df = pd.read_csv("{}".format(in_name), sep='\t', skiprows=1, header=None,
+                                   usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+                                   dtype={0: str, 1: str, 2: str, 3: str, 4: str, 5: str, 6: str, 7: str, 8: str,
+                                          9: str, 10: str, 11: str, 12: str, 13: str, 14: int, 15: str})
             # cant use seq in pandas df slicing
             final_df = final_df[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0]]
             final_df['blk_pos'] = final_df[1].div(1000000).astype(int)
