@@ -26,6 +26,8 @@ import subprocess as sp
 from impala.util import as_pandas
 import os
 import logging
+import multiprocessing as mp
+
 
 logger = logging.getLogger('snpeff')
 hdlr = logging.FileHandler('snpeff.log')
@@ -140,30 +142,68 @@ class snpeff(object):
     ##########################################################
     ## Output SnpEff effects as tsv file, one effect per line ##
     ############################################################
-    def parse_snpeff(self, input_chrom):
+    def split_snpeff(self, input_chrom):
         '''
         Parse snpeff output to contain one allele per row
         :param input_vcf: snpeff annotation results
         :return: tsv file for upload to impala table
         '''
         in_name = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
-        out_name = "{}/chr{}_snpeff.tsv".format(self.out_dir, input_chrom)
-        parse_cmd = 'cat {vcf} | {perl} | java -Xmx16g -jar {snpsift} extractFields \
-            - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
-            "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
-            "ANN[*].HGVS_C" "ANN[*].HGVS_P" > {out}'.format(vcf=in_name, perl=self.snpeff_oneperline, \
-                                                            snpsift=self.snpsift_jar, out=out_name)
+        # split the snpeff file into smaller files for processing
+        split_cmd = "split -b 5G {}".format(in_name)
         if os.path.isfile(in_name):
-            self.subprocess_cmd(parse_cmd, self.out_dir)
+            self.subprocess_cmd(split_cmd, self.out_dir)
             os.remove(in_name)
         else:
             raise SystemExit("A vcf file was not created for chromosome {}".format(input_chrom))
+
+    def parse_snpeff(self, input_chrom):
+        out_name = "{}/chr{}_snpeff.tsv".format(self.out_dir, input_chrom)
+        for file in os.listdir(self.out_dir):
+            if file.startswith("x"):
+                parse_cmd = 'cat {vcf} | {perl} | java -Xmx16g -jar {snpsift} extractFields \
+            - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
+            "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
+            "ANN[*].HGVS_C" "ANN[*].HGVS_P" >> {out}'.format(vcf=file, perl=self.snpeff_oneperline, \
+                                                            snpsift=self.snpsift_jar, out=out_name)
+                self.subprocess_cmd(parse_cmd, self.out_dir)
+
+    def remove_splits(self, input_chrom):
+        split_name = "{}/chr{}_snpeff.tsv".format(self.out_dir, input_chrom)
+        if os.path.isfile(split_name):
+            os.remove(split_name)
+        else:
+            raise SystemExit("The vcf file for chromosome {} was not split".format(input_chrom))
+
+
+
 
 
 
     ############################################
     ## Remove Header and add pos_block column ##
     ############################################
+
+    def read_tsv_chunky(self, in_name):
+
+        if os.path.isfile(in_name):
+            reader = pd.read_csv("{}".format(in_name), sep='\t', comment='#', header=None,
+                                   usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+                                   dtype={0: str, 1: str, 2: str, 3: str, 4: str, 5: str, 6: str, 7: str, 8: str,
+                                          9: str, 10: str, 11: str, 12: str, 13: str, 14: int, 15: str},
+                                   chunksize=100000)
+            pool = mp.Pool(6)
+            for chunk in reader:
+                # reorder columns
+                final_df = chunk[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0]]
+                # add blk_pos column for processing
+                final_df['blk_pos'] = final_df[1].div(1000000).astype(int)
+                with open(final_out, 'a') as f:
+                    final_df.to_csv(final_out, sep='\t', header=False, index=False)
+                os.remove(in_name)
+        else:
+            raise SystemExit("A parsed snpeff tsv was not created for chromosome {}".format(in_name))
+
 
     def parse_tsv(self, input_chrom):
         '''
@@ -174,19 +214,11 @@ class snpeff(object):
         in_name = "{}/chr{}_snpeff.tsv".format(self.out_dir, input_chrom)
         final_out = "{}/chr{}_final.tsv".format(self.out_dir, input_chrom)
 
-        # if final_tsv has been created, delete snpeff tsv
-        if os.path.isfile(in_name):
-            final_df = pd.read_csv("{}".format(in_name), sep='\t', skiprows=1, header=None,
-                                   usecols=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
-                                   dtype={0: str, 1: str, 2: str, 3: str, 4: str, 5: str, 6: str, 7: str, 8: str,
-                                          9: str, 10: str, 11: str, 12: str, 13: str, 14: int, 15: str})
-            # cant use seq in pandas df slicing
-            final_df = final_df[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0]]
-            final_df['blk_pos'] = final_df[1].div(1000000).astype(int)
-            final_df.to_csv(final_out, sep='\t', header=False, index=False)
-            os.remove(in_name)
-        else:
-            raise SystemExit("A parsed snpeff tsv was not created for chromosome {}".format(input_chrom))
+
+
+
+    def parse_the_chunks(self, in_file):
+
 
     #############################
     ## Upload results to hdfs  ##
@@ -240,11 +272,13 @@ class snpeff(object):
         self.check_outdir(self.out_dir)
         for chrom in snpeff.chroms:
             print ("Running snpeff on chromosome {} \n".format(chrom))
-            self.run_snpeff(chrom)
+            # self.run_snpeff(chrom)
+            self.split_snpeff(chrom)
             self.parse_snpeff(chrom)
-            self.parse_tsv(chrom)
-            self.upload_hdfs(chrom)
-            self.remove_final(chrom)
+            self.remove_splits(chrom)
+            # self.parse_tsv(chrom)
+            # self.upload_hdfs(chrom)
+            # self.remove_final(chrom)
         self.cur.close()
 
 
