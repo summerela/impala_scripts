@@ -217,7 +217,7 @@ class snpeff(object):
 
 
 
-    def parse_the_chunks(self, in_file):
+    #def parse_the_chunks(self, in_file):
 
 
     #############################
