@@ -40,7 +40,8 @@ pd.options.mode.chained_assignment = None
 
 class snpeff(object):
 
-    chroms = map(str, range(2, 23)) + ['X', 'Y']
+    # chroms = map(str, range(2, 23)) + ['X', 'Y']
+    chroms = ['X']
     var_blocks = range(0,251)
 
     # ITMI impala cluster
