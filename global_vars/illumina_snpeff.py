@@ -161,13 +161,14 @@ class snpeff(object):
     def parse_snpeff(self, input_chrom):
         out_name = "{}/chr{}_snpeff.tsv".format(self.out_dir, input_chrom)
         for file in os.listdir(self.out_dir):
+            pool = mp.Pool(4)
             if file.startswith("x"):
-                parse_cmd = 'cat {vcf} | {perl} | java -Xmx16g -jar {snpsift} extractFields \
+                parse_cmd = 'cat {vcf} | {perl} | java -Xmx4g -jar {snpsift} extractFields \
             - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
             "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
             "ANN[*].HGVS_C" "ANN[*].HGVS_P" >> {out}'.format(vcf=file, perl=self.snpeff_oneperline, \
                                                             snpsift=self.snpsift_jar, out=out_name)
-                self.subprocess_cmd(parse_cmd, self.out_dir)
+                pool.apply(self.subprocess_cmd(parse_cmd, self.out_dir))
 
     def remove_splits(self, input_chrom):
         split_name = "{}/chr{}_snpeff.tsv".format(self.out_dir, input_chrom)
@@ -276,7 +277,7 @@ class snpeff(object):
             # self.run_snpeff(chrom)
             # self.split_snpeff(chrom)
             self.parse_snpeff(chrom)
-            self.remove_splits(chrom)
+            # self.remove_splits(chrom)
             # self.parse_tsv(chrom)
             # self.upload_hdfs(chrom)
             # self.remove_final(chrom)
