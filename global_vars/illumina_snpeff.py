@@ -267,8 +267,7 @@ class snpeff(object):
         # self.check_outdir(self.out_dir)
         for chrom in snpeff.chroms:
             print ("Running snpeff on chromosome {} \n".format(chrom))
-            # self.run_snpeff(chrom)
-            # self.split_snpeff(chrom)
+            self.run_snpeff(chrom)
             self.parse_chunks(chrom)
             # self.remove_splits(chrom)
             # self.parse_tsv(chrom)
