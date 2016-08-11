@@ -144,6 +144,7 @@ class snpeff(object):
     ## Output SnpEff effects as tsv file, one effect per line ##
     ############################################################
 
+# TODO remove snpeff file
 
     def parse_snpeff(self, input_chrom):
         in_name = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
