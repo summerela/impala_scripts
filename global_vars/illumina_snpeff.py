@@ -143,32 +143,25 @@ class snpeff(object):
     ##########################################################
     ## Output SnpEff effects as tsv file, one effect per line ##
     ############################################################
-    def split_snpeff(self, input_chrom):
-        '''
-        Parse snpeff output to contain one allele per row
-        :param input_vcf: snpeff annotation results
-        :return: tsv file for upload to impala table
-        '''
-        in_name = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
-        # split the snpeff file into smaller files for processing
-        split_cmd = "split -b 5G {}".format(in_name)
-        if os.path.isfile(in_name):
-            self.subprocess_cmd(split_cmd, self.out_dir)
-            os.remove(in_name)
-        else:
-            raise SystemExit("A vcf file was not created for chromosome {}".format(input_chrom))
+
 
     def parse_snpeff(self, input_chrom):
+        in_name = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
         out_name = "{}/chr{}_snpeff.tsv".format(self.out_dir, input_chrom)
-        for file in os.listdir(self.out_dir):
-            pool = mp.Pool(4)
-            if file.startswith("x"):
-                parse_cmd = 'cat {vcf} | {perl} | java -Xmx4g -jar {snpsift} extractFields \
+        parse_cmd = 'cat {vcf} | {perl} | java -Xmx4g -jar {snpsift} extractFields \
             - CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" "ANN[*].EFFECT" "ANN[*].IMPACT" \
             "ANN[*].FEATURE" "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE" \
-            "ANN[*].HGVS_C" "ANN[*].HGVS_P" >> {out}'.format(vcf=file, perl=self.snpeff_oneperline, \
+            "ANN[*].HGVS_C" "ANN[*].HGVS_P" >> {out}'.format(vcf=in_name, perl=self.snpeff_oneperline, \
                                                             snpsift=self.snpsift_jar, out=out_name)
-                pool.apply(self.subprocess_cmd(parse_cmd, self.out_dir))
+        self.subprocess_cmd(parse_cmd, self.out_dir)
+
+    def parse_chunks(self, input_chrom):
+        in_name = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
+        chunksize = 100000
+        reader = pd.read_csv(in_name, sep="\t", header=None, comment='#', chunksize=chunksize)
+        pool = mp.Pool(4)
+        for df in reader:
+            pool.apply_async(self.parse_snpeff(df))
 
     def remove_splits(self, input_chrom):
         split_name = "{}/chr{}_snpeff.tsv".format(self.out_dir, input_chrom)
@@ -270,13 +263,13 @@ class snpeff(object):
     ##################
 
     def run_snpeff_pipeline(self):
-        self.make_hdfs_dir()
-        self.check_outdir(self.out_dir)
+        # self.make_hdfs_dir()
+        # self.check_outdir(self.out_dir)
         for chrom in snpeff.chroms:
             print ("Running snpeff on chromosome {} \n".format(chrom))
             # self.run_snpeff(chrom)
             # self.split_snpeff(chrom)
-            self.parse_snpeff(chrom)
+            self.parse_chunks(chrom)
             # self.remove_splits(chrom)
             # self.parse_tsv(chrom)
             # self.upload_hdfs(chrom)
@@ -297,3 +290,21 @@ if __name__ == "__main__":
     snp = snpeff(out_dir=out_dir, impala_host=impala_host, impala_port=impala_port, impala_user_name=impala_user_name,
                  hdfs_path=hdfs_path)
     snp.run_snpeff_pipeline()
+
+
+
+########### unused snippets  #####################
+# def split_snpeff(self, input_chrom):
+#     '''
+#     Parse snpeff output to contain one allele per row
+#     :param input_vcf: snpeff annotation results
+#     :return: tsv file for upload to impala table
+#     '''
+#     in_name = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
+#     # split the snpeff file into smaller files for processing
+#     split_cmd = "split -b 5G {}".format(in_name)
+#     if os.path.isfile(in_name):
+#         self.subprocess_cmd(split_cmd, self.out_dir)
+#         os.remove(in_name)
+#     else:
+#         raise SystemExit("A vcf file was not created for chromosome {}".format(input_chrom))
