@@ -10,9 +10,7 @@ impala_user_name = 'ec2-user'
 hdfs_path = 'elasasu/'
 vcf_dir = '/home/ec2-user/elasasu/impala_scripts/global_vars/illumina_gv'
 
-# chrom_list = map(str, range(1, 23)) + ['X', 'Y', 'M']
-chrom_list = ['M']
-
+chrom_list = map(str, range(1, 23)) + ['X', 'Y', 'M']
 # instantiate snpeff script and variables
 snpeff = snp.snpeff(vcf_dir, impala_host, impala_port, impala_user_name, hdfs_path)
 
