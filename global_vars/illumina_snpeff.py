@@ -19,6 +19,7 @@ annotated variants uploaded to hdfs and converted
 into an impala table
 
 '''
+from pyspark import SparkContext, SparkConf, SQLContext
 from subprocess import Popen, PIPE
 import pandas as pd
 from impala.dbapi import connect
@@ -126,7 +127,7 @@ class snpeff(object):
         # run snpeff on query results
         if not var_df.empty:
             snp_out = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
-            snpeff_cmd = r'''java -Xmx16g -jar {snpeff} -t -v GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
+            snpeff_cmd = r'''java -d64 -Xmx4g -jar {snpeff} -t -v GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
                                                                                               vcf_out=snp_out)
             # run the subprocess command
             ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
