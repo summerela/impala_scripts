@@ -306,7 +306,7 @@ for chrom in chrom_list:
             LEFT JOIN dbsnp
              ON vars.var_id = dbsnp.var_id;
             '''.format(chrom=chrom, pos=pos)
-        # snpeff.run_query(add_dbsnp)
+        snpeff.run_query(add_dbsnp)
 
 # compute stats
 snpeff.run_query("compute stats wgs_ilmn.vars_dbsnp;")
