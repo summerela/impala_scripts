@@ -10,7 +10,8 @@ impala_user_name = 'ec2-user'
 hdfs_path = 'elasasu/'
 vcf_dir = '/home/ec2-user/elasasu/impala_scripts/global_vars/illumina_gv'
 
-chrom_list = map(str, range(1, 23)) + ['X', 'Y']
+# chrom_list = map(str, range(1, 23)) + ['X', 'Y', 'M']
+chrom_list = ['M']
 
 # instantiate snpeff script and variables
 snpeff = snp.snpeff(vcf_dir, impala_host, impala_port, impala_user_name, hdfs_path)
@@ -341,9 +342,9 @@ for chrom in chrom_list:
         snpeff.run_query(add_kaviar)
 
 # compute stats
-snpeff.run_query("compute stats wgs_ilmn.vars_kaviar;")
-
-check_tables('wgs_ilmn.vars_dbsnp', 'wgs_ilmn.vars_kaviar')
+# snpeff.run_query("compute stats wgs_ilmn.vars_kaviar;")
+#
+# check_tables('wgs_ilmn.vars_dbsnp', 'wgs_ilmn.vars_kaviar')
 
 # # add clinvar significance and disease identification from clinVar
 # for chrom in chrom_list:
