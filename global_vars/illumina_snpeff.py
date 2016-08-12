@@ -19,7 +19,6 @@ annotated variants uploaded to hdfs and converted
 into an impala table
 
 '''
-from pyspark import SparkContext, SparkConf, SQLContext
 from subprocess import Popen, PIPE
 import pandas as pd
 from impala.dbapi import connect
