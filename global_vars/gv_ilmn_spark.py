@@ -19,7 +19,7 @@ chroms = sorted(map(str, range(1,23) + ["M", "X", "Y"]))
 var_blocks = range(0,251)
 
 # configure connection to impala
-impala_conn = connect(host="localhost", port=210500, timeout=10000, user='ec2-user')
+impala_conn = connect(host="localhost", port=21050, timeout=10000, user='ec2-user')
 cur = impala_conn.cursor()
 
 # configure connection to spark
