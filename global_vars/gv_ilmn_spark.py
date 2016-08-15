@@ -43,11 +43,11 @@ def impala_query(input_query):
 def run_query(input_query):
     sqlContext.sql(input_query)
 
-def check_tables(server_name, table1, table2):
+def check_tables(table1, table2):
     print ("Checking that rows were preserved between {} and {}".format(table1, table2))
-    in_table1 = sqlContext.parquetFile("{prefix}/{table}".format(prefix=server_name, table=table1))
+    in_table1 = sqlContext.parquetFile("{prefix}/{table}".format(prefix=ilmn_spark_prefix, table=table1))
     in_table1.registerTempTable('t1_df')
-    in_table2 = sqlContext.parquetFile("{prefix}/{table}".format(prefix=server_name, table=table2))
+    in_table2 = sqlContext.parquetFile("{prefix}/{table}".format(prefix=ilmn_spark_prefix, table=table2))
     in_table2.registerTempTable('t2_df')
     count1 = sqlContext.sql("SELECT COUNT(1) FROM t1_df").collect()
     count2 = sqlContext.sql("SELECT COUNT(1) FROM t2_df").collect()
@@ -297,8 +297,8 @@ for chrom in chroms:
         '''.format(chrom=chrom, pos=pos, ilmn_db=ilmn_spark_prefix, anno_db=anno_spark_prefix)
         # run_query(insert_ilmn_vars)
 
-ilmn_vars_stats = 'compute stats {ilmn_db}ilmn_vars;'.format(ilmn_db=ilmn_spark_prefix)
-# run_query(ilmn_vars_stats)
+ilmn_vars_stats = 'compute stats {ilmn_db}ilmn_vars;'.format(ilmn_db=ilmn_impala_prefix)
+# impala_query(ilmn_vars_stats)
 
 # ###################
 # ### run snpeff  ###
@@ -332,9 +332,9 @@ for chrom in chroms:
             '''.format(chrom=chrom, pos=pos, ilmn_db=ilmn_spark_prefix, anno_db=anno_spark_prefix)
         # run_query(add_dbsnp)
 
-ilmn_dbsnp_stats = 'compute stats {ilmn_db}vars_dbsnp;'.format(ilmn_db=ilmn_spark_prefix)
-# run_query(ilmn_dbsnp_stats)
-check_tables(ilmn_spark_prefix, 'ilmn_vars', 'vars_dbsnp')
+ilmn_dbsnp_stats = 'compute stats {ilmn_db}vars_dbsnp;'.format(ilmn_db=ilmn_impala_prefix)
+# impala_query(ilmn_dbsnp_stats)
+# check_tables('ilmn_vars', 'vars_dbsnp')
 
 # add kaviar frequency and source from Kaviar
 for chrom in chroms:
@@ -367,9 +367,9 @@ for chrom in chroms:
         # run_query(add_kaviar)
 
 # compute stats and check that rows were preserved
-ilmn_kaviar_stats = 'compute stats {ilmn_db}vars_kaviar;'.format(ilmn_db=ilmn_spark_prefix)
-run_query(ilmn_kaviar_stats)
-check_tables(ilmn_spark_prefix, 'vars_dbsnp', 'vars_kaviar')
+ilmn_kaviar_stats = 'compute stats {ilmn_db}vars_kaviar;'.format(ilmn_db=ilmn_impala_prefix)
+# impala_query(ilmn_kaviar_stats)
+check_tables('vars_dbsnp', 'vars_kaviar')
 
 # # add clinvar significance and disease identification from clinVar
 # for chrom in chroms:
