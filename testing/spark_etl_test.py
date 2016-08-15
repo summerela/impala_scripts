@@ -36,7 +36,7 @@ from pyspark import SparkContext, SparkConf, SQLContext
 
 class TestETL(unittest.TestCase):
 
-    def __init__(self, server_prefix='hdfs://nameservice1/itmi/', in_table = 'wgs_ilmn.db/vcf_variant', is_vcf='no', platform='illumina',
+    def __init__(self, server_prefix='hdfs://nameservice1/vlad/', in_table = 'wgs_ilmn.db/vcf_variant', is_vcf='no', platform='illumina',
     local_dir='./', hdfs_dir='/itmi/', appname='etl_testing'):
         self.server_prefix = server_prefix
         self.in_table = in_table
