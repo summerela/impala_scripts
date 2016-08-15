@@ -57,16 +57,14 @@ def shut_down():
 ########################################################
 
 # create table to store all distinct illumina + ref variants
-create_ilmn_vars = '''
-create table {prefix}ilmn_vars
-(
-  var_id string,
-  pos int,
-  ref string,
-  allele string)
-partitioned by (chrom string, blk_pos int)
-STORED AS PARQUET;
-'''.format(prefix= ilmn_db_path)
+create_ilmn_vars = "create table {prefix}ilmn_vars \
+( \
+  var_id string, \
+  pos int, \
+  ref string, \
+  allele string) \
+partitioned by (chrom string, blk_pos int) \
+STORED AS PARQUET;".format(prefix= ilmn_db_path)
 
 create_vars_dbsnp = '''
 create table {prefix}vars_dbsnp
@@ -268,7 +266,7 @@ STORED AS PARQUET;
 '''.format(prefix=ilmn_db_path)
 
 # create list of tables to create
-create_tables_list = [create_vars_dbsnp, create_vars_kaviar, create_vars_clinvar,
+create_tables_list = [create_ilmn_vars, create_vars_dbsnp, create_vars_kaviar, create_vars_clinvar,
                create_vars_hgmd, create_vars_dbnsfp, create_vars_ensembl, create_vars_coding,
                create_global_vars]
 
