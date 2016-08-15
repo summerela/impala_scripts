@@ -60,8 +60,10 @@ def check_tables(server_name, table1, table2):
     in_table2 = "{prefix}{table}".format(prefix=server_name, table=table2)
     t1_df = sqlContext.parquetFile(in_table1)
     t2_df = sqlContext.parquetFile(in_table2)
-    count1 = run_query("SELECT COUNT(*) FROM t1_df")
-    count2 = run_query("SELECT COUNT(*) FROM t2_df")
+    count1_query = "SELCT COUNT(*) FROM {}".foramt(t1_df)
+    count2_query = "SELCT COUNT(*) FROM {}".foramt(t2_df)
+    count1 = run_query(count1_query)
+    count2 = run_query(count2_query)
     if count1 <= count2:
         run_query("drop table {prefix}{table}".format(prefix=server_name, table=table1))
     else:
