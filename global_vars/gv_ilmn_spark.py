@@ -12,8 +12,10 @@ from impala.dbapi import connect
 ###################################
 
 # ITMI options
-ilmn_db_path = '/itmi/wgs_ilmn.db/'
-anno_db_path = '/itmi/anno_grch37.db/'
+ilmn_spark_prefix = '/itmi/wgs_ilmn.db/'
+ilmn_impala_prefix = 'wgs_ilmn.'
+anno_spark_prefix = '/itmi/anno_grch37.db/'
+anno_impala_prefix = 'anno_grch37'
 appname= 'run_gv_illumina'
 chroms = sorted(map(str, range(1,23) + ["M", "X", "Y"]))
 var_blocks = range(0,251)
@@ -78,7 +80,7 @@ create_ilmn_vars = "create table {prefix}ilmn_vars \
   ref string, \
   allele string) \
 partitioned by (chrom string, blk_pos int) \
-STORED AS PARQUET;".format(prefix= ilmn_db_path)
+STORED AS PARQUET;".format(prefix= ilmn_impala_prefix)
 
 create_vars_dbsnp = "  \
 create table {prefix}vars_dbsnp \
@@ -90,7 +92,7 @@ create table {prefix}vars_dbsnp \
  rs_id string, \
  dbsnp_buildid string) \
 partitioned by (chrom string, blk_pos int) \
-STORED AS PARQUET;".format(prefix=ilmn_db_path)
+STORED AS PARQUET;".format(prefix=ilmn_impala_prefix)
 
 create_vars_kaviar = " \
 create table {prefix}vars_kaviar \
@@ -103,7 +105,7 @@ create table {prefix}vars_kaviar \
  kav_freq FLOAT, \
  kav_source STRING) \
 partitioned by (chrom string, blk_pos int) \
-STORED AS PARQUET;".format(prefix=ilmn_db_path)
+STORED AS PARQUET;".format(prefix=ilmn_impala_prefix)
 
 create_vars_clinvar = "  \
 create table {prefix}vars_clinvar \
@@ -120,7 +122,7 @@ create table {prefix}vars_clinvar \
  clin_dbn string \
 ) \
 partitioned by (chrom string, blk_pos int) \
-STORED AS PARQUET;".format(prefix=ilmn_db_path)
+STORED AS PARQUET;".format(prefix=ilmn_impala_prefix)
 
 create_vars_hgmd = "  \
 create table {prefix}vars_hgmd \
@@ -139,7 +141,7 @@ create table {prefix}vars_hgmd \
  hgmd_varclass string \
 ) \
 partitioned by (chrom string, blk_pos int) \
-STORED AS PARQUET;".format(prefix=ilmn_db_path)
+STORED AS PARQUET;".format(prefix=ilmn_impala_prefix)
 
 create_vars_dbnsfp = "  \
 create table {prefix}vars_dbnsfp \
@@ -161,7 +163,7 @@ create table {prefix}vars_dbnsfp \
  interpro_domain string \
 ) \
 partitioned by (chrom string, blk_pos int) \
-STORED AS PARQUET;".format(prefix=ilmn_db_path)
+STORED AS PARQUET;".format(prefix=ilmn_impala_prefix)
 
 create_vars_ensembl = " \
 create table {prefix}vars_ensembl \
@@ -190,7 +192,7 @@ create table {prefix}vars_ensembl \
  exon_number int \
 ) \
 partitioned by (chrom string, blk_pos int) \
-STORED AS PARQUET;".format(prefix=ilmn_db_path)
+STORED AS PARQUET;".format(prefix=ilmn_impala_prefix)
 
 create_vars_coding = " \
 create table {prefix}vars_coding \
@@ -227,7 +229,7 @@ create table {prefix}vars_coding \
  hgvs_p string \
 ) \
 partitioned by (chrom string, blk_pos int) \
-STORED AS PARQUET;".format(prefix=ilmn_db_path)
+STORED AS PARQUET;".format(prefix=ilmn_impala_prefix)
 
 create_global_vars = " \
 create table {prefix}global_vars \
@@ -266,7 +268,7 @@ create table {prefix}global_vars \
  ppc_rating string \
 ) \
 partitioned by (chrom string, blk_pos int) \
-STORED AS PARQUET;".format(prefix=ilmn_db_path)
+STORED AS PARQUET;".format(prefix=ilmn_impala_prefix)
 
 # create list of tables to create
 create_tables_list = [create_ilmn_vars, create_vars_dbsnp, create_vars_kaviar, create_vars_clinvar,
@@ -285,7 +287,7 @@ for query in create_tables_list:
 # insert variants into {prefix}ilmn_vars by chromosome and block_pos
 for chrom in chroms:
     for pos in var_blocks:
-        print ("Running query for chrom {} blk_pos {}").format(chrom, pos)
+        print ("Inserting chrom {} blk_pos {} into ilmn_vars").format(chrom, pos)
         insert_ilmn_vars = '''
         insert into {ilmn_db}ilmn_vars partition (chrom, blk_pos)
         SELECT var_id, pos, ref, allele, chrom, blk_pos FROM {ilmn_db}vcf_distinct WHERE chrom = '{chrom}' AND blk_pos = {pos}
@@ -299,10 +301,10 @@ for chrom in chroms:
         SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM {anno_db}dbsnp_test WHERE chrom = '{chrom}' AND blk_pos = {pos}
         UNION
         SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM {anno_db}hgmd_test WHERE chrom = '{chrom}' AND blk_pos = {pos};
-        '''.format(chrom=chrom, pos=pos, ilmn_db=ilmn_db_path, anno_db=anno_db_path)
+        '''.format(chrom=chrom, pos=pos, ilmn_db=ilmn_spark_prefix, anno_db=anno_spark_prefix)
         # run_query(insert_ilmn_vars)
 
-ilmn_vars_stats = 'compute stats {ilmn_db}ilmn_vars;'.format(ilmn_db=ilmn_db_path)
+ilmn_vars_stats = 'compute stats {ilmn_db}ilmn_vars;'.format(ilmn_db=ilmn_spark_prefix)
 # run_query(ilmn_vars_stats)
 
 # ###################
@@ -334,11 +336,12 @@ for chrom in chroms:
             from vars
             LEFT JOIN dbsnp
              ON vars.var_id = dbsnp.var_id;
-            '''.format(chrom=chrom, pos=pos, ilmn_db=ilmn_db_path, anno_db=anno_db_path)
+            '''.format(chrom=chrom, pos=pos, ilmn_db=ilmn_spark_prefix, anno_db=anno_spark_prefix)
         # run_query(add_dbsnp)
 
-ilmn_dbsnp_stats = 'compute stats {ilmn_db}vars_dbsnp;'.format(ilmn_db=ilmn_db_path)
+ilmn_dbsnp_stats = 'compute stats {ilmn_db}vars_dbsnp;'.format(ilmn_db=ilmn_spark_prefix)
 # run_query(ilmn_dbsnp_stats)
+check_tables(ilmn_spark_prefix, 'ilmn_vars', 'vars_dbsnp')
 
 # add kaviar frequency and source from Kaviar
 for chrom in chroms:
@@ -367,14 +370,13 @@ for chrom in chroms:
         FROM vars
         LEFT JOIN kav
          ON vars.var_id = kav.var_id;
-        '''.format(chrom=chrom, pos=pos, ilmn_db=ilmn_db_path, anno_db=anno_db_path)
+        '''.format(chrom=chrom, pos=pos, ilmn_db=ilmn_spark_prefix, anno_db=anno_spark_prefix)
         # run_query(add_kaviar)
 
 # compute stats and check that rows were preserved
-# run_query("compute stats {prefix}vars_kaviar;")
-ilmn_kaviar_stats = 'compute stats {ilmn_db}vars_kaviar;'.format(ilmn_db=ilmn_db_path)
+ilmn_kaviar_stats = 'compute stats {ilmn_db}vars_kaviar;'.format(ilmn_db=ilmn_spark_prefix)
 # run_query(ilmn_kaviar_stats)
-check_tables('{ilmn_db}vars_dbsnp', '{ilmn_db}vars_kaviar'.format(ilmn_db=ilmn_db_path))
+check_tables(ilmn_spark_prefix, 'vars_dbsnp', 'vars_kaviar')
 
 # # add clinvar significance and disease identification from clinVar
 # for chrom in chroms:
