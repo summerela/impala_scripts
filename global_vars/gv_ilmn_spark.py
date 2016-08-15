@@ -56,8 +56,12 @@ def run_query(input_query):
     sqlContext.sql(input_query).collect()
 
 def check_tables(server_name, table1, table2):
-    count1 = run_query("SELECT COUNT(*) FROM {prefix}{table}.collect".format(prefix=server_name, table=table1))
-    count2 = run_query("SELECT COUNT(*) FROM {prefix}{table}.collect".format(prefix=server_name, table1=table2))
+    in_table1 = "{prefix}{table}".format(prefix=server_name, table=table1)
+    in_table2 = "{prefix}{table}".format(prefix=server_name, table=table2)
+    t1_df = sqlContext.parquetFile(in_table1)
+    t2_df = sqlContext.parquetFile(in_table2)
+    count1 = run_query("SELECT COUNT(*) FROM t1_df")
+    count2 = run_query("SELECT COUNT(*) FROM t2_df")
     if count1 <= count2:
         run_query("drop table {prefix}{table}".format(prefix=server_name, table=table1))
     else:
@@ -276,8 +280,8 @@ create_tables_list = [create_ilmn_vars, create_vars_dbsnp, create_vars_kaviar, c
                create_global_vars]
 
 # create each table in the list
-for query in create_tables_list:
-    impala_query(query)
+# for query in create_tables_list:
+#     impala_query(query)
 
 ############################################################
 # create table of all variants found by joining distinct ###
