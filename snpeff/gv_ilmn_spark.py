@@ -365,10 +365,10 @@ for chrom in chroms:
         LEFT JOIN kav
          ON vars.var_id = kav.var_id;
         '''.format(chrom=chrom, pos=pos)
-        run_query(add_kaviar)
+        # run_query(add_kaviar)
 
 # compute stats and check that rows were preserved
-run_query("compute stats wgs_ilmn.vars_kaviar;")
+# run_query("compute stats wgs_ilmn.vars_kaviar;")
 check_tables('wgs_ilmn.vars_dbsnp', 'wgs_ilmn.vars_kaviar')
 
 # # add clinvar significance and disease identification from clinVar

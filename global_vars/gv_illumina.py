@@ -337,10 +337,10 @@ for chrom in chrom_list:
         LEFT JOIN kav
          ON vars.var_id = kav.var_id;
         '''.format(chrom=chrom, pos=pos)
-        snpeff.run_query(add_kaviar)
+        # snpeff.run_query(add_kaviar)
 
 # compute stats
-snpeff.run_query("compute stats wgs_ilmn.vars_kaviar;")
+# snpeff.run_query("compute stats wgs_ilmn.vars_kaviar;")
 
 # check_tables('wgs_ilmn.vars_dbsnp', 'wgs_ilmn.vars_kaviar')
 
