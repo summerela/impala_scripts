@@ -52,7 +52,7 @@ def check_tables(server_name, table1, table2):
     count1 = sqlContext.sql("SELECT COUNT(1) FROM t1_df").collect()
     count2 = sqlContext.sql("SELECT COUNT(1) FROM t2_df").collect()
     if count1 <= count2:
-        run_query("drop table {}{}".format(server_name, table1))
+        impala_query("drop table {}{}".format(ilmn_impala_prefix, table1))
     else:
         sys.exit("{} has less rows than {}.".format(table2, table1))
 
