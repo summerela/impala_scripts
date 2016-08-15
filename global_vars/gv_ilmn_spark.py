@@ -12,9 +12,9 @@ from impala.dbapi import connect
 ###################################
 
 # ITMI options
-ilmn_spark_prefix = 'itmi/wgs_ilmn.db/'
+ilmn_spark_prefix = 'hdfs://nameservice1/itmi/wgs_ilmn.db/'
 ilmn_impala_prefix = 'wgs_ilmn.'
-anno_spark_prefix = 'itmi/anno_grch37.db/'
+anno_spark_prefix = 'hdfs://nameservice1/itmi/anno_grch37.db/'
 anno_impala_prefix = 'anno_grch37'
 appname= 'gv_illumina'
 chroms = sorted(map(str, range(1,23) + ["M", "X", "Y"]))
