@@ -394,7 +394,7 @@ for chrom in chroms:
                    FROM vars
         LEFT JOIN clin
          ON vars.var_id = clin.var_id;
-        '''.format(chrom=chrom, pos=pos)
+        '''.format(prefix=ilmn_spark_prefix, chrom=chrom, pos=pos)
         run_query(add_clinvar)
 
 # # compute stats and check that rows were preserved
