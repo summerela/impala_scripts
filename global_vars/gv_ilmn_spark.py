@@ -59,10 +59,8 @@ def check_tables(server_name, table1, table2):
     print ("Checking that rows were preserved between {} and {}".format(table1, table2))
     in_table1 = "{prefix}{table}".format(prefix=server_name, table=table1)
     in_table2 = "{prefix}{table}".format(prefix=server_name, table=table2)
-    t1_df = sqlContext.parquetFile(in_table1)
-    t2_df = sqlContext.parquetFile(in_table2)
-    count1 = sqlContext.sql("SELECT * FROM {}".format(t1_df)).count()
-    count2 = sqlContext.sql("SELECT * FROM {}".format(t2_df)).count()
+    count1 = sqlContext.sql("SELECT * FROM {}".format(in_table1)).count()
+    count2 = sqlContext.sql("SELECT * FROM {}".format(in_table2)).count()
     if count1 <= count2:
         run_query("drop table {prefix}{table}".format(prefix=server_name, table=table1))
     else:
