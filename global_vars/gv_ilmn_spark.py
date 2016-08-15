@@ -369,34 +369,34 @@ for chrom in chroms:
 # compute stats and check that rows were preserved
 ilmn_kaviar_stats = 'compute stats {ilmn_db}vars_kaviar;'.format(ilmn_db=ilmn_impala_prefix)
 # impala_query(ilmn_kaviar_stats)
-check_tables('vars_dbsnp', 'vars_kaviar')
+# check_tables('vars_dbsnp', 'vars_kaviar')
 
-# # add clinvar significance and disease identification from clinVar
-# for chrom in chroms:
-#     for pos in var_blocks:
-#         add_clinvar = '''
-#         insert into {prefix}vars_clinvar partition (chrom, blk_pos)
-#         with vars as (
-#                 SELECT v.var_id, v.pos, v.ref, v.allele, v.rs_id,
-#                     v.dbsnp_buildid, v.kav_freq, v.kav_source,
-#                     v.chrom, v.blk_pos
-#                 FROM {prefix}vars_kaviar v
-#                 WHERE v.chrom = '{chrom}'
-#                 AND v.blk_pos = {pos}
-#           ),
-#           clin as (
-#             SELECT c.var_id, c.clin_sig, c.clin_dbn
-#             FROM anno_grch37.clinvar_distinct c
-#             )
-#             SELECT vars.var_id, vars.pos, vars.ref, vars.allele, vars.rs_id,
-#                    vars.dbsnp_buildid, vars.kav_freq, vars.kav_source,
-#                    clin.clin_sig, clin.clin_dbn, vars.chrom, vars.blk_pos
-#                    FROM vars
-#         LEFT JOIN clin
-#          ON vars.var_id = clin.var_id;
-#         '''.format(chrom=chrom, pos=pos)
-#         run_query(add_clinvar)
-#
+# add clinvar significance and disease identification from clinVar
+for chrom in chroms:
+    for pos in var_blocks:
+        add_clinvar = '''
+        # insert into {prefix}vars_clinvar partition (chrom, blk_pos)
+        with vars as (
+                SELECT v.var_id, v.pos, v.ref, v.allele, v.rs_id,
+                    v.dbsnp_buildid, v.kav_freq, v.kav_source,
+                    v.chrom, v.blk_pos
+                FROM {prefix}vars_kaviar v
+                WHERE v.chrom = '{chrom}'
+                AND v.blk_pos = {pos}
+          ),
+          clin as (
+            SELECT c.var_id, c.clin_sig, c.clin_dbn
+            FROM anno_grch37.clinvar_distinct c
+            )
+            SELECT vars.var_id, vars.pos, vars.ref, vars.allele, vars.rs_id,
+                   vars.dbsnp_buildid, vars.kav_freq, vars.kav_source,
+                   clin.clin_sig, clin.clin_dbn, vars.chrom, vars.blk_pos
+                   FROM vars
+        LEFT JOIN clin
+         ON vars.var_id = clin.var_id;
+        '''.format(chrom=chrom, pos=pos)
+        run_query(add_clinvar)
+
 # # compute stats and check that rows were preserved
 # run_query("compute stats {prefix}vars_clinvar;")
 # check_tables('{prefix}vars_kaviar', '{prefix}vars_clinvar')
