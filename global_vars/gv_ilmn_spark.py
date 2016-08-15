@@ -275,7 +275,7 @@ create_tables_list = [create_ilmn_vars, create_vars_dbsnp, create_vars_kaviar, c
 
 # create each table in the list
 for query in create_tables_list:
-    run_query(query)
+    impala_query(query)
 
 ############################################################
 # create table of all variants found by joining distinct ###
