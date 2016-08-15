@@ -33,13 +33,6 @@ sqlContext.sql("SET spark.sql.parquet.binaryAsString=true")
 sqlContext.sql("SET spark.sql.parquet.cacheMetadata=true")
 
 # read in table, convert to parquet, store as temp
-def ingest_table(server_path, table_name):
-    in_table = "{prefix}/{table}".format(prefix=server_path, table=table_name)
-    # convert table to parquet format
-    data = sqlContext.parquetFile(in_table)
-    # register distinct table as parquet temp file for speed
-    data.registerTempTable("{table}_tmp".format(table=table_name))
-
 def impala_query(input_query):
     print("Running query: {}").format(input_query)
     try:
@@ -47,23 +40,21 @@ def impala_query(input_query):
     except Exception as e:
         print (e)
 
-def get_result(input_query):
-    result = sqlContext.sql(input_query)
-    return result
-
 def run_query(input_query):
     sqlContext.sql(input_query)
 
-def check_tables(server_name, temp_table1, temp_table2, drop_table):
-    print ("Checking that rows were preserved between {} and {}".format(temp_table1, temp_table2))
-    t1_df = sqlContext.parquetFile(temp_table1)
-    t2_df = sqlContext.parquetFile(temp_table2)
+def check_tables(server_name, table1, table2):
+    print ("Checking that rows were preserved between {} and {}".format(table1, table2))
+    in_table1 = sqlContext.parquetFile("{prefix}/{table}".format(prefix=server_name, table=table1))
+    in_table1.registerTempTable('t1_df')
+    in_table2 = sqlContext.parquetFile("{prefix}/{table}".format(prefix=server_name, table=table2))
+    in_table2.registerTempTable('t2_df')
     count1 = sqlContext.sql("SELECT COUNT(1) FROM t1_df").collect()
     count2 = sqlContext.sql("SELECT COUNT(1) FROM t2_df").collect()
     if count1 <= count2:
-        run_query("drop table {}".format(drop_table))
+        run_query("drop table {}{}".format(server_name, table1))
     else:
-        sys.exit("{} has less rows than {}.".format(temp_table2, temp_table1))
+        sys.exit("{} has less rows than {}.".format(table2, table1))
 
 def shut_down():
     sqlContext.clearCache()
