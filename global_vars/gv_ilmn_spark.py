@@ -56,12 +56,13 @@ def run_query(input_query):
     sqlContext.sql(input_query).collect()
 
 def check_tables(server_name, table1, table2):
+    print ("Checking that rows were preserved between {} and {}".format(table1, table2))
     in_table1 = "{prefix}{table}".format(prefix=server_name, table=table1)
     in_table2 = "{prefix}{table}".format(prefix=server_name, table=table2)
     t1_df = sqlContext.parquetFile(in_table1)
     t2_df = sqlContext.parquetFile(in_table2)
-    count1_query = "SELCT COUNT(*) FROM {}".foramt(t1_df)
-    count2_query = "SELCT COUNT(*) FROM {}".foramt(t2_df)
+    count1_query = "SELCT COUNT(*) FROM {}".format(t1_df)
+    count2_query = "SELCT COUNT(*) FROM {}".format(t2_df)
     count1 = run_query(count1_query)
     count2 = run_query(count2_query)
     if count1 <= count2:
