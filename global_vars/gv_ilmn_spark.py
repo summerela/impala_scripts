@@ -5,6 +5,7 @@ import illumina_snpeff as snp
 import sys
 import subprocess as sp
 from pyspark import SparkContext, SparkConf, SQLContext
+from impala.dbapi import connect
 
 ###################################
 ## setup variables and functions ##
@@ -16,6 +17,10 @@ anno_db_path = '/itmi/anno_grch37.db/'
 appname= 'run_gv_illumina'
 chroms = sorted(map(str, range(1,23) + ["M", "X", "Y"]))
 var_blocks = range(0,251)
+
+# configure connection to impala
+impala_conn = connect(host="localhost", port=210500, timeout=10000, user='ec2-user')
+cur = impala_conn.cursor()
 
 # configure connection to spark
 conf = (SparkConf().setAppName(appname))
@@ -32,6 +37,14 @@ def ingest_table(server_path, table_name):
     # register distinct table as parquet temp file for speed
     parquet_tbl = data.registerTempTable("{table}_tmp".format(table=table_name))
     return parquet_tbl
+
+
+def impala_query(input_query):
+    print("Running query: {}").format(input_query)
+    try:
+        cur.execute(input_query)
+    except Exception as e:
+        print (e)
 
 def get_result(input_query):
     result = sqlContext.sql(input_query)
@@ -51,6 +64,7 @@ def check_tables(server_name, table1, table2):
 def shut_down():
     sqlContext.clearCache()
     sc.stop()
+    cur.close()
 
 ########################################################
 # create tables needed to store data along the way   ###
@@ -66,204 +80,193 @@ create_ilmn_vars = "create table {prefix}ilmn_vars \
 partitioned by (chrom string, blk_pos int) \
 STORED AS PARQUET;".format(prefix= ilmn_db_path)
 
-create_vars_dbsnp = '''
-create table {prefix}vars_dbsnp
-(
- var_id string,
- pos int,
- ref string,
- allele string,
- rs_id string,
- dbsnp_buildid string
-)
-partitioned by (chrom string, blk_pos int)
-STORED AS PARQUET;
-'''.format(prefix=ilmn_db_path)
+create_vars_dbsnp = "  \
+create table {prefix}vars_dbsnp \
+( \
+ var_id string, \
+ pos int, \
+ ref string, \
+ allele string, \
+ rs_id string, \
+ dbsnp_buildid string) \
+partitioned by (chrom string, blk_pos int) \
+STORED AS PARQUET;".format(prefix=ilmn_db_path)
 
-create_vars_kaviar = '''
-create table {prefix}vars_kaviar
-(
- var_id STRING,
- pos      INT,
- ref STRING,
- allele STRING,
- rs_id STRING,
- dbsnp_buildid STRING,
- kav_freq FLOAT,
- kav_source STRING
-)
-partitioned by (chrom string, blk_pos int)
-STORED AS PARQUET;
-'''.format(prefix=ilmn_db_path)
+create_vars_kaviar = " \
+create table {prefix}vars_kaviar \
+( var_id STRING, \
+ pos      INT, \
+ ref STRING, \
+ allele STRING, \
+ rs_id STRING, \
+ dbsnp_buildid STRING, \
+ kav_freq FLOAT, \
+ kav_source STRING) \
+partitioned by (chrom string, blk_pos int) \
+STORED AS PARQUET;".format(prefix=ilmn_db_path)
 
-create_vars_clinvar = '''
-create table {prefix}vars_clinvar
-(
- var_id string,
- pos int,
- ref string,
- allele string,
- rs_id string,
- dbsnp_buildid string,
- kav_freq float,
- kav_source string,
- clin_sig string,
- clin_dbn string
-)
-partitioned by (chrom string, blk_pos int)
-STORED AS PARQUET;
-'''.format(prefix=ilmn_db_path)
+create_vars_clinvar = "  \
+create table {prefix}vars_clinvar \
+( \
+ var_id string, \
+ pos int, \
+ ref string, \
+ allele string, \
+ rs_id string, \
+ dbsnp_buildid string, \
+ kav_freq float, \
+ kav_source string, \
+ clin_sig string, \
+ clin_dbn string \
+) \
+partitioned by (chrom string, blk_pos int) \
+STORED AS PARQUET;".format(prefix=ilmn_db_path)
 
-create_vars_hgmd = '''
-create table {prefix}vars_hgmd
-(
- var_id string,
- pos int,
- ref string,
- allele string,
- rs_id string,
- dbsnp_buildid string,
- kav_freq float,
- kav_source string,
- clin_sig string,
- clin_dbn string,
- hgmd_id string,
- hgmd_varclass string
-)
-partitioned by (chrom string, blk_pos int)
-STORED AS PARQUET;
-'''.format(prefix=ilmn_db_path)
+create_vars_hgmd = "  \
+create table {prefix}vars_hgmd \
+( \
+ var_id string, \
+ pos int, \
+ ref string, \
+ allele string, \
+ rs_id string, \
+ dbsnp_buildid string, \
+ kav_freq float, \
+ kav_source string, \
+ clin_sig string, \
+ clin_dbn string, \
+ hgmd_id string, \
+ hgmd_varclass string \
+) \
+partitioned by (chrom string, blk_pos int) \
+STORED AS PARQUET;".format(prefix=ilmn_db_path)
 
-create_vars_dbnsfp = '''
-create table {prefix}vars_dbnsfp
-(
- var_id string,
- pos int,
- ref string,
- allele string,
- rs_id string,
- dbsnp_buildid string,
- kav_freq float,
- kav_source string,
- clin_sig string,
- clin_dbn string,
- hgmd_id string,
- hgmd_varclass string,
- cadd_raw float,
- dann_score float,
- interpro_domain string
-)
-partitioned by (chrom string, blk_pos int)
-STORED AS PARQUET;
-'''.format(prefix=ilmn_db_path)
+create_vars_dbnsfp = "  \
+create table {prefix}vars_dbnsfp \
+( \
+ var_id string, \
+ pos int, \
+ ref string, \
+ allele string, \
+ rs_id string, \
+ dbsnp_buildid string, \
+ kav_freq float, \
+ kav_source string, \
+ clin_sig string, \
+ clin_dbn string, \
+ hgmd_id string, \
+ hgmd_varclass string, \
+ cadd_raw float, \
+ dann_score float, \
+ interpro_domain string \
+) \
+partitioned by (chrom string, blk_pos int) \
+STORED AS PARQUET;".format(prefix=ilmn_db_path)
 
-create_vars_ensembl = '''
-create table {prefix}vars_ensembl
-(
- var_id string,
- pos int,
- ref string,
- allele string,
- rs_id string,
- dbsnp_buildid string,
- kav_freq float,
- kav_source string,
- clin_sig string,
- clin_dbn string,
- hgmd_id string,
- hgmd_varclass string,
- cadd_raw float,
- dann_score float,
- interpro_domain string,
- strand string,
- gene_name string,
- gene_id string,
- transcript_name string,
- transcript_id string,
- exon_name string,
- exon_number int
-)
-partitioned by (chrom string, blk_pos int)
-STORED AS PARQUET;
-'''.format(prefix=ilmn_db_path)
+create_vars_ensembl = " \
+create table {prefix}vars_ensembl \
+( \
+ var_id string, \
+ pos int, \
+ ref string, \
+ allele string, \
+ rs_id string, \
+ dbsnp_buildid string, \
+ kav_freq float, \
+ kav_source string, \
+ clin_sig string, \
+ clin_dbn string, \
+ hgmd_id string, \
+ hgmd_varclass string, \
+ cadd_raw float, \
+ dann_score float, \
+ interpro_domain string, \
+ strand string, \
+ gene_name string, \
+ gene_id string, \
+ transcript_name string, \
+ transcript_id string, \
+ exon_name string, \
+ exon_number int \
+) \
+partitioned by (chrom string, blk_pos int) \
+STORED AS PARQUET;".format(prefix=ilmn_db_path)
 
-create_vars_coding = '''
-create table {prefix}vars_coding
-(
- var_id string,
- pos int,
- ref string,
- allele string,
- rs_id string,
- dbsnp_buildid string,
- kav_freq float,
- kav_source string,
- clin_sig string,
- clin_dbn string,
- hgmd_id string,
- hgmd_varclass string,
- cadd_raw float,
- dann_score float,
- interpro_domain string,
- strand string,
- gene_name string,
- gene_id string,
- transcript_name string,
- transcript_id string,
- exon_name string,
- exon_number int,
- effect string,
- impact string,
- feature string,
- feature_id string,
- biotype string,
- rank int,
- hgvs_c string,
- hgvs_p string
-)
-partitioned by (chrom string, blk_pos int)
-STORED AS PARQUET;
-'''.format(prefix=ilmn_db_path)
+create_vars_coding = " \
+create table {prefix}vars_coding \
+( \
+ var_id string, \
+ pos int, \
+ ref string, \
+ allele string, \
+ rs_id string, \
+ dbsnp_buildid string, \
+ kav_freq float, \
+ kav_source string, \
+ clin_sig string, \
+ clin_dbn string, \
+ hgmd_id string, \
+ hgmd_varclass string, \
+ cadd_raw float, \
+ dann_score float, \
+ interpro_domain string, \
+ strand string, \
+ gene_name string, \
+ gene_id string, \
+ transcript_name string, \
+ transcript_id string, \
+ exon_name string, \
+ exon_number int, \
+ effect string, \
+ impact string, \
+ feature string, \
+ feature_id string, \
+ biotype string, \
+ rank int, \
+ hgvs_c string, \
+ hgvs_p string \
+) \
+partitioned by (chrom string, blk_pos int) \
+STORED AS PARQUET;".format(prefix=ilmn_db_path)
 
-create_global_vars = '''
-create table {prefix}global_vars
-(
- var_id string,
- pos int,
- ref string,
- allele string,
- rs_id string,
- dbsnp_buildid string,
- kav_freq float,
- kav_source string,
- clin_sig string,
- clin_dbn string,
- hgmd_id string,
- hgmd_varclass string,
- cadd_raw float,
- dann_score float,
- interpro_domain string,
- strand string,
- gene_name string,
- gene_id string,
- transcript_name string,
- transcript_id string,
- exon_name string,
- exon_number int,
- effect string,
- impact string,
- feature string,
- feature_id string,
- biotype string,
- rank int,
- hgvs_c string,
- hgvs_p string,
- var_type string,
- ppc_rating string
-)
-partitioned by (chrom string, blk_pos int)
-STORED AS PARQUET;
-'''.format(prefix=ilmn_db_path)
+create_global_vars = " \
+create table {prefix}global_vars \
+( \
+ var_id string, \
+ pos int, \
+ ref string, \
+ allele string, \
+ rs_id string, \
+ dbsnp_buildid string, \
+ kav_freq float, \
+ kav_source string, \
+ clin_sig string, \
+ clin_dbn string, \
+ hgmd_id string, \
+ hgmd_varclass string, \
+ cadd_raw float, \
+ dann_score float, \
+ interpro_domain string, \
+ strand string, \
+ gene_name string, \
+ gene_id string, \
+ transcript_name string, \
+ transcript_id string, \
+ exon_name string, \
+ exon_number int, \
+ effect string, \
+ impact string, \
+ feature string, \
+ feature_id string, \
+ biotype string, \
+ rank int, \
+ hgvs_c string, \
+ hgvs_p string, \
+ var_type string, \
+ ppc_rating string \
+) \
+partitioned by (chrom string, blk_pos int) \
+STORED AS PARQUET;".format(prefix=ilmn_db_path)
 
 # create list of tables to create
 create_tables_list = [create_ilmn_vars, create_vars_dbsnp, create_vars_kaviar, create_vars_clinvar,

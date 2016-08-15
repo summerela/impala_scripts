@@ -3,6 +3,7 @@ import illumina_snpeff as snp
 import sys
 import subprocess as sp
 
+
 # ITMI options
 impala_host = 'localhost'
 impala_port = 21050
