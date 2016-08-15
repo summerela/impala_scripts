@@ -13,7 +13,7 @@ from impala.dbapi import connect
 
 # ITMI options
 # ilmn_spark_prefix = 'hdfs://ip-10-0-0-118.ec2.internal:8020/itmi/wgs_ilmn.db/'
-ilmn_spark_prefix = 'itmi/wgs_ilmn.db/'
+ilmn_spark_prefix = 'hdfs://ip-10-0-0-118.ec2.internal:8020/itmi/wgs_ilmn.db/'
 ilmn_impala_prefix = 'wgs_ilmn.'
 anno_spark_prefix = 'hdfs://ip-10-0-0-118.ec2.internal:8020/itmi/anno_grch37.db/'
 anno_impala_prefix = 'anno_grch37.'
@@ -34,13 +34,11 @@ sqlContext.sql("SET spark.sql.parquet.cacheMetadata=true")
 
 # read in table, convert to parquet, store as temp
 def ingest_table(server_path, table_name):
-    read_table = "{prefix}/{table}".format(prefix=server_path, table=table_name)
+    in_table = "{prefix}/{table}".format(prefix=server_path, table=table_name)
     # convert table to parquet format
-    data = sqlContext.parquetFile(read_table)
+    data = sqlContext.parquetFile(in_table)
     # register distinct table as parquet temp file for speed
-    parquet_tbl = data.registerTempTable("{table}_tmp".format(table=table_name))
-    return parquet_tbl
-
+    data.registerTempTable("{table}_tmp".format(table=table_name))
 
 def impala_query(input_query):
     print("Running query: {}").format(input_query)
@@ -56,16 +54,16 @@ def get_result(input_query):
 def run_query(input_query):
     sqlContext.sql(input_query)
 
-def check_tables(server_name, table1, table2):
-    print ("Checking that rows were preserved between {} and {}".format(table1, table2))
-    in_table1 = "{prefix}{table}".format(prefix=server_name, table=table1)
-    in_table2 = "{prefix}{table}".format(prefix=server_name, table=table2)
-    count1 = sqlContext.sql("SELECT * FROM {}".format(in_table1)).count()
-    count2 = sqlContext.sql("SELECT * FROM {}".format(in_table2)).count()
+def check_tables(server_name, temp_table1, temp_table2, drop_table):
+    print ("Checking that rows were preserved between {} and {}".format(temp_table1, temp_table2))
+    t1_df = sqlContext.parquetFile(temp_table1)
+    t2_df = sqlContext.parquetFile(temp_table2)
+    count1 = sqlContext.sql("SELECT COUNT(1) FROM t1_df").collect()
+    count2 = sqlContext.sql("SELECT COUNT(1) FROM t2_df").collect()
     if count1 <= count2:
-        run_query("drop table {prefix}{table}".format(prefix=server_name, table=table1))
+        run_query("drop table {}".format(drop_table))
     else:
-        sys.exit("{} has less rows than {}.".format(table2, table1))
+        sys.exit("{} has less rows than {}.".format(temp_table2, temp_table1))
 
 def shut_down():
     sqlContext.clearCache()
@@ -379,7 +377,7 @@ for chrom in chroms:
 
 # compute stats and check that rows were preserved
 ilmn_kaviar_stats = 'compute stats {ilmn_db}vars_kaviar;'.format(ilmn_db=ilmn_spark_prefix)
-# run_query(ilmn_kaviar_stats)
+run_query(ilmn_kaviar_stats)
 check_tables(ilmn_spark_prefix, 'vars_dbsnp', 'vars_kaviar')
 
 # # add clinvar significance and disease identification from clinVar
