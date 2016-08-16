@@ -388,7 +388,6 @@ register_table(ilmn_spark_prefix, 'vars_clinvar')
 for chrom in chroms:
     for pos in var_blocks:
         add_clinvar = " \
-        # insert into vars_clinvar partition (chrom, blk_pos) \
         with vars as ( \
                 SELECT v.var_id, v.pos, v.ref, v.allele, v.rs_id, \
                     v.dbsnp_buildid, v.kav_freq, v.kav_source, \
