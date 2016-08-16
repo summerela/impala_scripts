@@ -401,69 +401,69 @@ for chrom in chrom_list:
             LEFT JOIN hgmd
                ON vars.var_id = hgmd.var_id;
         '''.format(chrom=chrom, pos=pos)
-        snpeff.run_query(add_hgmd)
+        # snpeff.run_query(add_hgmd)
 
 # compute stats
-snpeff.run_query("compute stats wgs_ilmn.vars_hgmd;")
+# snpeff.run_query("compute stats wgs_ilmn.vars_hgmd;")
 
-check_tables('wgs_ilmn.vars_clinvar', 'wgs_ilmn.vars_hgmd')
+# check_tables('wgs_ilmn.vars_clinvar', 'wgs_ilmn.vars_hgmd')
 
 #
-# # add cadd, dann and interpro domain from dbnsfp
-# for chrom in chrom_list:
-#     for pos in snpeff.var_blocks:
-#         add_dbnsfp = '''
-#         insert into wgs_ilmn.vars_dbnsfp partition (chrom, blk_pos)
-#         WITH vars AS
-#           (SELECT v.var_id,
-#                  v.pos,
-#                  v.ref,
-#                  v.allele,
-#                  v.rs_id,
-#                  v.dbsnp_buildid,
-#                  v.kav_freq,
-#                  v.kav_source,
-#                  v.clin_sig,
-#                  v.clin_dbn,
-#                  v.hgmd_id,
-#                  v.hgmd_varclass,
-#                  v.chrom,
-#                  v.blk_pos
-#           FROM wgs_ilmn.vars_hgmd v
-#           WHERE v.chrom = '{chrom}'
-#                   AND v.blk_pos = {pos} ), dbnsfp AS
-#           (SELECT d.var_id,
-#                  d.cadd_raw,
-#                  d.dann_score,
-#                  d.interpro_domain
-#           FROM anno_grch37.dbnsfp_distinct d )
-#         SELECT vars.var_id,
-#                  vars.pos,
-#                  vars.ref,
-#                  vars.allele,
-#                  vars.rs_id,
-#                  vars.dbsnp_buildid,
-#                  vars.kav_freq,
-#                  vars.kav_source,
-#                  vars.clin_sig,
-#                  vars.clin_dbn,
-#                  vars.hgmd_id,
-#                  vars.hgmd_varclass,
-#                  dbnsfp.cadd_raw,
-#                  dbnsfp.dann_score,
-#                  dbnsfp.interpro_domain,
-#                  vars.chrom,
-#                  vars.blk_pos
-#         FROM vars
-#         LEFT JOIN dbnsfp
-#             ON vars.var_id = dbnsfp.var_id;
-#         '''.format(chrom=chrom, pos=pos)
-#         snpeff.run_query(add_dbnsfp)
-#
-# # compute stats
-# snpeff.run_query("compute stats wgs_ilmn.vars_dbnsfp;")
-#
-# check_tables('wgs_ilmn.vars_hgmd', 'wgs_ilmn.vars_dbnsfp')
+# add cadd, dann and interpro domain from dbnsfp
+for chrom in chrom_list:
+    for pos in snpeff.var_blocks:
+        add_dbnsfp = '''
+        insert into wgs_ilmn.vars_dbnsfp partition (chrom, blk_pos)
+        WITH vars AS
+          (SELECT v.var_id,
+                 v.pos,
+                 v.ref,
+                 v.allele,
+                 v.rs_id,
+                 v.dbsnp_buildid,
+                 v.kav_freq,
+                 v.kav_source,
+                 v.clin_sig,
+                 v.clin_dbn,
+                 v.hgmd_id,
+                 v.hgmd_varclass,
+                 v.chrom,
+                 v.blk_pos
+          FROM wgs_ilmn.vars_hgmd v
+          WHERE v.chrom = '{chrom}'
+                  AND v.blk_pos = {pos} ), dbnsfp AS
+          (SELECT d.var_id,
+                 d.cadd_raw,
+                 d.dann_score,
+                 d.interpro_domain
+          FROM anno_grch37.dbnsfp_distinct d )
+        SELECT vars.var_id,
+                 vars.pos,
+                 vars.ref,
+                 vars.allele,
+                 vars.rs_id,
+                 vars.dbsnp_buildid,
+                 vars.kav_freq,
+                 vars.kav_source,
+                 vars.clin_sig,
+                 vars.clin_dbn,
+                 vars.hgmd_id,
+                 vars.hgmd_varclass,
+                 dbnsfp.cadd_raw,
+                 dbnsfp.dann_score,
+                 dbnsfp.interpro_domain,
+                 vars.chrom,
+                 vars.blk_pos
+        FROM vars
+        LEFT JOIN dbnsfp
+            ON vars.var_id = dbnsfp.var_id;
+        '''.format(chrom=chrom, pos=pos)
+        snpeff.run_query(add_dbnsfp)
+
+# compute stats
+snpeff.run_query("compute stats wgs_ilmn.vars_dbnsfp;")
+
+check_tables('wgs_ilmn.vars_hgmd', 'wgs_ilmn.vars_dbnsfp')
 #
 #
 # # add gene, transcript and exon id and names from ensembl
