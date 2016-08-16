@@ -40,13 +40,15 @@ def impala_query(input_query):
     except Exception as e:
         print (e)
 
-def compute_and_register(in_table):
-    print("Registering spark temp table {}...".format(in_table))
-    in_df = sqlContext.parquetFile("{}/{}".format(ilmn_spark_prefix, in_table))
-    in_df.registerTempTable('{}'.format(in_table))
+def compute_stats(in_table):
     print("Computing stats for {}".format(in_table))
     compute_query = "compute stats {}{}".format(ilmn_impala_prefix, in_table)
     impala_query(compute_query)
+
+def register_table(prefix, in_table):
+    print("Registering spark temp table {}...".format(in_table))
+    in_df = sqlContext.parquetFile("{}/{}".format(prefix, in_table))
+    in_df.registerTempTable('{}'.format(in_table))
 
 def run_query(input_query):
     sqlContext.sql(input_query)
@@ -57,6 +59,7 @@ def check_tables(t1_df, t2_df):
     count2 = sqlContext.sql("SELECT COUNT(1) FROM {}".format(t2_df)).collect()
     if count1 <= count2:
         impala_query("drop table {}{}".format(ilmn_impala_prefix, t1_df ))
+        sqlContext.dropTempTable(t1_df)
     else:
         sys.exit("{} has less rows than {}.".format(t2_df, t1_df))
 
@@ -301,7 +304,8 @@ for chrom in chroms:
         '''.format(chrom=chrom, pos=pos, ilmn_db=ilmn_spark_prefix, anno_db=anno_spark_prefix)
         # run_query(insert_ilmn_vars)
 
-# compute_and_register('ilmn_vars')
+# compute_stats('ilmn_vars')
+# register_table(ilmn_spark_prefix, 'ilmn_vars')
 
 # ###################
 # ### run snpeff  ###
@@ -312,37 +316,43 @@ for chrom in chroms:
 #################################
 ### ADD VARIANT  ANNOTATIONS  ###
 #################################
+# register_table(anno_spark_prefix, 'dbsnp')
+# register_table(ilmn_spark_prefix, 'vars_dbsnp')
+
 # add rsID from dbSNP
 for chrom in chroms:
     for pos in var_blocks:
         add_dbsnp = '''
-            insert into {ilmn_db}vars_dbsnp partition (chrom, blk_pos)
+            insert into vars_dbsnp partition (chrom, blk_pos)
             with vars as (
             SELECT v.var_id, v.pos, v.ref, v.allele, v.chrom, v.blk_pos
-            FROM {ilmn_db}ilmn_vars v
+            FROM ilmn_vars v
             WHERE v.chrom = '{chrom}'
             AND v.blk_pos = {pos}
             ),
             dbsnp as (
             SELECT d.rs_id, d.dbsnpbuildid as dbsnp_buildid, d.var_id
-            from {anno_db}dbsnp d
+            from dbsnp d
             )
             SELECT vars.var_id, vars.pos, vars.ref, vars.allele, dbsnp.rs_id, dbsnp.dbsnp_buildid,
                 vars.chrom, vars.blk_pos
             from vars
             LEFT JOIN dbsnp
              ON vars.var_id = dbsnp.var_id;
-            '''.format(chrom=chrom, pos=pos, ilmn_db=ilmn_spark_prefix, anno_db=anno_spark_prefix)
+            '''.format(chrom=chrom, pos=pos)
         # run_query(add_dbsnp)
 
-# compute_and_register('vars_dbsnp')
+# compute_stats('vars_dbsnp')
 # check_tables('ilmn_vars', 'vars_dbsnp')
 
 # add kaviar frequency and source from Kaviar
+# register_table(anno_spark_prefix, 'kaviar_distinct')
+register_table(ilmn_spark_prefix, 'vars_kaviar')
+
 for chrom in chroms:
     for pos in var_blocks:
         add_kaviar = '''
-        insert into {ilmn_db}vars_kaviar partition (chrom, blk_pos)
+        insert into vars_kaviar partition (chrom, blk_pos)
     WITH vars AS
       (SELECT v.var_id,
              v.pos,
@@ -352,12 +362,12 @@ for chrom in chroms:
              v.dbsnp_buildid,
              v.chrom,
              v.blk_pos
-      FROM {ilmn_db}vars_dbsnp v
+      FROM vars_dbsnp v
       WHERE v.chrom = '{chrom}'
       AND v.blk_pos = {pos} ),
       kav as (
         SELECT k.var_id, k.kav_freq, k.kav_source
-        FROM {anno_db}kaviar_distinct k
+        FROM kaviar_distinct k
         )
         SELECT vars.var_id, vars.pos, vars.ref, vars.allele, vars.rs_id,
             vars.dbsnp_buildid, kav.kav_freq, kav.kav_source, vars.chrom,
@@ -365,29 +375,32 @@ for chrom in chroms:
         FROM vars
         LEFT JOIN kav
          ON vars.var_id = kav.var_id;
-        '''.format(chrom=chrom, pos=pos, ilmn_db=ilmn_spark_prefix, anno_db=anno_spark_prefix)
+        '''.format(chrom=chrom, pos=pos)
         # run_query(add_kaviar)
 
 # compute stats and check that rows were preserved
-compute_and_register('vars_kaviar')
+# compute_stats('vars_kaviar')
 # check_tables('vars_dbsnp', 'vars_kaviar')
 
 # add clinvar significance and disease identification from clinVar
+register_table(anno_spark_prefix, 'clinvar_distinct')
+register_table(ilmn_spark_prefix, 'vars_clinvar')
+
 for chrom in chroms:
     for pos in var_blocks:
         add_clinvar = '''
-        # insert into {prefix}vars_clinvar partition (chrom, blk_pos)
+        # insert into vars_clinvar partition (chrom, blk_pos)
         with vars as (
                 SELECT v.var_id, v.pos, v.ref, v.allele, v.rs_id,
                     v.dbsnp_buildid, v.kav_freq, v.kav_source,
                     v.chrom, v.blk_pos
-                FROM {prefix}vars_kaviar v
+                FROM vars_kaviar v
                 WHERE v.chrom = '{chrom}'
                 AND v.blk_pos = {pos}
           ),
           clin as (
             SELECT c.var_id, c.clin_sig, c.clin_dbn
-            FROM anno_grch37.clinvar_distinct c
+            FROM clinvar_distinct c
             )
             SELECT vars.var_id, vars.pos, vars.ref, vars.allele, vars.rs_id,
                    vars.dbsnp_buildid, vars.kav_freq, vars.kav_source,
@@ -395,8 +408,8 @@ for chrom in chroms:
                    FROM vars
         LEFT JOIN clin
          ON vars.var_id = clin.var_id;
-        '''.format(prefix=ilmn_spark_prefix, chrom=chrom, pos=pos)
-        # run_query(add_clinvar)
+        '''.format(chrom=chrom, pos=pos)
+        run_query(add_clinvar)
 
 # # compute stats and check that rows were preserved
 # run_query("compute stats {prefix}vars_clinvar;")
