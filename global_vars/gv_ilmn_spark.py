@@ -284,23 +284,38 @@ create_tables_list = [create_ilmn_vars, create_vars_dbsnp, create_vars_kaviar, c
 # illumina variants with distinct reference variants     ###
 ############################################################
 
+# TODO spark dataframes to pandas, then join
+
+##########################
+## register temp tables ##
+##########################
+register_table(ilmn_spark_prefix, 'vcf_distinct')
+annotation_list = ['dbnsfp_distinct', 'kaviar_distinct', 'clinvar_distinct', 'dbsnp', 'hgmd']
+for table in annotation_list:
+    register_table(anno_spark_prefix, table)
+
 # insert variants into {prefix}ilmn_vars by chromosome and block_pos
 for chrom in chroms:
     for pos in var_blocks:
         print ("Inserting chrom {} blk_pos {} into ilmn_vars").format(chrom, pos)
+
+
+
+
+
         insert_ilmn_vars = '''
         insert into {ilmn_db}ilmn_vars partition (chrom, blk_pos)
         SELECT var_id, pos, ref, allele, chrom, blk_pos FROM {ilmn_db}vcf_distinct WHERE chrom = '{chrom}' AND blk_pos = {pos}
         UNION
-        SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM {anno_db}dbnsfp_distinct_test WHERE chrom = '{chrom}' AND blk_pos = {pos}
+        SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM {anno_db}dbnsfp_distinct WHERE chrom = '{chrom}' AND blk_pos = {pos}
         UNION
-        SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM {anno_db}kaviar_distinct_test WHERE chrom = '{chrom}' AND blk_pos = {pos}
+        SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM {anno_db}kaviar_distinct WHERE chrom = '{chrom}' AND blk_pos = {pos}
         UNION
-        SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM {anno_db}clinvar_distinct_test WHERE chrom = '{chrom}' AND blk_pos = {pos}
+        SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM {anno_db}clinvar_distinct WHERE chrom = '{chrom}' AND blk_pos = {pos}
         UNION
-        SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM {anno_db}dbsnp_test WHERE chrom = '{chrom}' AND blk_pos = {pos}
+        SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM {anno_db}dbsnp WHERE chrom = '{chrom}' AND blk_pos = {pos}
         UNION
-        SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM {anno_db}hgmd_test WHERE chrom = '{chrom}' AND blk_pos = {pos};
+        SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM {anno_db}hgmd WHERE chrom = '{chrom}' AND blk_pos = {pos};
         '''.format(chrom=chrom, pos=pos, ilmn_db=ilmn_spark_prefix, anno_db=anno_spark_prefix)
         # run_query(insert_ilmn_vars)
 
@@ -388,6 +403,7 @@ register_table(ilmn_spark_prefix, 'vars_clinvar')
 for chrom in chroms:
     for pos in var_blocks:
         add_clinvar = " \
+        # insert into vars_clinvar partition (chrom, blk_pos) \
         with vars as ( \
                 SELECT v.var_id, v.pos, v.ref, v.allele, v.rs_id, \
                     v.dbsnp_buildid, v.kav_freq, v.kav_source, \
