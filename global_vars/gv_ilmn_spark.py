@@ -40,21 +40,25 @@ def impala_query(input_query):
     except Exception as e:
         print (e)
 
+def compute_and_register(in_table):
+    print("Registering spark temp table {}...".format(in_table))
+    in_df = sqlContext.parquetFile("{}/{}".format(ilmn_spark_prefix, in_table))
+    in_df.registerTempTable('{}'.format(in_table))ilmn_vars_stats = 'compute stats {ilmn_db}ilmn_vars;'.format(ilmn_db=ilmn_impala_prefix)
+    print("Computing stats for {}".format(in_table))
+    compute_query = "compute stats {}/{}".format(ilmn_impala_prefix, in_table)
+    impala_query(compute_query)
+
 def run_query(input_query):
     sqlContext.sql(input_query)
 
-def check_tables(table1, table2):
-    print ("Checking that rows were preserved between {} and {}".format(table1, table2))
-    in_table1 = sqlContext.parquetFile("{prefix}/{table}".format(prefix=ilmn_spark_prefix, table=table1))
-    in_table1.registerTempTable('t1_df')
-    in_table2 = sqlContext.parquetFile("{prefix}/{table}".format(prefix=ilmn_spark_prefix, table=table2))
-    in_table2.registerTempTable('t2_df')
-    count1 = sqlContext.sql("SELECT COUNT(1) FROM t1_df").collect()
-    count2 = sqlContext.sql("SELECT COUNT(1) FROM t2_df").collect()
+def check_tables(t1_df, t2_df):
+    print ("Checking that rows were preserved between {} and {}".format(t1_df, t2_df))
+    count1 = sqlContext.sql("SELECT COUNT(1) FROM {}".format(t1_df)).collect()
+    count2 = sqlContext.sql("SELECT COUNT(1) FROM {}".format(t2_df)).collect()
     if count1 <= count2:
-        impala_query("drop table {}{}".format(ilmn_impala_prefix, table1))
+        impala_query("drop table {}{}".format(ilmn_impala_prefix, t1_df ))
     else:
-        sys.exit("{} has less rows than {}.".format(table2, table1))
+        sys.exit("{} has less rows than {}.".format(t2_df, t1_df))
 
 def shut_down():
     sqlContext.clearCache()
@@ -297,8 +301,7 @@ for chrom in chroms:
         '''.format(chrom=chrom, pos=pos, ilmn_db=ilmn_spark_prefix, anno_db=anno_spark_prefix)
         # run_query(insert_ilmn_vars)
 
-ilmn_vars_stats = 'compute stats {ilmn_db}ilmn_vars;'.format(ilmn_db=ilmn_impala_prefix)
-# impala_query(ilmn_vars_stats)
+compute_and_register('ilmn_vars')
 
 # ###################
 # ### run snpeff  ###
@@ -395,7 +398,7 @@ for chrom in chroms:
         LEFT JOIN clin
          ON vars.var_id = clin.var_id;
         '''.format(prefix=ilmn_spark_prefix, chrom=chrom, pos=pos)
-        run_query(add_clinvar)
+        # run_query(add_clinvar)
 
 # # compute stats and check that rows were preserved
 # run_query("compute stats {prefix}vars_clinvar;")
