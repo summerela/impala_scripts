@@ -45,7 +45,7 @@ def compute_and_register(in_table):
     in_df = sqlContext.parquetFile("{}/{}".format(ilmn_spark_prefix, in_table))
     in_df.registerTempTable('{}'.format(in_table))
     print("Computing stats for {}".format(in_table))
-    compute_query = "compute stats {}/{}".format(ilmn_impala_prefix, in_table)
+    compute_query = "compute stats {}{}".format(ilmn_impala_prefix, in_table)
     impala_query(compute_query)
 
 def run_query(input_query):
