@@ -369,45 +369,45 @@ for chrom in chrom_list:
         LEFT JOIN clin
          ON vars.var_id = clin.var_id;
         '''.format(chrom=chrom, pos=pos)
-        snpeff.run_query(add_clinvar)
+        # snpeff.run_query(add_clinvar)
 
 # compute stats
-snpeff.run_query("compute stats wgs_ilmn.vars_clinvar;")
+# snpeff.run_query("compute stats wgs_ilmn.vars_clinvar;")
+#
+# check_tables('wgs_ilmn.vars_kaviar', 'wgs_ilmn.vars_clinvar')
 
-check_tables('wgs_ilmn.vars_kaviar', 'wgs_ilmn.vars_clinvar')
+# add hgmd ratings
+for chrom in chrom_list:
+    for pos in snpeff.var_blocks:
+        add_hgmd = '''
+        insert into wgs_ilmn.vars_hgmd partition (chrom, blk_pos)
+        WITH vars as (
+            SELECT v.var_id, v.pos, v.ref, v.allele, v.rs_id,
+                v.dbsnp_buildid, v.kav_freq, v.kav_source,
+                v.clin_sig, v.clin_dbn, v.chrom, v.blk_pos
+            FROM wgs_ilmn.vars_clinvar v
+            WHERE v.chrom = '{chrom}'
+            AND v.blk_pos = {pos}
+          ), hgmd as (
+          SELECT h.var_id, h.id as hgmd_id,
+                h.var_class as hgmd_varclass
+            FROM anno_grch37.hgmd h
+            )
+         SELECT vars.var_id, vars.pos, vars.ref, vars.allele, vars.rs_id,
+                vars.dbsnp_buildid, vars.kav_freq, vars.kav_source,
+                vars.clin_sig, vars.clin_dbn, hgmd.hgmd_id, hgmd.hgmd_varclass,
+                vars.chrom, vars.blk_pos
+            FROM vars
+            LEFT JOIN hgmd
+               ON vars.var_id = hgmd.var_id;
+        '''.format(chrom=chrom, pos=pos)
+        snpeff.run_query(add_hgmd)
 
-# # add hgmd ratings
-# for chrom in chrom_list:
-#     for pos in snpeff.var_blocks:
-#         add_hgmd = '''
-#         insert into wgs_ilmn.vars_hgmd partition (chrom, blk_pos)
-#         WITH vars as (
-#             SELECT v.var_id, v.pos, v.ref, v.allele, v.rs_id,
-#                 v.dbsnp_buildid, v.kav_freq, v.kav_source,
-#                 v.clin_sig, v.clin_dbn, v.chrom, v.blk_pos
-#             FROM wgs_ilmn.vars_clinvar v
-#             WHERE v.chrom = '{chrom}'
-#             AND v.blk_pos = {pos}
-#           ), hgmd as (
-#           SELECT h.var_id, h.id as hgmd_id,
-#                 h.var_class as hgmd_varclass
-#             FROM anno_grch37.hgmd h
-#             )
-#          SELECT vars.var_id, vars.pos, vars.ref, vars.allele, vars.rs_id,
-#                 vars.dbsnp_buildid, vars.kav_freq, vars.kav_source,
-#                 vars.clin_sig, vars.clin_dbn, hgmd.hgmd_id, hgmd.hgmd_varclass,
-#                 vars.chrom, vars.blk_pos
-#             FROM vars
-#             LEFT JOIN hgmd
-#                ON vars.var_id = hgmd.var_id;
-#         '''.format(chrom=chrom, pos=pos)
-#         snpeff.run_query(add_hgmd)
-#
-# # compute stats
-# snpeff.run_query("compute stats wgs_ilmn.vars_hgmd;")
-#
-# check_tables('wgs_ilmn.vars_clinvar', 'wgs_ilmn.vars_hgmd')
-#
+# compute stats
+snpeff.run_query("compute stats wgs_ilmn.vars_hgmd;")
+
+check_tables('wgs_ilmn.vars_clinvar', 'wgs_ilmn.vars_hgmd')
+
 #
 # # add cadd, dann and interpro domain from dbnsfp
 # for chrom in chrom_list:
