@@ -301,7 +301,7 @@ for chrom in chroms:
         '''.format(chrom=chrom, pos=pos, ilmn_db=ilmn_spark_prefix, anno_db=anno_spark_prefix)
         # run_query(insert_ilmn_vars)
 
-compute_and_register('ilmn_vars')
+# compute_and_register('ilmn_vars')
 
 # ###################
 # ### run snpeff  ###
@@ -335,8 +335,7 @@ for chrom in chroms:
             '''.format(chrom=chrom, pos=pos, ilmn_db=ilmn_spark_prefix, anno_db=anno_spark_prefix)
         # run_query(add_dbsnp)
 
-ilmn_dbsnp_stats = 'compute stats {ilmn_db}vars_dbsnp;'.format(ilmn_db=ilmn_impala_prefix)
-# impala_query(ilmn_dbsnp_stats)
+# compute_and_register('vars_dbsnp')
 # check_tables('ilmn_vars', 'vars_dbsnp')
 
 # add kaviar frequency and source from Kaviar
@@ -370,8 +369,7 @@ for chrom in chroms:
         # run_query(add_kaviar)
 
 # compute stats and check that rows were preserved
-ilmn_kaviar_stats = 'compute stats {ilmn_db}vars_kaviar;'.format(ilmn_db=ilmn_impala_prefix)
-# impala_query(ilmn_kaviar_stats)
+compute_and_register('vars_kaviar')
 # check_tables('vars_dbsnp', 'vars_kaviar')
 
 # add clinvar significance and disease identification from clinVar
