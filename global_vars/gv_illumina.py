@@ -458,88 +458,88 @@ for chrom in chrom_list:
         LEFT JOIN dbnsfp
             ON vars.var_id = dbnsfp.var_id;
         '''.format(chrom=chrom, pos=pos)
-        snpeff.run_query(add_dbnsfp)
+        # snpeff.run_query(add_dbnsfp)
 
 # compute stats
-snpeff.run_query("compute stats wgs_ilmn.vars_dbnsfp;")
+# snpeff.run_query("compute stats wgs_ilmn.vars_dbnsfp;")
+#
+# check_tables('wgs_ilmn.vars_hgmd', 'wgs_ilmn.vars_dbnsfp')
+#
+#
+# add gene, transcript and exon id and names from ensembl
+for chrom in chrom_list:
+    for pos in snpeff.var_blocks:
+        add_ensembl = '''
+        INSERT INTO TABLE wgs_ilmn.vars_ensembl partition(chrom, blk_pos)
+        WITH vars AS
+          (SELECT v.var_id,
+                 v.pos,
+                 v.ref,
+                 v.allele,
+                 v.rs_id,
+                 v.dbsnp_buildid,
+                 v.kav_freq,
+                 v.kav_source,
+                 v.clin_sig,
+                 v.clin_dbn,
+                 v.hgmd_id,
+                 v.hgmd_varclass,
+                 v.cadd_raw,
+                 v.dann_score,
+                 v.interpro_domain,
+                 v.chrom,
+                 v.blk_pos
+          FROM wgs_ilmn.vars_dbnsfp v
+          WHERE v.chrom = '{chrom}'
+                  AND v.blk_pos = {pos} ), ens AS
+          (SELECT e.strand,
+                 e.gene_name,
+                 e.gene_id,
+                 e.transcript_name,
+                 e.transcript_id,
+                 e.exon_name,
+                 e.exon_number,
+                 e.chrom,
+                 e.pos,
+                 e.stop
+          FROM anno_grch37.ensembl_distinct e )
+        SELECT vars.var_id,
+                 vars.pos,
+                 vars.ref,
+                 vars.allele,
+                 vars.rs_id,
+                 vars.dbsnp_buildid,
+                 vars.kav_freq,
+                 vars.kav_source,
+                 vars.clin_sig,
+                 vars.clin_dbn,
+                 vars.hgmd_id,
+                 vars.hgmd_varclass,
+                 vars.cadd_raw,
+                 vars.dann_score,
+                 vars.interpro_domain,
+                 ens.strand,
+                 ens.gene_name,
+                 ens.gene_id,
+                 ens.transcript_name,
+                 ens.transcript_id,
+                 ens.exon_name,
+                 ens.exon_number,
+                 vars.chrom,
+                 vars.blk_pos
+        FROM vars
+        LEFT JOIN ens
+            ON vars.chrom = ens.chrom
+                AND (vars.pos
+            BETWEEN ens.pos
+                AND ens.stop);
 
-check_tables('wgs_ilmn.vars_hgmd', 'wgs_ilmn.vars_dbnsfp')
-#
-#
-# # add gene, transcript and exon id and names from ensembl
-# for chrom in chrom_list:
-#     for pos in snpeff.var_blocks:
-#         add_ensembl = '''
-#         INSERT INTO TABLE wgs_ilmn.vars_ensembl partition(chrom, blk_pos)
-#         WITH vars AS
-#           (SELECT v.var_id,
-#                  v.pos,
-#                  v.ref,
-#                  v.allele,
-#                  v.rs_id,
-#                  v.dbsnp_buildid,
-#                  v.kav_freq,
-#                  v.kav_source,
-#                  v.clin_sig,
-#                  v.clin_dbn,
-#                  v.hgmd_id,
-#                  v.hgmd_varclass,
-#                  v.cadd_raw,
-#                  v.dann_score,
-#                  v.interpro_domain,
-#                  v.chrom,
-#                  v.blk_pos
-#           FROM wgs_ilmn.vars_dbnsfp v
-#           WHERE v.chrom = '{chrom}'
-#                   AND v.blk_pos = {pos} ), ens AS
-#           (SELECT e.strand,
-#                  e.gene_name,
-#                  e.gene_id,
-#                  e.transcript_name,
-#                  e.transcript_id,
-#                  e.exon_name,
-#                  e.exon_number,
-#                  e.chrom,
-#                  e.pos,
-#                  e.stop
-#           FROM anno_grch37.ensembl_distinct e )
-#         SELECT vars.var_id,
-#                  vars.pos,
-#                  vars.ref,
-#                  vars.allele,
-#                  vars.rs_id,
-#                  vars.dbsnp_buildid,
-#                  vars.kav_freq,
-#                  vars.kav_source,
-#                  vars.clin_sig,
-#                  vars.clin_dbn,
-#                  vars.hgmd_id,
-#                  vars.hgmd_varclass,
-#                  vars.cadd_raw,
-#                  vars.dann_score,
-#                  vars.interpro_domain,
-#                  ens.strand,
-#                  ens.gene_name,
-#                  ens.gene_id,
-#                  ens.transcript_name,
-#                  ens.transcript_id,
-#                  ens.exon_name,
-#                  ens.exon_number,
-#                  vars.chrom,
-#                  vars.blk_pos
-#         FROM vars
-#         LEFT JOIN ens
-#             ON vars.chrom = ens.chrom
-#                 AND (vars.pos
-#             BETWEEN ens.pos
-#                 AND ens.stop);
-#
-#
-#             '''.format(chrom=chrom, pos=pos)
-#         snpeff.run_query(add_ensembl)
-#
-# check_tables('wgs_ilmn.vars_dbnsfp', 'wgs_ilmn.vars_ensembl')
-# snpeff.run_query("compute stats wgs_ilmn.vars_ensembl")
+
+            '''.format(chrom=chrom, pos=pos)
+        snpeff.run_query(add_ensembl)
+
+check_tables('wgs_ilmn.vars_dbnsfp', 'wgs_ilmn.vars_ensembl')
+snpeff.run_query("compute stats wgs_ilmn.vars_ensembl")
 #
 # #######################################
 # ### ADD snpEff Coding Consequences  ###
