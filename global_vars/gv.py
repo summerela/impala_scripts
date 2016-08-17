@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env pyspark
 
 from pyspark import SparkContext, SparkConf, SQLContext
 import subprocess as sp
