@@ -28,8 +28,9 @@ class snpeff(object):
         self.sqlC.sql("SET spark.sql.parquet.binaryAsString=true")
         self.sqlC.sql("SET spark.sql.parquet.cacheMetadata=true")
         self.in_table = "{}{}{}".format(self.spark_host_prefix, self.ilmn_db, 'vcf_distinct')
-        self.var_df = self.sqlC.sql("select * from {}{}{}".format(self.spark_host_prefix, self.ilmn_db, 'vcf_distinct')
+        self.var_df = self.sqlC.parquetFile(self.in_table)
         self.var_tbl = self.var_df.registerTempTable("var_tbl")
+        self.test = self.sqlC.sql("select * from var_tbl limit 5")
 
     def register_table(self, prefix, in_table):
         print("Registering spark temp table {}...".format(in_table))
@@ -95,6 +96,6 @@ if __name__ == "__main__":
 
     gv = snpeff()
 
-    gv.var_tbl.show()
+    gv.test.show()
 
     gv.shut_down()
