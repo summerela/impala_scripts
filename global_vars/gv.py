@@ -93,6 +93,6 @@ if __name__ == 'main':
 
     gv = gv()
 
-    gv.var_df.show()
+    print gv.var_df.show()
 
     gv.shut_down()
