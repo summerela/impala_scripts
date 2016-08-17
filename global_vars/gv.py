@@ -95,6 +95,6 @@ if __name__ == "__main__":
 
     gv = snpeff()
 
-    print gv.var_tbl.show()
+    gv.var_tbl.show()
 
     gv.shut_down()
