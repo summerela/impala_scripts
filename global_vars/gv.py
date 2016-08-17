@@ -91,7 +91,7 @@ class snpeff(object):
             print("No variants found for chromosome {}".format(input_chrom))
 
 ############################################
-if __name__ == 'main':
+if __name__ == "__main__":
 
     gv = snpeff()
 
