@@ -4,7 +4,7 @@ from pyspark import SparkContext, SparkConf, SQLContext
 import subprocess as sp
 import os
 
-class gv(object):
+class snpeff(object):
 
     # chroms = map(str, range(1, 23)) + ['X', 'Y', 'M']
     chroms = ['X', 'Y']
@@ -21,12 +21,14 @@ class gv(object):
         self.spark_host_prefix = spark_host_prefix
         self.ilmn_db = ilmn_db
         self.anno_db = anno_db
-        self.conf = SparkConf().setAppName("gv_pipeline")
+        self.appname = "run_snpeff"
+        self.conf = SparkConf().setAppName(self.appname)
         self.sc = SparkContext(conf=self.conf)
         self.sqlC = SQLContext(self.sc)
         self.sqlC.sql("SET spark.sql.parquet.binaryAsString=true")
         self.sqlC.sql("SET spark.sql.parquet.cacheMetadata=true")
-        self.var_df = self.sqlC.parquetFile("{}{}{}".format(self.spark_host_prefix, self.ilmn_db, 'vcf_distinct'))
+        self.in_table = "{}{}{}".format(self.spark_host_prefix, self.ilmn_db, 'vcf_distinct')
+        self.var_df = self.sqlC.parquetFile(self.in_table)
         self.var_tbl = self.var_df.registerTempTable("var_tbl")
 
     def register_table(self, prefix, in_table):
@@ -91,8 +93,8 @@ class gv(object):
 ############################################
 if __name__ == 'main':
 
-    gv = gv()
+    gv = snpeff()
 
-    print gv.var_df.show()
+    print gv.var_tbl.show()
 
     gv.shut_down()
