@@ -2,8 +2,7 @@
 
 from pyspark import SparkContext, SparkConf, SQLContext
 import subprocess as sp
-import os
-import logging
+import os, csv, io, logging
 import pandas as pd
 
 logger = logging.getLogger('snpeff')
@@ -74,6 +73,13 @@ class snpeff(object):
         self.sqlC.clearCache()
         self.sc.stop()
 
+    @staticmethod
+    def list_to_csv_str(x):
+        """Given a list of strings, returns a properly-csv-formatted string."""
+        output = io.StringIO("")
+        csv.writer(output).writerow(x)
+        return output.getvalue().strip()  # remove extra newline
+
     def run_snpeff(self, input_chrom):
         '''
         Run snpeff by chromosome on ilmn_vars table
@@ -85,8 +91,7 @@ class snpeff(object):
         snp_out = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
         snpeff_cmd = r'''java -d64 -Xmx32g -jar {snpeff} -t -v GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
                                                                                           vcf_out=snp_out)
-        for line in var_df:
-            self.sc.parallelize(line).pipe(snp_out).collect()
+        var_df.map(self.list_to_csv_str).pipe(snp_out).collect()
         # run the subprocess command
         # ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
         # stdout, stderr = ps.communicate(var_df)
