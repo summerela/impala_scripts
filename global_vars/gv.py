@@ -81,21 +81,22 @@ class snpeff(object):
         # select variants by chromosome
         var_df =  self.sqlC.sql("select * from var_tbl where chrom = {}".format(input_chrom))
         # run snpeff on query results
-        if not var_df.empty:
-            snp_out = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
-            snpeff_cmd = r'''java -d64 -Xmx32g -jar {snpeff} -t -v GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
-                                                                                              vcf_out=snp_out)
-            # run the subprocess command
-            ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
-            stdout, stderr = ps.communicate(var_df.to_csv(sep='\t', header=True, index=False))
-            if stdout:
-                logger.info(stdout)
-            if stderr:
-                logger.error(stderr)
-                print("Error encountered on chrom {}, check snpeff.log".format(input_chrom))
-
-        else:
-            print("No variants found for chromosome {}".format(input_chrom))
+        # if not var_df.empty:
+        #     snp_out = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
+        #     snpeff_cmd = r'''java -d64 -Xmx32g -jar {snpeff} -t -v GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
+        #                                                                                       vcf_out=snp_out)
+        #     # run the subprocess command
+        #     ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
+        #     stdout, stderr = ps.communicate(var_df.to_csv(sep='\t', header=True, index=False))
+        #     if stdout:
+        #         logger.info(stdout)
+        #     if stderr:
+        #         logger.error(stderr)
+        #         print("Error encountered on chrom {}, check snpeff.log".format(input_chrom))
+        #
+        # else:
+        #     print("No variants found for chromosome {}".format(input_chrom))
+        print var_df.take(10)
 
 ############################################
 if __name__ == "__main__":
