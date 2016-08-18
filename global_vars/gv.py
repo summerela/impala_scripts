@@ -4,6 +4,7 @@ from pyspark import SparkContext, SparkConf, SQLContext
 import subprocess as sp
 import os
 import logging
+import pandas as pd
 
 logger = logging.getLogger('snpeff')
 hdlr = logging.FileHandler('snpeff.log')
