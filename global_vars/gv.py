@@ -27,7 +27,7 @@ class snpeff(object):
     snpsift_jar = '{}share/snpEff/SnpSift.jar'.format(tool_path)
 
     def __init__(self, spark_host_prefix='hdfs://ip-10-0-0-118.ec2.internal:8020/itmi/', ilmn_db='wgs_ilmn.db/', \
-                 anno_db='anno_grch37.db/'):
+                 anno_db='anno_grch37.db/', out_dir='./'):
         self.spark_host_prefix = spark_host_prefix
         self.ilmn_db = ilmn_db
         self.anno_db = anno_db
@@ -40,6 +40,7 @@ class snpeff(object):
         self.in_table = "{}{}{}".format(self.spark_host_prefix, self.ilmn_db, 'vcf_distinct')
         self.var_df = self.sqlC.parquetFile(self.in_table)
         self.var_tbl = self.var_df.registerTempTable("var_tbl")
+        self.out_dir = out_dir
 
     def register_table(self, prefix, in_table):
         print("Registering spark temp table {}...".format(in_table))
@@ -98,6 +99,8 @@ class snpeff(object):
 if __name__ == "__main__":
 
     gv = snpeff()
+
+    gv.check_outdir('./snpeff_out')
 
     for chrom in gv.chroms:
         gv.run_snpeff(chrom)
