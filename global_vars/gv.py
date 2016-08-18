@@ -85,7 +85,7 @@ class snpeff(object):
         snpeff_cmd = r'''java -d64 -Xmx32g -jar {snpeff} -t -v GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
                                                                                           vcf_out=snp_out)
 
-        print var_df.dtypes
+        print var_df.map(lambda line: line.split('\t')).collect()
 
         #stuff
         # run the subprocess command
