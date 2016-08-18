@@ -3,6 +3,15 @@
 from pyspark import SparkContext, SparkConf, SQLContext
 import subprocess as sp
 import os
+import logging
+
+logger = logging.getLogger('snpeff')
+hdlr = logging.FileHandler('snpeff.log')
+logger.addHandler(hdlr)
+logger.setLevel(logging.INFO)
+
+# disable extraneous pandas warning
+pd.options.mode.chained_assignment = None
 
 class snpeff(object):
 
@@ -30,7 +39,6 @@ class snpeff(object):
         self.in_table = "{}{}{}".format(self.spark_host_prefix, self.ilmn_db, 'vcf_distinct')
         self.var_df = self.sqlC.parquetFile(self.in_table)
         self.var_tbl = self.var_df.registerTempTable("var_tbl")
-        self.test = self.sqlC.sql("select * from var_tbl limit 5")
 
     def register_table(self, prefix, in_table):
         print("Registering spark temp table {}...".format(in_table))
@@ -70,14 +78,11 @@ class snpeff(object):
         :return: vcf files of annoated variants for each chrom
         '''
         # select variants by chromosome
-        get_vars_query = "SELECT chrom as '#chrom', pos, var_id as id, ref, allele as alt, 100 as qual, \
-                         'PASS' as filter, 'GT' as 'format', '.' as INFO from wgs_ilmn.ilmn_vars \
-                         where chrom = '{}'".format(input_chrom)
-        var_df = self.pandas_query(get_vars_query)
+        var_df =  self.sqlC.sql("select * from var_tbl where chrom = {}".format(input_chrom))
         # run snpeff on query results
         if not var_df.empty:
             snp_out = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
-            snpeff_cmd = r'''java -d64 -Xmx4g -jar {snpeff} -t -v GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
+            snpeff_cmd = r'''java -d64 -Xmx32g -jar {snpeff} -t -v GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
                                                                                               vcf_out=snp_out)
             # run the subprocess command
             ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
@@ -96,6 +101,7 @@ if __name__ == "__main__":
 
     gv = snpeff()
 
-    gv.test.show()
+    for chrom in gv.chroms:
+        gv.run_snpeff(chrom)
 
     gv.shut_down()
