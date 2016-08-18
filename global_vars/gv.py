@@ -3,13 +3,7 @@
 from pyspark import SparkContext, SparkConf, SQLContext
 import subprocess as sp
 import os
-import logging
 import pandas as pd
-
-logger = logging.getLogger('snpeff')
-hdlr = logging.FileHandler('snpeff.log')
-logger.addHandler(hdlr)
-logger.setLevel(logging.INFO)
 
 # disable extraneous pandas warning
 pd.options.mode.chained_assignment = None
@@ -87,12 +81,6 @@ class snpeff(object):
                                                                                           vcf_out=snp_out)
         # run the subprocess command
         ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
-        stdout, stderr = ps.communicate(var_df.to_csv(sep='\t', header=True, index=False))
-        if stdout:
-            logger.info(stdout)
-        if stderr:
-            logger.error(stderr)
-            print("Error encountered on chrom {}, check snpeff.log".format(input_chrom))
 
 
 ############################################
