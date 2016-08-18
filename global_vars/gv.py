@@ -88,7 +88,8 @@ class snpeff(object):
         # stuff= var_df.map(lambda line: line.split('\t')).collect()
         # print stuff.take(5)
 
-        print var_df.take(5)
+        var_df.rdd.map(lambda x: ",".join(map(str, x))).coalesce(1).saveAsTextFile("test.csv")
+
 
 
         # run the subprocess command
