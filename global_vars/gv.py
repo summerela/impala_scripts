@@ -87,10 +87,10 @@ class snpeff(object):
                                                                                           vcf_out=snp_out)
         # run the subprocess command
         ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
-        stdout, stderr = ps.communicate(var_df)
+        stdout, stderr = ps.communicate(var_df.saveAsParquetFile('./out'))
         if stdout:
             logger.info(stdout)
-        if stderr:
+        elif stderr:
             logger.error(stderr)
             raise SystemExit("Error encountered on chrom {}, check snpeff.log".format(input_chrom))
 
