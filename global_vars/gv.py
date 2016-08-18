@@ -88,8 +88,7 @@ class snpeff(object):
         snp_out = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
         snpeff_cmd = r'''java -d64 -Xmx32g -jar {snpeff} -t -v GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
                                                                                           vcf_out=snp_out)
-        test = var_df.map(self.toCSVLine)
-        print test.take(5)
+        print var_df.take(10)
 
         #stuff
         # run the subprocess command
