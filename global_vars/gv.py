@@ -79,7 +79,7 @@ class snpeff(object):
         :return: vcf files of annoated variants for each chrom
         '''
         # select variants by chromosome
-        var_df =  self.sqlC.sql("select * from var_tbl where chrom = {}".format(input_chrom))
+        var_df =  self.sqlC.sql("select * from var_tbl where chrom = '{}'".format(input_chrom))
         # run snpeff on query results
         # if not var_df.empty:
         #     snp_out = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
