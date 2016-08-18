@@ -91,6 +91,8 @@ class snpeff(object):
         test = var_df.map(self.toCSVLine)
         for line in test:
             print(line)
+
+        #stuff
         # run the subprocess command
         # ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
         # stdout, stderr = ps.communicate(var_df)
