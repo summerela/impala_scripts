@@ -81,7 +81,7 @@ class snpeff(object):
         # select variants by chromosome
         var_df =  self.sqlC.sql("select * from var_tbl where chrom = '{}'".format(input_chrom))
         # run snpeff on query results
-        if not var_df.empty:
+        if not var_df.isEmpty:
             snp_out = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
             snpeff_cmd = r'''java -d64 -Xmx32g -jar {snpeff} -t -v GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
                                                                                               vcf_out=snp_out)
