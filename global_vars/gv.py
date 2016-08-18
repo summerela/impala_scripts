@@ -85,10 +85,12 @@ class snpeff(object):
         snpeff_cmd = r'''java -d64 -Xmx32g -jar {snpeff} -t -v GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
                                                                                           vcf_out=snp_out)
 
-        stuff= var_df.map(lambda line: line.split('\t')).collect()
-        print stuff.take(5)
+        # stuff= var_df.map(lambda line: line.split('\t')).collect()
+        # print stuff.take(5)
 
-        #stuff
+        print var_df.take(5)
+
+
         # run the subprocess command
         # ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
         # stdout, stderr = ps.communicate(var_df)
