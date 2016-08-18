@@ -73,6 +73,10 @@ class snpeff(object):
         self.sqlC.clearCache()
         self.sc.stop()
 
+    @staticmethod
+    def toCSVLine(data):
+        return ','.join(str(d) for d in data)
+
     def run_snpeff(self, input_chrom):
         '''
         Run snpeff by chromosome on ilmn_vars table
@@ -84,7 +88,7 @@ class snpeff(object):
         snp_out = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
         snpeff_cmd = r'''java -d64 -Xmx32g -jar {snpeff} -t -v GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar,
                                                                                           vcf_out=snp_out)
-        var_df.map(','.join(str(d) for d in var_df)).pipe(snp_out).collect()
+        var_df.map(toCSVLine).pipe(snp_out)
         # run the subprocess command
         # ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
         # stdout, stderr = ps.communicate(var_df)
