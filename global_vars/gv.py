@@ -73,7 +73,8 @@ class snpeff(object):
         self.sqlC.clearCache()
         self.sc.stop()
 
-    def toCSVLine(self, data):
+    @staticmethod
+    def toCSVLine(data):
         return ','.join(str(d) for d in data)
 
     def run_snpeff(self, input_chrom):
