@@ -83,9 +83,7 @@ class run_admix(object):
         out_panel = "{}/sorted_panel.txt".format(self.ref_dir)
 
         try:
-            # read in 1000g integrated panel file
-            header = ['sample', 'pop', 'super_pop', 'gender']
-            panel = pd.read_csv(self.panel_file, sep='\t', index_col=False, header=header)
+            panel = pd.read_csv(self.panel_file, sep='\t', index_col=False, header=1)
             print panel.head(5)
             # panel.sort_values(by=['super_pop', 'sub_pop'], axis=0, inplace=True)
             # # create super_pop.txt file for super populations
