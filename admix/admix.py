@@ -99,7 +99,7 @@ class run_admix(object):
             sub_out.to_csv("{}/sub_pop.txt".format(self.ref_dir), index=False, names=['subject', 'sub_pop'],
                            sep='\t', header=False)
             # create sorted_ref.txt for sorting marker tsv by pop in format family_id | subject_id
-            sorter_out = panel[['family', 'subject']]
+            sorter_out = panel[['subject', 'subject']]
             print("Saving sorted panel file as {}".format(out_panel))
             sorter_out.to_csv("{}/sorted_panel.txt".format(self.ref_dir), index=False, sep='\t', header=False)
         except Exception as e:
