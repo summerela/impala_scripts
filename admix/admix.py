@@ -16,7 +16,6 @@ Run ADMIXTURE
 import os
 import subprocess as sp
 import pandas as pd
-import glob
 import sys
 
 class run_admix(object):
@@ -43,7 +42,6 @@ class run_admix(object):
     #################################################################################
     ## setup basic methods for working with files and calling subprocess commands  ##
     #################################################################################
-
     @staticmethod
     # create function to run bash command with subprocess
     def subprocess_cmd(command, input_dir):
