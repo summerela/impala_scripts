@@ -76,14 +76,15 @@ class run_admix(object):
     def create_sorter_and_pop(self):
         '''
         Creates sorted popuplation files for reference data set for super and subpopulations
-        :param panel_file: patht to tab-delimited .panel file in format [family_id | subject_id | super_pop | sub_pop ]
+        :param panel_file: patht to tab-delimited .panel file in format [subject_id | super_pop | sub_pop  | gender]
         :return sorted_ref.txt a two column tsv ( sample | pop ) to be fed to plink
         for sorting by populations and super_pop.txt and sub_pop.txt
         '''
         out_panel = "{}/sorted_panel.txt".format(self.ref_dir)
 
         try:
-            panel_cols = ['family', 'subject', 'super_pop', 'sub_pop']
+            # read in 1000g integrated panel file
+            panel_cols = ['sample', 'pop', 'super_pop', 'gender']
             panel = pd.read_csv(self.panel_file, sep='\t', names=panel_cols, index_col=False)
             print panel.head(5)
             # panel.sort_values(by=['super_pop', 'sub_pop'], axis=0, inplace=True)
