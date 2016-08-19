@@ -112,6 +112,8 @@ if __name__ == '__main__':
                       panel_file='/users/selasady/shared/admix/vcf_files/', ref_dir='/users/selasady/shared/admix', \
                       ref_base='all_chroms_1000g_pruned')
 
+    admix.create_sorter_and_pop()
+
 
 
     # # cmd to filter reference ped file to retain MAF between .05 and 0.5 and LD 50 5 0.5

@@ -64,7 +64,7 @@ class snpeff_pipeline(object):
         Run programs in bash via subprocess
         :param command: command string as would be run on the command line
         :param input_dir: optional directory to run command in, default cwd
-        :return: runs bash command
+   :return: runs bash command
         '''
         print ("Running \n {}".format(command))
         ps = sp.Popen(command, shell=True, stdout=sp.PIPE, stderr=sp.PIPE, cwd=input_dir)
