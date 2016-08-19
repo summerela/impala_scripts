@@ -83,24 +83,25 @@ class run_admix(object):
         out_panel = "{}/sorted_panel.txt".format(self.ref_dir)
 
         try:
+            # read in 1000g admix panel file
             panel = pd.read_csv(self.panel_file, sep='\t', index_col=False, header=1,
                                 names=['subject', 'sub_pop', 'super_pop', 'gender'])
+            # sort the panel by super and then sub pop for ease of downstream analysis
             panel.sort_values(by=['super_pop', 'sub_pop'], axis=0, inplace=True)
-            print panel.head(5)
-            # # create super_pop.txt file for super populations
-            # super_out = panel[['subject', 'super_pop']]
-            # print ("Creating super_pop.txt...")
-            # super_out.to_csv("{}/super_pop.txt".format(self.ref_dir), index=False,
-            #                  names=['sample', 'super_pop'], sep='\t', header=False)
-            # # create sub_pop.txt for subpopulations
-            # sub_out = panel[['subject', 'sub_pop']]
-            # print ("Creating sub_pop.txt...")
-            # sub_out.to_csv("{}/sub_pop.txt".format(self.ref_dir), index=False, names=['sample', 'sub_pop'],
-            #                sep='\t', header=False)
-            # # create sorted_ref.txt for sorting marker tsv by pop in format family_id | subject_id
-            # sorter_out = panel[['family', 'subject']]
-            # print("Saving sorted panel file as {}".format(out_panel))
-            # sorter_out.to_csv("{}/sorted_panel.txt".format(self.ref_dir), index=False, sep='\t', header=False)
+            # create super_pop.txt file for super populations
+            super_out = panel[['subject', 'super_pop']]
+            print ("Creating super_pop.txt...")
+            super_out.to_csv("{}/super_pop.txt".format(self.ref_dir), index=False,
+                             names=['subject', 'super_pop'], sep='\t', header=False)
+            # create sub_pop.txt for subpopulations
+            sub_out = panel[['subject', 'sub_pop']]
+            print ("Creating sub_pop.txt...")
+            sub_out.to_csv("{}/sub_pop.txt".format(self.ref_dir), index=False, names=['subject', 'sub_pop'],
+                           sep='\t', header=False)
+            # create sorted_ref.txt for sorting marker tsv by pop in format family_id | subject_id
+            sorter_out = panel[['family', 'subject']]
+            print("Saving sorted panel file as {}".format(out_panel))
+            sorter_out.to_csv("{}/sorted_panel.txt".format(self.ref_dir), index=False, sep='\t', header=False)
         except Exception as e:
             raise SystemExit("{}".format(e))
 
