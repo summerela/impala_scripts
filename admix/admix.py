@@ -109,8 +109,9 @@ class run_admix(object):
 #################################################
 if __name__ == '__main__':
 
-    admix = run_admix(vcf_dir='/users/selasady/shared/admix/vcf_files/integrated_call_samples_v3.20130502.ALL.panel', \
-                      panel_file='/users/selasady/shared/admix/vcf_files/', ref_dir='/users/selasady/shared/admix', \
+    admix = run_admix(vcf_dir='/users/selasady/shared/admix/vcf_files/', \
+                      panel_file='/users/selasady/shared/admix/integrated_call_samples_v3.20130502.ALL.panel', \
+                      ref_dir='/users/selasady/shared/admix', \
                       ref_base='all_chroms_1000g_pruned')
 
     admix.create_sorter_and_pop()
