@@ -7,8 +7,27 @@ Requires:
 - SnpEff 4.2 (build 2015-12-05)
 - Gzipped individual vcf files, illumina format
 
+#### 1000 Genomes Phase 3 Reference Files #####
+Files were created as outlined here:
+http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/admixture_files/README.admixture_20141217
 
-Run ADMIXTURE
+PED file:
+http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/admixture_files/ALL.wgs.phase3_shapeit2_filtered.20141217.maf0.05.ped
+
+MAP file:
+http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/admixture_files/ALL.wgs.phase3_shapeit2_filtered.20141217.maf0.05.map
+
+Panel file:
+http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/integrated_call_samples_v3.20130502.ALL.panel
+
+References:
+LD Pruning: http://pngu.mgh.harvard.edu/~purcell/plink/summary.shtml#prune
+
+Pre-Formatted Files are located at:
+/users/selasady/shared/admix
+
+
+run_admix()
 - creates reference marker file set
 - converts VCF of interest to plink bed/bim/fam format
 - runs admixture
@@ -332,6 +351,7 @@ if __name__ == '__main__':
 
 #######################################
 
+    # TODO comment this out if marker file already created
     # create files for 1000g markers
     admix.create_sorter_and_pop()
     admix.filter_ped_bed()
