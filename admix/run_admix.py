@@ -40,8 +40,7 @@ class run_admix(object):
         self.ref_panel = ''.join([f for f in os.listdir(self.ref_dir) if f.endswith('.panel')])
         self.ref_panel_file = "{}/{}".format(self.ref_dir, str(self.ref_panel))
         # cmd to filter reference ped file to retain MAF between .05 and 0.5 and LD 50 5 0.5
-        self.plink_filter_ped_cmd = "{plink} --file {ref}/{ped} --out {ref}/{ped}_maf_ld --maf 0.05 --max-maf .49 \
-            --indep-pairwise 50 5 0.5".format(plink=self.plink_path, ref=self.ref_dir, ped=self.ref_base)
+
         self.plink_filter_bed_cmd = "{plink} --bfile {ref}/{bed_base} --out {ref}/{bed_base}_maf_ld --maf 0.05 --max-maf .49 \
             --indep-pairwise 50 5 0.5".format(plink=self.plink_path, bed_base=self.ref_base, ref=self.ref_dir)
         # cmd to retain only maf/ld pruned variants and convert ped to bed/bim/fam file using plink
@@ -212,9 +211,9 @@ class run_admix(object):
         '''
         bedList = []
         base_name = self.get_file_base(input_vcf, 2)
-        bedList.append(str(base_name + '.bed'))
-        bedList.append(str(base_name + '.bim'))
-        bedList.append(str(base_name + '.fam'))
+        bedList.append(str(self.vcf_dir + '/' + base_name + '.bed'))
+        bedList.append(str(self.vcf_dir + '/' + base_name + '.bim'))
+        bedList.append(str(self.vcf_dir + '/' + base_name + '.fam'))
         bedList.sort()
         return bedList
 
