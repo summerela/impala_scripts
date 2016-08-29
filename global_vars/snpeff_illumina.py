@@ -31,8 +31,6 @@ class snpeff(object):
         self.appname = "run_snpeff"
         self.conf = SparkConf().setAppName(self.appname) \
         .set("spark.sql.parquet.compression.codec", "snappy") \
-        # spark executor memory per cluster is maxed at 5024 total
-        .set("spark.yarn.executor.memoryOverhead", 1024)
         #                    .set("spark.yarn.executor.cores", 1)
         self.sc = SparkContext(conf=self.conf)
         self.sqlC = SQLContext(self.sc)
