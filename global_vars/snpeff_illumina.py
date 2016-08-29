@@ -124,7 +124,7 @@ class snpeff(object):
                       "ANN[*].HGVS_P"'.format(self.snpsift_jar)
 
         rdd = self.sqlC.parquetFile(files) \
-            # .map(self.var2tsv) \
+            .map(self.var2tsv) \
             # .pipe(snpeff_cmd) \
             # .pipe(self.snpeff_oneperline) \
             # .pipe(extract_cmd) \
