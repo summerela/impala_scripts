@@ -30,8 +30,9 @@ class snpeff(object):
         self.anno_db = anno_db
         self.appname = "run_snpeff"
         self.conf = SparkConf().setAppName(self.appname) \
-            .set("spark.sql.parquet.compression.codec", "snappy") \
-            .set("spark.yarn.executor.memoryOverhead", 1024)
+        .set("spark.sql.parquet.compression.codec", "snappy") \
+        # spark executor memory per cluster is maxed at 5024 total
+        .set("spark.yarn.executor.memoryOverhead", 1024)
         #                    .set("spark.yarn.executor.cores", 1)
         self.sc = SparkContext(conf=self.conf)
         self.sqlC = SQLContext(self.sc)
@@ -105,9 +106,9 @@ class snpeff(object):
         Run snpeff by chromosome on ilmn_vars table
         :return: vcf files of annotated variants for each chrom
         '''
-        files = '{}/chrom={}'.format(self.in_table, input_chrom)
+        # files = '{}/chrom={}'.format(self.in_table, input_chrom)
 
-        files = '/tmp/gv_test'
+        files = 'hdfs://ip-10-0-0-118.ec2.internal:8020/tmp/gv_test'
         # Test file is in /tmp/gv/chrom=1/ff*.parq.  Note that hadoop correctly
         # interprets the chrom=1 as a partition and includes it as an additional
         # 'chrom' column in the RDD
@@ -137,7 +138,7 @@ class snpeff(object):
         # df.write.parquet('/tmp/gv_out')
         sys.exit(0)
 
-        var_df.rdd.map(lambda x: ",".join(map(str, x))).coalesce(1).saveAsTextFile("test.csv")
+        # var_df.rdd.map(lambda x: ",".join(map(str, x))).coalesce(1).saveAsTextFile("test.csv")
 
 
 
