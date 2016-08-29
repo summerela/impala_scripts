@@ -124,11 +124,11 @@ class snpeff(object):
                       "ANN[*].HGVS_P"'.format(self.snpsift_jar)
 
         rdd = self.sqlC.parquetFile(files) \
-            .map(self.var2tsv) \
-            .pipe(snpeff_cmd) \
-            .pipe(self.snpeff_oneperline) \
-            .pipe(extract_cmd) \
-            .filter(lambda l: not l.startswith('#')) \
+            # .map(self.var2tsv) \
+            # .pipe(snpeff_cmd) \
+            # .pipe(self.snpeff_oneperline) \
+            # .pipe(extract_cmd) \
+            # .filter(lambda l: not l.startswith('#')) \
             # .map(lambda l: Row(chrom=l[0], pos=int(l[1], id=l[2]))) \
             # .map(lambda l: Row(name=l))
         df = self.sqlC.createDataFrame(rdd)
