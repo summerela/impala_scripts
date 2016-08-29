@@ -31,7 +31,7 @@ class snpeff(object):
         self.appname = "run_snpeff"
         self.conf = SparkConf().setAppName(self.appname) \
             .set("spark.sql.parquet.compression.codec", "snappy") \
-            .set("spark.yarn.executor.memoryOverhead", 14336)
+            .set("spark.yarn.executor.memoryOverhead", 5275)
         #                    .set("spark.yarn.executor.cores", 1)
         self.sc = SparkContext(conf=self.conf)
         self.sqlC = SQLContext(self.sc)
@@ -130,7 +130,7 @@ class snpeff(object):
             .pipe(self.snpeff_oneperline) \
             .pipe(extract_cmd) \
             .filter(lambda l: not l.startswith('#')) \
-            .map(lambda l: Row(chrom=l[0], pos=int(l[1], id=l[2]))) \
+            # .map(lambda l: Row(chrom=l[0], pos=int(l[1], id=l[2]))) \
             # .map(lambda l: Row(name=l))
         df = self.sqlC.createDataFrame(rdd)
         print (df.take(5))
