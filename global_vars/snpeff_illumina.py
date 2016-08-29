@@ -31,7 +31,7 @@ class snpeff(object):
         self.appname = "run_snpeff"
         self.conf = SparkConf().setAppName(self.appname) \
             .set("spark.sql.parquet.compression.codec", "snappy") \
-            .set("spark.yarn.executor.memoryOverhead", 5275)
+            .set("spark.yarn.executor.memoryOverhead", 1024)
         #                    .set("spark.yarn.executor.cores", 1)
         self.sc = SparkContext(conf=self.conf)
         self.sqlC = SQLContext(self.sc)
@@ -117,7 +117,7 @@ class snpeff(object):
         # help)
         snpeff_cmd = 'java -d64 -Xmx32g -jar {} -noStats -v GRCh37.75'.format(self.snpeff_jar)
 
-        extract_cmd = 'java -Xmx4g -jar {} extractFields - \
+        extract_cmd = 'java -Xmx32g -jar {} extractFields - \
                       CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" \
                       "ANN[*].EFFECT" "ANN[*].IMPACT" "ANN[*].FEATURE" \
                       "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" \
