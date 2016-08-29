@@ -306,7 +306,7 @@ class run_admix(object):
         '''
         if self.population == 'super':
             print("Running admixture with super populations for {}".format(merged_bed))
-            super_cmd = "nohup {} -j4 {} --supervised 5".format(self.admixture_path, merged_bed)
+            super_cmd = "nohup {} -j4 {}{} --supervised 5".format(self.admixture_path, self.vcf_dir, merged_bed)
             self.subprocess_cmd(super_cmd)
         elif self.population == 'sub':
             print("Running admixture with sub-populations for {}".format(merged_bed))
