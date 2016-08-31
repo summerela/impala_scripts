@@ -161,7 +161,8 @@ class run_admix(object):
         :return: snplist.txt of filtered marker variants
         '''
         print ("Creating marker file at {}/snplist.txt".format(self.ref_dir))
-        bim_file = "{ref_dir}/1000g_marker.bim".format(ref_dir=self.ref_dir)
+        # bim_file = "{ref_dir}/1000g_marker.bim".format(ref_dir=self.ref_dir)
+        bim_file = "{ref_dir}/1kg_phase1_all.bim".format(ref_dir=self.ref_dir)
         # pull out chrom and position from bim file
         ref_bim = pd.read_csv(bim_file, sep='\t', header=None, usecols=[0, 3], names=['chrom', 'pos'])
         # sort by chrom and pos
@@ -342,20 +343,28 @@ class run_admix(object):
 #################################################
 if __name__ == '__main__':
 
-    # update these options with each run
-    admix = run_admix(vcf_dir='/users/selasady/shared/admix/vcf_files/', \
-                      panel_file='/users/selasady/shared/admix/integrated_call_samples_v3.20130502.ALL.panel', \
-                      ref_dir='/users/selasady/shared/admix', \
-                      ref_base='ALL.wgs.phase3_shapeit2_filtered.20141217.maf0.05',
+    # phase3 testing
+    # admix = run_admix(vcf_dir='/users/selasady/shared/admix/vcf_files/', \
+    #                   panel_file='/users/selasady/shared/admix/integrated_call_samples_v3.20130502.ALL.panel', \
+    #                   ref_dir='/users/selasady/shared/admix/', \
+    #                   ref_base='ALL.wgs.phase3_shapeit2_filtered.20141217.maf0.05',
+    #                   population='super')
+
+    # phase1 testing
+    admix = run_admix(vcf_dir='/users/selasady/my_titan_itmi/impala_scripts/admix/vcf_files/', \
+                      panel_file='/users/selasady/my_titan_itmi/impala_scripts/admix/hapmap_phase2_panel.txt', \
+                      ref_dir='/users/selasady/my_titan_itmi/impala_scripts/admix/', \
+                      ref_base='1kg_phase1_all',
                       population='super')
+
 
 #######################################
 
     # TODO comment this out if marker file already created
     # create files for 1000g markers
     admix.create_sorter_and_pop()
-    admix.filter_ped_bed()
-    admix.ped2bed()
+    # admix.filter_ped_bed()
+    # admix.ped2bed()
     admix.make_snp_list()
 
     # create genome_trimmed.vcf

@@ -30,7 +30,8 @@ class snpeff(object):
         self.anno_db = anno_db
         self.appname = "run_snpeff"
         self.conf = SparkConf().setAppName(self.appname) \
-        .set("spark.sql.parquet.compression.codec", "snappy") \
+            .set("spark.sql.parquet.compression.codec", "snappy") \
+            .set("spark.yarn.executor.memoryOverhead", 14336)
         #                    .set("spark.yarn.executor.cores", 1)
         self.sc = SparkContext(conf=self.conf)
         self.sqlC = SQLContext(self.sc)
@@ -64,28 +65,13 @@ class snpeff(object):
 
     @staticmethod
     def check_outdir(output_dir):
-        '''
-        Check that output dir exists
-        and if not, create it
-        :param output_dir:
-        :return:
-        '''
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
     def run_query(self, input_query):
-        '''
-        Run a query using sqlContext
-        :param input_query:
-        :return:
-        '''
         self.sqlC.sql(input_query)
 
     def shut_down(self):
-        '''
-        Close down spark connection object
-        :return:
-        '''
         self.sqlC.clearCache()
         self.sc.stop()
 
@@ -104,19 +90,19 @@ class snpeff(object):
         Run snpeff by chromosome on ilmn_vars table
         :return: vcf files of annotated variants for each chrom
         '''
-        # files = '{}/chrom={}'.format(self.in_table, input_chrom)
+        files = '{}/chrom={}'.format(self.in_table, input_chrom)
 
-        files = 'hdfs://ip-10-0-0-118.ec2.internal:8020/tmp/gv_test'
-        # Test file is in /tmp/gv/chrom=1/ff*.parq.  Note that hadoop correctly
-        # interprets the chrom=1 as a partition and includes it as an additional
-        # 'chrom' column in the RDD
+        files = '/tmp/gv_test'
+        # Test file is in /tmp/gv_test/chrom=1/blk_pos=1/ff*.parq.  Note that
+        # hadoop correctly interprets the chrom=1 and blk_pos=1 as a partitions
+        # and includes them as additional 'chrom' and blk_pos columns in the RDD
 
         # Do not run snpEff with stats or threads (Spark job is distributed and
         # threading is outside of resource management and likely won't even
         # help)
-        snpeff_cmd = 'java -d64 -Xmx32g -jar {} -noStats -v GRCh37.75'.format(self.snpeff_jar)
+        snpeff_cmd = 'java -d64 -Xmx16g -jar {} -noStats -v GRCh37.75'.format(self.snpeff_jar)
 
-        extract_cmd = 'java -Xmx32g -jar {} extractFields - \
+        extract_cmd = 'java -Xmx4g -jar {} extractFields - \
                       CHROM POS ID REF ALT "ANN[*].GENE" "ANN[*].GENEID" \
                       "ANN[*].EFFECT" "ANN[*].IMPACT" "ANN[*].FEATURE" \
                       "ANN[*].FEATUREID" "ANN[*].BIOTYPE" "ANN[*].RANK" \
@@ -125,29 +111,40 @@ class snpeff(object):
 
         rdd = self.sqlC.parquetFile(files) \
             .map(self.var2tsv) \
-            # .pipe(snpeff_cmd) \
-            # .pipe(self.snpeff_oneperline) \
-            # .pipe(extract_cmd) \
-            # .filter(lambda l: not l.startswith('#')) \
-            # .map(lambda l: Row(chrom=l[0], pos=int(l[1], id=l[2]))) \
-            # .map(lambda l: Row(name=l))
+            .pipe(snpeff_cmd) \
+            .pipe(self.snpeff_oneperline) \
+            .pipe(extract_cmd) \
+            .filter(lambda l: not l.startswith('#')).map(lambda l: Row(name=l))
+            #  .map(lambda l: Row(chrom=tsv[0], pos=int(tsv[1], id=tsv[2])))
+
+
+
         df = self.sqlC.createDataFrame(rdd)
         print (df.take(5))
         # df.write.parquet('/tmp/gv_out')
         sys.exit(0)
 
-        # var_df.rdd.map(lambda x: ",".join(map(str, x))).coalesce(1).saveAsTextFile("test.csv")
+    # select variants by chromosome
+    #        var_df =  self.sqlC.sql("select * from var_tbl where chrom = '{}'".format(input_chrom))
+    # run snpeff on query results
+    #        snp_out = "{}/chr{}_snpeff.vcf".format(self.out_dir, input_chrom)
+    #        snpeff_cmd = r'''java -d64 -Xmx32g -jar {snpeff} -t -v GRCh37.75 > {vcf_out}'''.format(snpeff=self.snpeff_jar, vcf_out=snp_out)
+
+    # tsv_df = var_df.map(lambda r: r[0])
+    # stuff= var_df.map(lambda line: line.split('\t')).collect()
+
+    # var_df.rdd.map(lambda x: ",".join(map(str, x))).coalesce(1).saveAsTextFile("test.csv")
 
 
 
-        # run the subprocess command
-        # ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
-        # stdout, stderr = ps.communicate(var_df)
-        # if stdout:
-        #     logger.info(stdout)
-        # elif stderr:
-        #     logger.error(stderr)
-        #     raise SystemExit("Error encountered on chrom {}, check snpeff.log".format(input_chrom))
+    # run the subprocess command
+    # ps = sp.Popen(snpeff_cmd, shell=True, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, cwd=os.getcwd())
+    # stdout, stderr = ps.communicate(var_df)
+    # if stdout:
+    #     logger.info(stdout)
+    # elif stderr:
+    #     logger.error(stderr)
+    #     raise SystemExit("Error encountered on chrom {}, check snpeff.log".format(input_chrom))
 
 
 ############################################
