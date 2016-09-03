@@ -250,15 +250,15 @@ create_tables_list = [create_vars_dbsnp, create_vars_kaviar, create_vars_clinvar
 #         insert into wgs_ilmn.ilmn_vars partition (chrom, blk_pos)
 #         SELECT var_id, pos, ref, allele, chrom, blk_pos FROM wgs_ilmn.vcf_distinct WHERE chrom = '{chrom}' AND blk_pos = {pos}
 #         UNION
-#         SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.dbnsfp_distinct_test WHERE chrom = '{chrom}' AND blk_pos = {pos}
+#         SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.dbnsfp_distinct WHERE chrom = '{chrom}' AND blk_pos = {pos}
 #         UNION
-#         SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.kaviar_distinct_test WHERE chrom = '{chrom}' AND blk_pos = {pos}
+#         SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.kaviar_distinct WHERE chrom = '{chrom}' AND blk_pos = {pos}
 #         UNION
-#         SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.clinvar_distinct_test WHERE chrom = '{chrom}' AND blk_pos = {pos}
+#         SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.clinvar_distinct WHERE chrom = '{chrom}' AND blk_pos = {pos}
 #         UNION
-#         SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.dbsnp_test WHERE chrom = '{chrom}' AND blk_pos = {pos}
+#         SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.dbsnp WHERE chrom = '{chrom}' AND blk_pos = {pos}
 #         UNION
-#         SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.hgmd_test WHERE chrom = '{chrom}' AND blk_pos = {pos};
+#         SELECT var_id, pos, ref, alt as allele, chrom, blk_pos FROM anno_grch37.hgmd WHERE chrom = '{chrom}' AND blk_pos = {pos};
 #         '''.format(chrom=chrom, pos=pos)
 #         # snpeff.run_query(insert_ilmn_vars)
 #
@@ -536,10 +536,10 @@ for chrom in chrom_list:
 
 
             '''.format(chrom=chrom, pos=pos)
-        snpeff.run_query(add_ensembl)
-
-check_tables('wgs_ilmn.vars_dbnsfp', 'wgs_ilmn.vars_ensembl')
-snpeff.run_query("compute stats wgs_ilmn.vars_ensembl")
+#         snpeff.run_query(add_ensembl)
+#
+# check_tables('wgs_ilmn.vars_dbnsfp', 'wgs_ilmn.vars_ensembl')
+# snpeff.run_query("compute stats wgs_ilmn.vars_ensembl")
 #
 # #######################################
 # ### ADD snpEff Coding Consequences  ###
