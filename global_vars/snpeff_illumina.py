@@ -78,7 +78,7 @@ class snpeff(object):
         :return: vcf files of annotated variants for each chrom
         '''
         # files = '{}/chrom={}'.format(self.in_table, input_chrom)
-        files = '/itmi/wgs_ilmn_new/vcf_variant/chrom={}'.format(input_chrom)
+        files = '/itmi/wgs_ilmn_new/vcf_variant/chrom={}/'.format(input_chrom)
 
         # files = '/tmp/gv_test'
         # Test file is in /tmp/gv_test/chrom=1/blk_pos=1/ff*.parq.  Note that
