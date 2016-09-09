@@ -1,21 +1,29 @@
 #!/usr/bin/env pyspark
 
-from pyspark import SparkContext, SparkConf, SQLContext
-from pyspark.sql import Row
-import subprocess as sp
-import os, csv, io, logging
-import sys
+'''
+Requirements:
+    - spark 1.3 and above
+    - python 2.7x
+    - SnpEff 4.2 (build 2015-12-05)
 
-logger = logging.getLogger('snpeff')
-hdlr = logging.FileHandler('snpeff.log')
-logger.addHandler(hdlr)
-logger.setLevel(logging.INFO)
+Variables:
+spark_host_prefix = hdfs prefix for cluster
+in_files = folder containing variant parquet files
+out_dir = directory to write snpeff parsed output
+
+Purpose:
+As part of the global variants pipeline, runs snpeff on variants located in the in_files directory
+
+input = hdfs location of parquet formatted distinct variants created using gv_illumina.py in table called ilmn_vars
+output = parquet formatted snpeff results parsed to one variant per line
+
+'''
+
+from pyspark import SparkContext, SparkConf, SQLContext
+import os
 
 
 class snpeff(object):
-    # chroms = map(str, range(1, 23)) + ['X', 'Y', 'M']
-    chroms = ['X']
-    var_blocks = range(0, 251)
 
     # ITMI impala cluster
     tool_path = '/opt/cloudera/parcels/ITMI/'
@@ -23,44 +31,24 @@ class snpeff(object):
     snpeff_oneperline = '{}share/snpEff/scripts/vcfEffOnePerLine.pl'.format(tool_path)
     snpsift_jar = '{}share/snpEff/SnpSift.jar'.format(tool_path)
 
-    def __init__(self, spark_host_prefix='hdfs://ip-10-0-0-118.ec2.internal:8020/itmi/'):
+    def __init__(self, spark_host_prefix='hdfs://ip-10-0-0-118.ec2.internal:8020/itmi/', in_files='/itmi/wgs_ilmn_new/vcf_variant/',
+                 out_dir = '/itmi/wgs_ilmn_new/snpeff_out'):
         self.spark_host_prefix = spark_host_prefix
+        self.in_files = in_files
+        self.out_dir = out_dir
         self.appname = "run_snpeff"
         self.conf = SparkConf().setAppName(self.appname) \
             .set("spark.sql.parquet.compression.codec", "snappy") \
             .set("spark.yarn.executor.memoryOverhead", 14336)
-        #                    .set("spark.yarn.executor.cores", 1)
         self.sc = SparkContext(conf=self.conf)
         self.sqlC = SQLContext(self.sc)
         self.sqlC.sql("SET spark.sql.parquet.binaryAsString=true")
         self.sqlC.sql("SET spark.sql.parquet.cacheMetadata=true")
-        #        self.sqlC.sql("SET spark.sql.parquet.compression.codec=snappy")
-        self.in_table = "{}/ilmn_db/ilmn_vars/".format(self.spark_host_prefix)
-
-
-    @staticmethod
-    def subprocess_cmd(command, cwd=os.getcwd()):
-        '''
-        Run programs in bash via subprocess
-        :param command: command string as would be run on the command line
-        :param input_dir: optional directory to run command in, default cwd
-        :return: runs bash command
-        '''
-        print ("Running \n {}".format(command))
-        ps = sp.Popen(command, shell=True, stdout=sp.PIPE, stderr=sp.PIPE, cwd=cwd)
-        try:
-            print ps.communicate()
-        except sp.CalledProcessError as e:
-            print e
 
     @staticmethod
     def check_outdir(output_dir):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-
-    def shut_down(self):
-        self.sqlC.clearCache()
-        self.sc.stop()
 
     @staticmethod
     def var2tsv(r):
@@ -71,23 +59,20 @@ class snpeff(object):
         # VCF: chrom, pos,  id,     ref, alt,    qual, filter, info
         return '\t'.join([str(r.chrom), str(r.pos), r.var_id, r.ref, r.allele,
                           '', '', ''])
-
-    def run_snpeff(self, input_chrom):
+    def run_snpeff(self):
         '''
-        Run snpeff by chromosome on ilmn_vars table
+        Run snpeff and parse output
         :return: vcf files of annotated variants for each chrom
-        '''
-        # files = '{}/chrom={}'.format(self.in_table, input_chrom)
-        files = '/itmi/wgs_ilmn_new/vcf_variant/chrom={}/'.format(input_chrom)
 
-        # files = '/tmp/gv_test'
-        # Test file is in /tmp/gv_test/chrom=1/blk_pos=1/ff*.parq.  Note that
-        # hadoop correctly interprets the chrom=1 and blk_pos=1 as a partitions
-        # and includes them as additional 'chrom' and blk_pos columns in the RDD
+        Test file is in /tmp/gv_test/chrom=1/blk_pos=1/ff*.parq.  Note that
+        hadoop correctly interprets the chrom=1 and blk_pos=1 as a partitions
+        and includes them as additional 'chrom' and blk_pos columns in the RDD
+
+        '''
+
 
         # Do not run snpEff with stats or threads (Spark job is distributed and
-        # threading is outside of resource management and likely won't even
-        # help)
+        # threading is outside of resource management and likely won't even help)
         snpeff_cmd = 'java -d64 -Xmx16g -jar {} -noStats -v GRCh37.75'.format(self.snpeff_jar)
 
         extract_cmd = 'java -Xmx4g -jar {} extractFields - \
@@ -96,7 +81,7 @@ class snpeff(object):
                       "ANN[*].FEATUREID" "ANN[*].BIOTYPE"\
                       "ANN[*].HGVS_C" "ANN[*].HGVS_P"'.format(self.snpsift_jar)
 
-        rdd = self.sqlC.parquetFile(files) \
+        rdd = self.sqlC.parquetFile(self.in_files) \
             .map(self.var2tsv) \
             .pipe(snpeff_cmd) \
             .pipe(self.snpeff_oneperline) \
@@ -109,25 +94,23 @@ class snpeff(object):
                             str(l[12]), str(l[13])
                             ))
 
-
-
-
         df = self.sqlC.createDataFrame(rdd)
-        print (df.take(5))
-        # df.write.parquet('/tmp/gv_out3')
-        sys.exit(0)
+        df.write.parquet(self.out_dir)
 
-
+    def shut_down(self):
+        self.sqlC.clearCache()
+        self.sc.stop()
 
 
 ############################################
 if __name__ == "__main__":
 
-    gv = snpeff(spark_host_prefix='localhost')
-
-    gv.check_outdir('./snpeff_out')
-
-    for chrom in gv.chroms:
-        gv.run_snpeff(chrom)
-
-gv.shut_down()
+    # instantiate instance (change depending on ITMI or ISB cluster)
+    gv = snpeff(spark_host_prefix='localhost', in_files= '/itmi/wgs_ilmn_new/vcf_variant/',
+                out_dir='/itmi/wgs_ilmn_new/snpeff_out')
+    # create output directory if not exists
+    gv.check_outdir(gv.out_dir)
+    # run snpeff and parse output
+    gv.run_snpeff()
+    # shut down connection to spark
+    gv.shut_down()
