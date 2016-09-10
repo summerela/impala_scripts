@@ -31,7 +31,7 @@ class snpeff(object):
     snpeff_oneperline = '{}share/snpEff/scripts/vcfEffOnePerLine.pl'.format(tool_path)
     snpsift_jar = '{}share/snpEff/SnpSift.jar'.format(tool_path)
 
-    def __init__(self, spark_host_prefix='hdfs://ip-10-0-0-118.ec2.internal:8020/itmi/', in_files='/itmi/wgs_ilmn_new/vcf_variant/',
+    def __init__(self, spark_host_prefix='hdfs://ip-10-0-0-118.ec2.internal:8020/itmi/', in_files='/itmi/wgs_ilmn.df/ilmn_vars/',
                  out_dir = '/itmi/wgs_ilmn_new/snpeff_out'):
         self.spark_host_prefix = spark_host_prefix
         self.in_files = in_files
@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     # instantiate instance (change depending on ITMI or ISB cluster)
     gv = snpeff(spark_host_prefix='localhost', in_files= '/itmi/wgs_ilmn.df/ilmn_vars/',
-                out_dir='/itmi/wgs_ilmn.db/snpeff_out')
+                out_dir='./snpeff_out')
     # create output directory if not exists
     gv.check_outdir(gv.out_dir)
     # run snpeff and parse output
