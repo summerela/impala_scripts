@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     # instantiate instance (change depending on ITMI or ISB cluster)
     gv = snpeff(spark_host_prefix='localhost', in_files= '/itmi/wgs_ilmn.df/ilmn_vars/',
-                out_dir='./snpeff_out')
+                out_dir='/home/ec2-user/snpeff_out')
     # create output directory if not exists
     gv.check_outdir(gv.out_dir)
     # run snpeff and parse output
