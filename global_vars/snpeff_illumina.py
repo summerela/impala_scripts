@@ -39,7 +39,8 @@ class snpeff(object):
         self.appname = "run_snpeff"
         self.conf = SparkConf().setAppName(self.appname) \
             .set("spark.sql.parquet.compression.codec", "snappy") \
-            .set("spark.yarn.executor.memoryOverhead", 14336)
+        # disable yarn memory on itmi servers
+            # .set("spark.yarn.executor.memoryOverhead", 14336)
         self.sc = SparkContext(conf=self.conf)
         self.sqlC = SQLContext(self.sc)
         self.sqlC.sql("SET spark.sql.parquet.binaryAsString=true")
