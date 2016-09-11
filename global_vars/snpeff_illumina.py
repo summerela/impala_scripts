@@ -21,6 +21,12 @@ output = parquet formatted snpeff results parsed to one variant per line
 
 from pyspark import SparkContext, SparkConf, SQLContext
 import os
+import logging
+
+logger = logging.getLogger('snpeff')
+hdlr = logging.FileHandler('snpeff.log')
+logger.addHandler(hdlr)
+logger.setLevel(logging.INFO)
 
 
 class snpeff(object):
